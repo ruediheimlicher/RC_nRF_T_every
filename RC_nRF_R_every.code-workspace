@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"path": "../RC_nRF_R_every"
+		},
+		{
+			"name": "RC_nRF_T_every",
+			"path": "."
+		},
+		{
+			"name": "RC_nRF24_Receiver",
+			"path": "../RC_nRF24_Receiver/Receiver/RC_nRF24_Receiver"
+		}
+	],
+	"settings": {
+		"git.ignoreLimitWarning": true
+	}
+}
