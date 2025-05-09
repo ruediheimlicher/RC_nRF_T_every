@@ -228,8 +228,8 @@ void updatemitte(void)
     Serial.print(servomittearray[i]);
     Serial.print("\t");
 
-    kanalsettingarray[0][i][1] = 0x11; // level
-    kanalsettingarray[0][i][2] = 0x22; // expo
+    kanalsettingarray[0][i][1] = 0x00; // level
+    kanalsettingarray[0][i][2] = 0x44; // expo
   }
   Serial.print("\n");
   
@@ -290,20 +290,25 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
   }
   */
     //Serial.print(" M: ");
+    //if(abs(servomittearray[ROLL] - potwertarray[ROLL]) > 2)
+    {
     Serial.print(servomittearray[ROLL]);
-Serial.print("*");    //Serial.print(" potwert: ");
+    Serial.print("*");    //Serial.print(" potwert: ");
     Serial.print(potwertarray[ROLL]);
-Serial.print("*");
+    Serial.print("*");
     //Serial.print(" intdiff: ");
     Serial.print(intdiff);
-Serial.print("*");    //Serial.print(" diffa: ");
+    Serial.print("*");    //Serial.print(" diffa: ");
     Serial.print(diffa);
-Serial.print("*");    //Serial.print(" diffb: ");
+    Serial.print("*");    //Serial.print(" diffb: ");
     Serial.print(diffb);
-Serial.print("*");    //Serial.print(" expoint: ");
+    Serial.print("*");    //Serial.print(" expoint: ");
     Serial.print(expoint);
-Serial.print("*");    //Serial.print(" levelint: ");
+    Serial.print("*");    //Serial.print(" levelint: ");
     Serial.print(levelint);
+    Serial.print(" *\n");
+    }
+    
 /*
     Serial.print(" \t");
     Serial.print(" * ");
@@ -336,15 +341,12 @@ Serial.print("*");    //Serial.print(" levelint: ");
     Serial.print(potwertarray[THROTTLE]);
     */
  
-    Serial.print(" *\n");
+    //Serial.print(" *\n");
   }
   // pot lesen
   for (uint8_t i=0;i<NUM_SERVOS;i++)
   {
     potwert=analogRead(adcpinarray[i]);
-
-
-  
 
     uint16_t mitte = servomittearray[i];
     uint8_t levelwert = kanalsettingarray[curr_model][i][1]; // element 1, levelarray
@@ -373,7 +375,8 @@ Serial.print("*");    //Serial.print(" levelint: ");
     //float diff = 0;
     
     // map(value, fromLow, fromHigh, toLow, toHigh)
-    if(i == ROLL)
+    
+    if((i == YAW) || (i == PITCH))
     {
 
       
@@ -383,18 +386,18 @@ Serial.print("*");    //Serial.print(" levelint: ");
         
         //if (intdiff > MINDIFF)
         {
-          diffa = map(intdiff,POTLO,mitte, 0,512);
 
-          diffa = map(intdiff,0,(mitte - POTLO), 0,512);
+          //diffa = map(intdiff,0,(mitte - POTLO), 0,512);
+          diffa = expoarray[expowerta][intdiff];
 
-          //Serial.print(diffa);
-          //Serial.print("\n");
           expoint = expoarray[expowerta][diffa];
-          // expoint umrechnen mit level
+          //expoint umrechnen mit level
           levelint = expoint * (8-levelwerta);
           levelint /= 8;
           levelint = map(levelint,0,512,0,(mitte - POTLO));
           levelint = mitte - levelint;
+          //levelint = mitte - diffa;
+          potwertarray[i] = levelint;
         }
       
 
@@ -404,29 +407,33 @@ Serial.print("*");    //Serial.print(" levelint: ");
         intdiff = (potwert - mitte);
         diffb = map(intdiff,0,(POTHI - mitte),0,512);
        
-        diffb = map(intdiff,POTLO,mitte,0,512);
-       
-        // diffb &= 0x200;
         expoint = expoarray[expowertb][diffb];
         levelint = expoint * (8-levelwertb) ;
         levelint /= 8;
         levelint = map(levelint,0,512,0,(POTHI - mitte));
+        
         levelint = mitte + levelint;
+        potwertarray[i] = levelint;
+        //potwertarray[i] = potwert;
       }
- 
+      
     }
-
-
-
-    potwertarray[i] = potwert;
+    else
+    {
+      potwertarray[i] = potwert;
+    }
+    
+//potwertarray[i] = potwert;
+    
+    //
   } // for i
 
   // Border_Map(val, lower, middle, upper, reverse)
     
     
-  data.yaw_data = Border_Map( impulscounter, 0, 512, 1023, true );  
+  //data.roll_data = Border_Map( impulscounter, 0, 512, 1023, true );  
 
-  //data.yaw_data = Border_Map(potwertarray[YAW], 0, 512, 1023, false );        // CH4
+  data.yaw_data = Border_Map(potwertarray[YAW], 0, 512, 1023, false );        // CH4
   
   data.roll_data = Border_Map(potwertarray[ROLL], 0, 512, 1023, true );        // CH1   Note: "true" or "false" for signal direction 
   data.pitch_data = Border_Map(potwertarray[PITCH], 0, 512, 1023, true );       // CH2    
