@@ -10,6 +10,8 @@
   #include <RF24.h>
   const uint64_t pipeOut = 0xABCDABCD71LL;         // NOTE: The address in the Transmitter and Receiver code must be the same "0xABCDABCD71LL" | Verici ve Alıcı kodundaki adres aynı olmalıdır
 
+
+  #define TEST 1
   #define CE_PIN 9
   #define CSN_PIN 10
   // instantiate an object for the nRF24L01 transceiver
@@ -47,13 +49,13 @@ uint8_t impulscounter = 0;
 #define POT0HI 3400 // Max wert vom ADC Pot 0
 
 #define POTLO   0
-#define POTHI  690
+#define POTHI  688
 
 //Impulslaenge, ms
 #define PPMLO  850  // Minwert ms fuer Impulslaenge
 #define PPMHI  2150 // Maxwert ms fur Impulslaenge
 
-#define MINDIFF 16
+#define MINDIFF 4
 
 #define  ANZAHLMODELLE        5
 #define  KANALSETTINGBREITE   4
@@ -89,9 +91,17 @@ uint8_t kanalsettingarray[ANZAHLMODELLE][NUM_SERVOS][KANALSETTINGBREITE] = {};
 
 uint16_t          servomittearray[NUM_SERVOS] = {}; // Werte fuer Mitte
 
+ uint8_t levelwert= 0;
+ uint8_t levelwerta = 0;
+uint8_t levelwertb = 0;
+
+uint8_t expowert = 0;
+uint8_t expowerta = 0;
+     uint8_t expowertb = 0;
 uint16_t          potwertarray[NUM_SERVOS] = {}; // Werte fuer Mitte
 uint16_t          externpotwertarray[NUM_SERVOS] = {}; // Werte von extern  pro servo
 
+uint16_t currentexpoarray[5][513] = {};
 
 
 float potlo = POTLO; // min pot
@@ -99,21 +109,40 @@ float pothi = POTHI; // max pot
 float ppmlo = PPMLO; // min ppm
 float ppmhi = PPMHI; // max ppm
 
-volatile uint16_t diffa = 0;
+uint16_t diffa = 0;
+
+uint16_t diffapitch = 0;
+uint16_t diffbpitch = 0;
+
 uint16_t diffb = 0;
 float expofloat = 0;
 uint16_t expoint = 0;
 uint16_t levelint = 0;
 
+uint16_t expointpitch = 0;
+uint16_t levelintpitch = 0;
+
+uint16_t levelintpitcha = 0;
+
+uint16_t levelintpitchb = 0;
+
+
+
+
+
 
 uint16_t intdiff = 0;
+uint16_t intdiffpitch = 0;
+
+
+
 uint16_t potgrenzearray[NUM_SERVOS][2]; // obere und untere Grenze von adc
 
 volatile float quot = (ppmhi - ppmlo)/(pothi - potlo);
 
 volatile float expoquot = (ppmhi - ppmlo)/2/0x200; // umrechnen der max expo (512) auf PPM  
 
-volatile float quotarray[NUM_SERVOS] = {}; // Umrechnungsfaktor pro Pot
+//volatile float quotarray[NUM_SERVOS] = {}; // Umrechnungsfaktor pro Pot
 
 uint8_t curr_model = 0;
 
@@ -216,7 +245,7 @@ void updatemitte(void)
 
       potgrenzearray[i][0] = potlo;
       potgrenzearray[i][1] = pothi;
-      quotarray[i] = quot;
+      //[i] = quot;
       servomittearray[i] = analogRead(adcpinarray[i]);
       
    }
@@ -229,13 +258,22 @@ void updatemitte(void)
     Serial.print("\t");
 
     kanalsettingarray[0][i][1] = 0x00; // level
-    kanalsettingarray[0][i][2] = 0x44; // expo
+    kanalsettingarray[0][i][2] = 0x22; // expo
   }
   Serial.print("\n");
   
 potwert = POTLO;
+
+
  
 } // setup
+
+int Throttle_Map(int val, int fromlow, int fromhigh,int tolow, int tohigh, bool reverse)
+{
+val = constrain(val, fromlow, fromhigh);
+val = map(val, fromlow,fromhigh, tolow, tohigh);
+return ( reverse ? 255 - val : val );
+}
 
 // Joystick center and its borders 
 int Border_Map(int val, int lower, int middle, int upper, bool reverse)
@@ -291,23 +329,43 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
   */
     //Serial.print(" M: ");
     //if(abs(servomittearray[ROLL] - potwertarray[ROLL]) > 2)
+    if (TEST)
     {
-    Serial.print(servomittearray[ROLL]);
-    Serial.print("*");    //Serial.print(" potwert: ");
-    Serial.print(potwertarray[ROLL]);
-    Serial.print("*");
+    Serial.print(servomittearray[PITCH]);
+    Serial.print("\t");    //Serial.print(" potwert: ");
+    Serial.print(potwertarray[PITCH]);
+    Serial.print("\t");
     //Serial.print(" intdiff: ");
-    Serial.print(intdiff);
-    Serial.print("*");    //Serial.print(" diffa: ");
+   // Serial.print("\t");    //Serial.print(" levelwerta: ");
+   // Serial.print(levelwerta);
+    Serial.print("\t");    //Serial.print(" expoint: ");
+    //uint8_t ea = kanalsettingarray[curr_model][PITCH][2];
+    //Serial.print(ea);
+    /*
+    Serial.print("\tintdiff "); 
+    Serial.print(intdiffpitch);
+    Serial.print("\tdiffa ");    //Serial.print(" diffa: ");
     Serial.print(diffa);
-    Serial.print("*");    //Serial.print(" diffb: ");
-    Serial.print(diffb);
-    Serial.print("*");    //Serial.print(" expoint: ");
+    Serial.print("\tlevelintpitcha ");    //Serial.print(" expoint: ");
+    Serial.print(levelintpitcha);
+    Serial.print("\texpoint ");    //Serial.print(" expoint: ");
     Serial.print(expoint);
-    Serial.print("*");    //Serial.print(" levelint: ");
-    Serial.print(levelint);
+
+
+    Serial.print("\t");    //Serial.print(" diffb: ");
+    Serial.print("\tdiffb ");
+    Serial.print(diffb);
+    Serial.print("\tlevelintpitchb ");    //Serial.print(" expoint: ");
+    Serial.print(levelintpitchb);
+    */
+    Serial.print("\tadc "); 
+    Serial.print(potwertarray[THROTTLE]);
+     Serial.print("\tthrottle ");    //Serial.print(" expoint: ");
+    Serial.print(data.throttle_data);
+
+
     Serial.print(" *\n");
-    }
+    } // if TEST
     
 /*
     Serial.print(" \t");
@@ -360,14 +418,14 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
     
     // eventuell ungleiche werte 
     
-    uint8_t levelwerta = levelwert & 0x07;
-    uint8_t levelwertb = (levelwert & 0x70)>>4;
+    levelwerta = levelwert & 0x07;
+    levelwertb = (levelwert & 0x70)>>4;
 
       // expowert ev. ungleich fuer richtung
-    uint8_t expowert = kanalsettingarray[curr_model][i][2]; // element2, expoarray
+    expowert = kanalsettingarray[curr_model][i][2]; // element2, expoarray
 
-    uint8_t expowerta = expowert & 0x07;
-    uint8_t expowertb = (expowert & 0x70)>>4;
+    expowerta = expowert & 0x07;
+    expowertb = (expowert & 0x70)>>4;
 
 
     
@@ -376,45 +434,56 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
     
     // map(value, fromLow, fromHigh, toLow, toHigh)
     
-    if((i == YAW) || (i == PITCH))
-    {
-
-      
-      if((potwert) < mitte) // Seite A
+    if((i == YAW) || (i == PITCH) || (i == ROLL))
+    //if(i == PITCH)
+    {      
+      if((potwert) < mitte) // Seite A, Ziehen
       {
         intdiff =  (mitte - potwert); // Abweichung von mitte
-        
+        constrain(intdiff, 0,mitte);
+        intdiffpitch = intdiff;
         //if (intdiff > MINDIFF)
         {
-
-          //diffa = map(intdiff,0,(mitte - POTLO), 0,512);
-          diffa = expoarray[expowerta][intdiff];
+          diffa = map(intdiff,0,(mitte - POTLO), 0,512);
 
           expoint = expoarray[expowerta][diffa];
           //expoint umrechnen mit level
           levelint = expoint * (8-levelwerta);
           levelint /= 8;
           levelint = map(levelint,0,512,0,(mitte - POTLO));
+          //constrain(levelint, 0,mitte);
           levelint = mitte - levelint;
           //levelint = mitte - diffa;
+          levelintpitcha = levelint;
           potwertarray[i] = levelint;
         }
-      
 
       }
-      else // Seite B potwert > mitte
+      else // Seite B potwert > mitte Stossen
       {
         intdiff = (potwert - mitte);
-        diffb = map(intdiff,0,(POTHI - mitte),0,512);
-       
-        expoint = expoarray[expowertb][diffb];
-        levelint = expoint * (8-levelwertb) ;
-        levelint /= 8;
-        levelint = map(levelint,0,512,0,(POTHI - mitte));
-        
-        levelint = mitte + levelint;
-        potwertarray[i] = levelint;
-        //potwertarray[i] = potwert;
+        constrain(intdiff, 0,mitte);
+        intdiffpitch = intdiff;
+
+        //if (intdiff > MINDIFF)
+        {
+          diffb = map(intdiff,0,(POTHI - mitte),0,512);
+          if(diffb >= 512 )
+          {
+            diffb = 512;
+          }
+          //constrain(diffb, 0, 512);
+          expoint = expoarray[expowertb][diffb];
+          levelint = expoint * (8-levelwertb) ;
+          levelint /= 8;
+          levelint = map(levelint,0,512,0,(POTHI - mitte));
+
+          levelint = mitte + levelint;
+          levelintpitchb = levelint;
+          potwertarray[i] = levelint;
+
+          //potwertarray[i] = potwert;
+        }
       }
       
     }
@@ -423,7 +492,7 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
       potwertarray[i] = potwert;
     }
     
-//potwertarray[i] = potwert;
+    //potwertarray[i] = potwert;
     
     //
   } // for i
@@ -433,14 +502,19 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
     
   //data.roll_data = Border_Map( impulscounter, 0, 512, 1023, true );  
 
-  data.yaw_data = Border_Map(potwertarray[YAW], 0, 512, 1023, false );        // CH4
+  data.yaw_data = Border_Map(potwertarray[YAW], 0, 512, 1023, true );        // CH4
   
   data.roll_data = Border_Map(potwertarray[ROLL], 0, 512, 1023, true );        // CH1   Note: "true" or "false" for signal direction 
   data.pitch_data = Border_Map(potwertarray[PITCH], 0, 512, 1023, true );       // CH2    
   
-  //data.throttle_data = Border_Map(potwertarray[THROTTLE],0, 340, 570, true );      // CH3   Note: For Single side ESC
-  data.throttle_data = Border_Map(potwertarray[THROTTLE],0, 10, 500, true ); 
+  //data.throttle_data = Border_Map(potwertarray[THROTTLE],0, 30, 800, false );      // Stick
+  //data.throttle_data = Border_Map(potwertarray[THROTTLE],0, 5, 1200, false ); 
   
+  uint16_t throttlemitte = servomittearray[THROTTLE];
+  data.throttle_data = Throttle_Map(potwertarray[THROTTLE],throttlemitte, POTHI,0,255, false );   
+  
+  //data.throttle_data = Border_Map(potwertarray[THROTTLE],0, 340,570, false );      // Potentiometer
+
   data.aux1 = digitalRead(5);                                          // CH5
   data.aux2 = digitalRead(7);                                          // CH6
   radiocounter++;
