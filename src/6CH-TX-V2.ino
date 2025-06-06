@@ -3,14 +3,27 @@
 
   #include <SPI.h>
 
-  #include <Adafruit_LiquidCrystal.h>
+  //#include <Adafruit_LiquidCrystal.h>
+  #include <U8g2lib.h>
+  #include <U8x8lib.h>
+  #include <Wire.h>
 
   #include "expo.h"
   #include <nRF24L01.h>
   #include <RF24.h>
   const uint64_t pipeOut = 0xABCDABCD71LL;         // NOTE: The address in the Transmitter and Receiver code must be the same "0xABCDABCD71LL" | Verici ve Alıcı kodundaki adres aynı olmalıdır
 
+  //U8G2_SSD1327_MIDAS_128X128_F_HW_I2C  u8g2(U8G2_R0,U8X8_PIN_NONE);
+  //U8G2_SSD1327_WS_128X128_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ A5, /* data=*/ A4, /* reset=*/ U8X8_PIN_NONE);
+  
+  //U8G2_SSD1327_WS_128X128_HW_I2C u8g2(U8G2_R0,U8X8_PIN_NONE);
 
+// https://github.com/olikraus/u8g2/discussions/1865
+//  U8G2_SSD1327_WS_128X128_F_HW_I2C u8g2(0, U8X8_PIN_NONE, A5, A4);
+
+U8X8_SSD1327_WS_128X128_HW_I2C u8x8(U8X8_PIN_NONE);
+
+  //U8X8_SSD1327_WS_128X128_HW_I2C u8g2(A4,A5);
   #define TEST 1
   #define CE_PIN 9
   #define CSN_PIN 10
@@ -171,7 +184,7 @@ uint16_t radiocounter = 0;
   data.throttle_data = 0;                  
   data.pitch_data = 127;
   data.roll_data = 127;
-  data.yaw_data = 127;
+  data.yaw_data = 110;
   data.aux1 = 0;                       
   data.aux2 = 0;
 
@@ -179,7 +192,7 @@ uint16_t radiocounter = 0;
 
 // initialize the library with the numbers of the interface pins
 //Adafruit_LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
-Adafruit_LiquidCrystal lcd(0);
+//Adafruit_LiquidCrystal lcd(0);
 
 void updatemitte(void)
 {
@@ -197,6 +210,12 @@ void updatemitte(void)
   //lcd.begin(20, 4);
   // Print a message to the LCD.
   //lcd.print("hello, world!");
+
+  // OLED
+u8x8.setBusClock(4000000);
+u8x8.setI2CAddress(2*0x3D);
+u8x8.begin();
+  //u8g2.setBusClock(4000000);
 
   //                Configure the NRF24 module  | NRF24 modül konfigürasyonu
   radio.begin();
@@ -258,7 +277,7 @@ void updatemitte(void)
     Serial.print("\t");
 
     kanalsettingarray[0][i][1] = 0x00; // level
-    kanalsettingarray[0][i][2] = 0x22; // expo
+    kanalsettingarray[0][i][2] = 0x33; // expo
   }
   Serial.print("\n");
   
@@ -309,6 +328,14 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
     blinkcounter++;
     impulscounter+=16;
     digitalWrite(LOOPLED, ! digitalRead(LOOPLED));
+
+    ///*
+    //u8g2.clearBuffer();                   // Clear display.
+    u8x8.setFont(u8g2_font_ncenB08_tr);    // choose a suitable font
+    u8x8.drawString(0, 24, "Hello OLED!");    // write something to the buffer
+    //u8x8.sendBuffer();   
+    //u8g2.sendBuffer(); // Transfer buffer to screen.
+    //*/
     /*
     Serial.print("blinkcounter: ");
     Serial.print(blinkcounter);
