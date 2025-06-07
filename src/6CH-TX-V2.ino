@@ -5,8 +5,8 @@
 
   //#include <Adafruit_LiquidCrystal.h>
   #include <U8g2lib.h>
-  #include <U8x8lib.h>
-  #include <Wire.h>
+  //#include <U8x8lib.h>
+  //#include <Wire.h>
 
   #include "expo.h"
   #include <nRF24L01.h>
@@ -21,7 +21,13 @@
 // https://github.com/olikraus/u8g2/discussions/1865
 //  U8G2_SSD1327_WS_128X128_F_HW_I2C u8g2(0, U8X8_PIN_NONE, A5, A4);
 
-U8X8_SSD1327_WS_128X128_HW_I2C u8x8(U8X8_PIN_NONE);
+//U8X8_SSD1327_WS_128X128_HW_I2C u8x8(U8X8_PIN_NONE);
+
+// 0.96"
+U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE);
+uint16_t loopcounter0 = 0;
+uint16_t loopcounter1 = 0;
+uint8_t charh = 0;
 
   //U8X8_SSD1327_WS_128X128_HW_I2C u8g2(A4,A5);
   #define TEST 1
@@ -33,7 +39,7 @@ U8X8_SSD1327_WS_128X128_HW_I2C u8x8(U8X8_PIN_NONE);
   //RF24 radio(9, 10);                               // select CE,CSN pin | CE ve CSN pinlerin seçimi
   #define LOOPLED 4
 
-  #define BLINKRATE 0x01FF
+  #define BLINKRATE 0x008F
 
 // defines for PINS
   // links
@@ -159,6 +165,36 @@ volatile float expoquot = (ppmhi - ppmlo)/2/0x200; // umrechnen der max expo (51
 
 uint8_t curr_model = 0;
 
+void oled_setInt(uint8_t x,uint8_t y, uint16_t data)
+{
+   u8g2.setCursor(x,y);
+   u8g2.print(data);
+   u8g2.sendBuffer();
+
+}
+
+void oled_delete(uint8_t x,uint8_t y,uint8_t l)
+{
+   u8g2.setDrawColor(0);
+   u8g2.drawBox(x,y-charh,l,charh+4);
+   u8g2.setDrawColor(1);
+   //u8g2.sendBuffer();
+}
+ void oled_fill(uint8_t x,uint8_t y,uint8_t l)
+{
+   //u8g2.setDrawColor(0);
+   u8g2.drawBox(x,y-charh,l,charh+4);
+   //u8g2.setDrawColor(1);
+   u8g2.sendBuffer();
+}
+
+void oled_frame(uint8_t x,uint8_t y,uint8_t l)
+{
+   //u8g2.setDrawColor(0);
+   u8g2.drawFrame(x,y-charh,l,charh+4);
+   //u8g2.setDrawColor(1);
+   u8g2.sendBuffer();
+}
 
 
 volatile uint16_t pot0 = 0;
@@ -212,10 +248,22 @@ void updatemitte(void)
   //lcd.print("hello, world!");
 
   // OLED
-u8x8.setBusClock(4000000);
-u8x8.setI2CAddress(2*0x3D);
-u8x8.begin();
+//u8x8.setBusClock(4000000);
+//u8x8.setI2CAddress(2*0x3D);
+//u8x8.begin();
   //u8g2.setBusClock(4000000);
+
+  // 0.96"
+   u8g2.begin(); 
+   u8g2.clearDisplay(); 
+    u8g2.setFont(u8g2_font_helvR14_tr); // https://github.com/olikraus/u8g2/wiki/fntlist12
+   //u8g2.setFont(u8g2_font_inr16_mr);  
+   u8g2.setCursor(0, 16);
+   u8g2.print(F("nRF24 T"));
+   //u8g2.setFont(u8g2_font_ncenB10_tr);
+   u8g2.setFontMode(0);
+  u8g2.sendBuffer(); 
+
 
   //                Configure the NRF24 module  | NRF24 modül konfigürasyonu
   radio.begin();
@@ -331,8 +379,8 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
 
     ///*
     //u8g2.clearBuffer();                   // Clear display.
-    u8x8.setFont(u8g2_font_ncenB08_tr);    // choose a suitable font
-    u8x8.drawString(0, 24, "Hello OLED!");    // write something to the buffer
+    //u8x8.setFont(u8g2_font_ncenB08_tr);    // choose a suitable font
+    //u8x8.drawString(0, 24, "Hello OLED!");    // write something to the buffer
     //u8x8.sendBuffer();   
     //u8g2.sendBuffer(); // Transfer buffer to screen.
     //*/
@@ -358,6 +406,25 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
     //if(abs(servomittearray[ROLL] - potwertarray[ROLL]) > 2)
     if (TEST)
     {
+      // 0.96
+      loopcounter1++;
+      uint8_t charindex = loopcounter1  & 0x7F;
+      //u8g2.setDrawColor(0);
+      charh = u8g2.getMaxCharHeight() ;
+      oled_delete(30,44,32);
+      
+      //u8g2.drawGlyph(32,44,'A'+(charindex));
+      u8g2.setCursor(32,44);
+      u8g2.print(data.yaw_data);
+      u8g2.sendBuffer();
+      if(loopcounter1 > 25)
+      {
+   	    loopcounter1 = 0;
+      }
+
+      
+
+
     Serial.print(servomittearray[PITCH]);
     Serial.print("\t");    //Serial.print(" potwert: ");
     Serial.print(potwertarray[PITCH]);
