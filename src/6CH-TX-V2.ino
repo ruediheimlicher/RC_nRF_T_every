@@ -4,10 +4,10 @@
   #include <SPI.h>
 
   //#include <Adafruit_LiquidCrystal.h>
-  #include <U8g2lib.h>
+  //#include <U8g2lib.h>
   //#include <U8x8lib.h>
   //#include <Wire.h>
-  //#include "display.h"
+  #include "display.h"
   #include "expo.h"
   #include <nRF24L01.h>
   #include <RF24.h>
@@ -26,12 +26,12 @@
 // 0.96"
 
 
-U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE);
+//U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE);
 uint16_t loopcounter0 = 0;
 uint16_t loopcounter1 = 0;
 uint8_t charh = 0;
-uint8_t balkenh = 50;
-uint8_t balkenb = 5;
+//uint8_t balkenh = 50;
+//uint8_t balkenb = 5;
   //U8X8_SSD1327_WS_128X128_HW_I2C u8g2(A4,A5);
   #define TEST 1
   #define CE_PIN 9
@@ -42,7 +42,7 @@ uint8_t balkenb = 5;
   //RF24 radio(9, 10);                               // select CE,CSN pin | CE ve CSN pinlerin seçimi
   #define LOOPLED 4
 
-  #define BLINKRATE 0x008F
+  #define BLINKRATE 0x004F
 
 // defines for PINS
   // links
@@ -287,7 +287,8 @@ void updatemitte(void)
   //u8g2.setBusClock(4000000);
 
   // 0.96"
-   u8g2.begin(); 
+   //u8g2.begin(); 
+   initDisplay();
    u8g2.clearDisplay(); 
     u8g2.setFont(u8g2_font_helvR14_tr); // https://github.com/olikraus/u8g2/wiki/fntlist12
    //u8g2.setFont(u8g2_font_inr16_mr);  
