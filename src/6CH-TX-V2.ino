@@ -33,7 +33,8 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE);
 uint16_t loopcounter0 = 0;
 uint16_t loopcounter1 = 0;
 uint8_t charh = 0;
-
+//balkenh = 50;
+//balkenb = 5;
 
   #define TEST 1
   #define CE_PIN 9
@@ -294,7 +295,7 @@ void updatemitte(void)
    //u8g2.setFont(u8g2_font_ncenB10_tr);
    u8g2.setFontMode(0);
 
-  oled_vertikalbalken(80,10,balkenb,balkenh);
+  oled_vertikalbalken(80,10,5,50);
 
   oled_horizontalbalken(10,50,40,8);
 
@@ -456,8 +457,8 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
       u8g2.print(data.yaw_data);
       u8g2.setCursor(32,44);
       u8g2.print(data.pitch_data);
-      uint8_t wertv = map(data.pitch_data,85,251,0,40);
-      oled_vertikalbalken_setwert(80,10,6,40,wertv);
+      uint8_t wertv = map(data.pitch_data,85,251,0,50);
+      oled_vertikalbalken_setwert(80,10,5,50,wertv);
       u8g2.sendBuffer();
       if(loopcounter1 > 25)
       {
