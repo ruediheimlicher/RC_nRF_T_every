@@ -5,16 +5,19 @@
 
   //#include <Adafruit_LiquidCrystal.h>
   #include <U8g2lib.h>
-  //#include <U8x8lib.h>
+  #include <U8x8lib.h>
   //#include <Wire.h>
 
   #include "expo.h"
+
+  #include "display.h"
+
   #include <nRF24L01.h>
   #include <RF24.h>
+
+
   const uint64_t pipeOut = 0xABCDABCD71LL;         // NOTE: The address in the Transmitter and Receiver code must be the same "0xABCDABCD71LL" | Verici ve Alıcı kodundaki adres aynı olmalıdır
 
-  //U8G2_SSD1327_MIDAS_128X128_F_HW_I2C  u8g2(U8G2_R0,U8X8_PIN_NONE);
-  //U8G2_SSD1327_WS_128X128_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ A5, /* data=*/ A4, /* reset=*/ U8X8_PIN_NONE);
   
   //U8G2_SSD1327_WS_128X128_HW_I2C u8g2(U8G2_R0,U8X8_PIN_NONE);
 
@@ -25,18 +28,19 @@
 
 // 0.96"
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE);
+
+
 uint16_t loopcounter0 = 0;
 uint16_t loopcounter1 = 0;
 uint8_t charh = 0;
 
-  //U8X8_SSD1327_WS_128X128_HW_I2C u8g2(A4,A5);
+
   #define TEST 1
   #define CE_PIN 9
   #define CSN_PIN 10
   // instantiate an object for the nRF24L01 transceiver
   RF24 radio(CE_PIN, CSN_PIN);
   
-  //RF24 radio(9, 10);                               // select CE,CSN pin | CE ve CSN pinlerin seçimi
   #define LOOPLED 4
 
   #define BLINKRATE 0x008F
@@ -196,6 +200,32 @@ void oled_frame(uint8_t x,uint8_t y,uint8_t l)
    u8g2.sendBuffer();
 }
 
+void oled_vertikalbalken(uint8_t x,uint8_t y, uint8_t b, uint8_t h)
+{
+   u8g2.drawFrame(x,y,b,h);
+
+
+}
+
+void oled_vertikalbalken_setwert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,uint8_t wert)
+{
+  constrain(wert,1,h-4);
+  u8g2.setDrawColor(0);
+   u8g2.drawBox(x+1,y+1,b-2,h-2);
+  u8g2.setDrawColor(1);
+  //u8g2.setCursor(x+1,y+h-wert);
+  u8g2.drawHLine(x,y+h-wert,b);
+  u8g2.drawHLine(x,y+h-wert-1,b);
+  //u8g2.drawHLine(x,y+h-wert+1,b);
+
+}
+
+void oled_horizontalbalken(uint8_t x,uint8_t y, uint8_t b, uint8_t h)
+{
+   u8g2.drawFrame(x,y,b,h);
+
+
+}
 
 volatile uint16_t pot0 = 0;
 
@@ -254,6 +284,7 @@ void updatemitte(void)
   //u8g2.setBusClock(4000000);
 
   // 0.96"
+
    u8g2.begin(); 
    u8g2.clearDisplay(); 
     u8g2.setFont(u8g2_font_helvR14_tr); // https://github.com/olikraus/u8g2/wiki/fntlist12
@@ -262,6 +293,13 @@ void updatemitte(void)
    u8g2.print(F("nRF24 T"));
    //u8g2.setFont(u8g2_font_ncenB10_tr);
    u8g2.setFontMode(0);
+
+  oled_vertikalbalken(80,10,balkenb,balkenh);
+
+  oled_horizontalbalken(10,50,40,8);
+
+
+
   u8g2.sendBuffer(); 
 
 
@@ -411,11 +449,15 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
       uint8_t charindex = loopcounter1  & 0x7F;
       //u8g2.setDrawColor(0);
       charh = u8g2.getMaxCharHeight() ;
-      oled_delete(30,44,32);
+      oled_delete(0,44,32);
       
       //u8g2.drawGlyph(32,44,'A'+(charindex));
-      u8g2.setCursor(32,44);
+       u8g2.setCursor(0,44);
       u8g2.print(data.yaw_data);
+      u8g2.setCursor(32,44);
+      u8g2.print(data.pitch_data);
+      uint8_t wertv = map(data.pitch_data,85,251,0,40);
+      oled_vertikalbalken_setwert(80,10,6,40,wertv);
       u8g2.sendBuffer();
       if(loopcounter1 > 25)
       {
