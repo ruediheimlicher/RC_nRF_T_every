@@ -4,7 +4,7 @@
   #include <SPI.h>
 
   //#include <Adafruit_LiquidCrystal.h>
-  //#include <U8g2lib.h>
+  #include <U8g2lib.h>
   //#include <U8x8lib.h>
   //#include <Wire.h>
   #include "display.h"
@@ -29,7 +29,7 @@
 //U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE);
 uint16_t loopcounter0 = 0;
 uint16_t loopcounter1 = 0;
-uint8_t charh = 0;
+//uint8_t charh = 0;
 //uint8_t balkenh = 50;
 //uint8_t balkenb = 5;
   //U8X8_SSD1327_WS_128X128_HW_I2C u8g2(A4,A5);
@@ -186,13 +186,6 @@ void oled_delete(uint8_t x,uint8_t y,uint8_t l)
    u8g2.setDrawColor(1);
    //u8g2.sendBuffer();
 }
- void oled_fill(uint8_t x,uint8_t y,uint8_t l)
-{
-   //u8g2.setDrawColor(0);
-   u8g2.drawBox(x,y-charh,l,charh+4);
-   //u8g2.setDrawColor(1);
-   u8g2.sendBuffer();
-}
 
 void oled_frame(uint8_t x,uint8_t y,uint8_t l)
 {
@@ -210,14 +203,14 @@ void oled_vertikalbalken(uint8_t x,uint8_t y, uint8_t b, uint8_t h)
 
 void oled_vertikalbalken_setwert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,uint8_t wert)
 {
-  constrain(wert,1,h-4);
+  constrain(wert,2,h-5);
   u8g2.setDrawColor(0);
-   u8g2.drawBox(x+1,y+1,b-2,h-2);
+  u8g2.drawBox(x+1,y+1,b-2,h-3);
   u8g2.setDrawColor(1);
   //u8g2.setCursor(x+1,y+h-wert);
   u8g2.drawHLine(x,y+h-wert,b);
   u8g2.drawHLine(x,y+h-wert-1,b);
-  //u8g2.drawHLine(x,y+h-wert+1,b);
+  u8g2.drawHLine(x,y+h-wert+1,b);
 
 }
 
