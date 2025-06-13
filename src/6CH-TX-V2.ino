@@ -42,7 +42,7 @@ uint16_t loopcounter1 = 0;
   //RF24 radio(9, 10);                               // select CE,CSN pin | CE ve CSN pinlerin seçimi
   #define LOOPLED 4
 
-  #define BLINKRATE 0x004F
+  #define BLINKRATE 0x00fF
 
 // defines for PINS
   // links
@@ -168,61 +168,7 @@ volatile float expoquot = (ppmhi - ppmlo)/2/0x200; // umrechnen der max expo (51
 
 uint8_t curr_model = 0;
 
-// OLED
-
-
-void oled_setInt(uint8_t x,uint8_t y, uint16_t data)
-{
-   u8g2.setCursor(x,y);
-   u8g2.print(data);
-   u8g2.sendBuffer();
-
-}
-
-void oled_delete(uint8_t x,uint8_t y,uint8_t l)
-{
-   u8g2.setDrawColor(0);
-   u8g2.drawBox(x,y-charh,l,charh+4);
-   u8g2.setDrawColor(1);
-   //u8g2.sendBuffer();
-}
-
-void oled_frame(uint8_t x,uint8_t y,uint8_t l)
-{
-   //u8g2.setDrawColor(0);
-   u8g2.drawFrame(x,y-charh,l,charh+4);
-   //u8g2.setDrawColor(1);
-   u8g2.sendBuffer();
-}
-void oled_vertikalbalken(uint8_t x,uint8_t y, uint8_t b, uint8_t h)
-{
-   u8g2.drawFrame(x,y,b,h);
-
-
-}
-
-void oled_vertikalbalken_setwert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,uint8_t wert)
-{
-  constrain(wert,2,h-5);
-  u8g2.setDrawColor(0);
-  u8g2.drawBox(x+1,y+1,b-2,h-3);
-  u8g2.setDrawColor(1);
-  //u8g2.setCursor(x+1,y+h-wert);
-  u8g2.drawHLine(x,y+h-wert,b);
-  u8g2.drawHLine(x,y+h-wert-1,b);
-  u8g2.drawHLine(x,y+h-wert+1,b);
-
-}
-
-void oled_horizontalbalken(uint8_t x,uint8_t y, uint8_t b, uint8_t h)
-{
-   u8g2.drawFrame(x,y,b,h);
-
-
-}
-
-
-
+// OLED > in display.cpp
 volatile uint16_t pot0 = 0;
 
 uint16_t potwert = 0;
@@ -232,10 +178,10 @@ uint16_t radiocounter = 0;
   
   struct Signal 
   {
-  byte throttle_data;
-  byte pitch_data;
-  byte roll_data;
-  byte yaw_data;
+  byte throttle;
+  byte pitch;
+  byte roll;
+  byte yaw;
   byte aux1;
   byte aux2;
   
@@ -243,10 +189,10 @@ uint16_t radiocounter = 0;
   Signal data;
   void ResetData() 
 {
-  data.throttle_data = 0;                  
-  data.pitch_data = 127;
-  data.roll_data = 127;
-  data.yaw_data = 110;
+  data.throttle = 0;                  
+  data.pitch = 127;
+  data.roll = 127;
+  data.yaw = 127;
   data.aux1 = 0;                       
   data.aux2 = 0;
 
@@ -285,13 +231,13 @@ void updatemitte(void)
    u8g2.clearDisplay(); 
     u8g2.setFont(u8g2_font_helvR14_tr); // https://github.com/olikraus/u8g2/wiki/fntlist12
    //u8g2.setFont(u8g2_font_inr16_mr);  
-   u8g2.setCursor(0, 16);
+   u8g2.setCursor(0, 14);
    u8g2.print(F("nRF24 T"));
    //u8g2.setFont(u8g2_font_ncenB10_tr);
    u8g2.setFontMode(0);
- oled_vertikalbalken(80,10,balkenb,balkenh);
+ oled_vertikalbalken(80,10,balkenvb,balkenvh);
 
-  oled_horizontalbalken(10,50,40,8);
+  oled_horizontalbalken(10,50,balkenhb,balkenhh);
 
 
 
@@ -450,13 +396,20 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
       oled_delete(0,44,72);
       
       //u8g2.drawGlyph(32,44,'A'+(charindex));
-      u8g2.setCursor(0,44);
-      u8g2.print(data.yaw_data);
-      u8g2.setCursor(32,44);
+      u8g2.setCursor(0,46);
+      u8g2.print(data.yaw);
+      u8g2.setCursor(32,46);
 
-       u8g2.print(data.pitch_data);
-     uint8_t wertv = map(data.pitch_data,85,251,0,50);
-     oled_vertikalbalken_setwert(80,10,5,50,wertv);
+       u8g2.print(data.pitch);
+      // uint8_t pitch = data.pitch;
+      //constrain(pitch,3,balkenh-6);
+
+     uint8_t wertv = map(data.pitch,85,251,2,balkenvh-2); // Platz fuer 3 pixel dicke
+     oled_vertikalbalken_setwert(80,10,balkenvb,balkenvh,wertv);
+
+      uint8_t werth = map(data.yaw,85,251,2,balkenhb-2); // Platz fuer 3 pixel dicke
+     
+     oled_horizontalbalken_setwert(10,50,balkenhb,balkenhh,werth);
 
 
       u8g2.sendBuffer();
@@ -468,14 +421,14 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
       
 
 
-    Serial.print(servomittearray[PITCH]);
-    Serial.print("\t");    //Serial.print(" potwert: ");
-    Serial.print(potwertarray[PITCH]);
-    Serial.print("\t");
+    //Serial.print(servomittearray[PITCH]);
+    //Serial.print("\t");    //Serial.print(" potwert: ");
+    //Serial.print(potwertarray[PITCH]);
+    //Serial.print("\t");
     //Serial.print(" intdiff: ");
    // Serial.print("\t");    //Serial.print(" levelwerta: ");
    // Serial.print(levelwerta);
-    Serial.print("\t");    //Serial.print(" expoint: ");
+    //Serial.print("\t");    //Serial.print(" expoint: ");
     //uint8_t ea = kanalsettingarray[curr_model][PITCH][2];
     //Serial.print(ea);
     /*
@@ -495,13 +448,14 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
     Serial.print("\tlevelintpitchb ");    //Serial.print(" expoint: ");
     Serial.print(levelintpitchb);
     */
+   /*
     Serial.print("\tadc "); 
     Serial.print(potwertarray[THROTTLE]);
      Serial.print("\tthrottle ");    //Serial.print(" expoint: ");
-    Serial.print(data.throttle_data);
+    Serial.print(data.throttle);
+    */
 
-
-    Serial.print(" *\n");
+    //Serial.print(" *\n");
     } // if TEST
     
 /*
@@ -511,20 +465,20 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
     Serial.print(" potwert: ");
     Serial.print(potwertarray[YAW]);
 
-    Serial.print(" yaw_data: ");
-    Serial.print(data.yaw_data);
+    Serial.print(" yaw: ");
+    Serial.print(data.yaw);
 
     Serial.print(" \t");
     Serial.print(" PITCH: ");
     Serial.print(potwertarray[PITCH]);
 
-    Serial.print(" pitch_data: ");
-    Serial.print(data.pitch_data);     
+    Serial.print(" pitch: ");
+    Serial.print(data.pitch);     
     Serial.print(" ROLL: ");
     Serial.print(potwertarray[ROLL]);
 
-    Serial.print(" roll_data: ");
-    Serial.print(data.roll_data);
+    Serial.print(" roll: ");
+    Serial.print(data.roll);
 
 */
     /*
@@ -637,20 +591,20 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
   // Border_Map(val, lower, middle, upper, reverse)
     
     
-  //data.roll_data = Border_Map( impulscounter, 0, 512, 1023, true );  
+  //data.roll = Border_Map( impulscounter, 0, 512, 1023, true );  
 
-  data.yaw_data = Border_Map(potwertarray[YAW], 0, 512, 1023, true );        // CH4
+  data.yaw = Border_Map(potwertarray[YAW], 0, 512, 1023, true );        // CH4
+  data.pitch = Border_Map(potwertarray[PITCH], 0, 512, 1023, true );       // CH2    
+
+  data.roll = Border_Map(potwertarray[ROLL], 0, 512, 1023, true );        // CH1   Note: "true" or "false" for signal direction 
   
-  data.roll_data = Border_Map(potwertarray[ROLL], 0, 512, 1023, true );        // CH1   Note: "true" or "false" for signal direction 
-  data.pitch_data = Border_Map(potwertarray[PITCH], 0, 512, 1023, true );       // CH2    
-  
-  //data.throttle_data = Border_Map(potwertarray[THROTTLE],0, 30, 800, false );      // Stick
-  //data.throttle_data = Border_Map(potwertarray[THROTTLE],0, 5, 1200, false ); 
+  //data.throttle = Border_Map(potwertarray[THROTTLE],0, 30, 800, false );      // Stick
+  //data.throttle = Border_Map(potwertarray[THROTTLE],0, 5, 1200, false ); 
   
   uint16_t throttlemitte = servomittearray[THROTTLE];
-  data.throttle_data = Throttle_Map(potwertarray[THROTTLE],throttlemitte, POTHI,0,255, false );   
+  data.throttle = Throttle_Map(potwertarray[THROTTLE],throttlemitte, POTHI,0,255, false );   
   
-  //data.throttle_data = Border_Map(potwertarray[THROTTLE],0, 340,570, false );      // Potentiometer
+  //data.throttle = Border_Map(potwertarray[THROTTLE],0, 340,570, false );      // Potentiometer
 
   data.aux1 = digitalRead(5);                                          // CH5
   data.aux2 = digitalRead(7);                                          // CH6
