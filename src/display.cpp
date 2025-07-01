@@ -7,7 +7,7 @@ uint8_t balkenh = 50;
 uint8_t balkenb = 5;
 uint8_t balkenvh = 50;
  uint8_t balkenvb = 5;
- uint8_t balkenhh = 10;
+ uint8_t balkenhh = 5;
  uint8_t balkenhb = 60;
 
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE);
@@ -83,11 +83,11 @@ void oled_horizontalbalken(uint8_t x,uint8_t y, uint8_t b, uint8_t h)
 }
 void oled_horizontalbalken_setwert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,uint8_t wert)
 {
-  Serial.print(b);
-  Serial.print("\t");
-  Serial.print(wert);
+  //Serial.print(b);
+  //Serial.print("\t");
+  //Serial.print(wert);
   
-  Serial.print("\n");
+  //Serial.print("\n");
   
 
   u8g2.setDrawColor(0);
