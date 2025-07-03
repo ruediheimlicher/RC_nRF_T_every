@@ -524,7 +524,7 @@ void loop()
          Serial.print(potgrenzearray[YAW][1]);
          Serial.print("\t* ");  
          Serial.print("pw2: ");
-         //Serial.print("\t ");
+         Serial.print("\t ");
          Serial.print(potwertarray[YAW]);
          Serial.print("\t ");
 
@@ -534,14 +534,17 @@ void loop()
          //Serial.print(yawmap);
          Serial.print(" *255*\t ");
          uint16_t yawmap2 = Border_Map(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],true);
+         Serial.print("\t ");
          Serial.print(yawmap2);
          
          Serial.print(" *512*\t ");
          uint16_t yawmap3 = Border_Map10(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],true);
+         Serial.print("\t ");
          Serial.print(yawmap3);
 
           Serial.print("\t ");
          Serial.print("pwarray: ");
+         Serial.print("\t ");
          Serial.print(potwertarray[YAW]);
 
 
@@ -550,15 +553,18 @@ void loop()
          
          Serial.print("\t ");
          Serial.print("intdiff: ");
+         Serial.print("\t ");
          Serial.print(intdiff);
 
           Serial.print("\t ");
          Serial.print("levelintcheck: ");
+         Serial.print("\t ");
          Serial.print(levelintcheck);
 
 
          Serial.print("\t ");
          Serial.print("data.yaw: ");
+         Serial.print("\t ");
          Serial.print(data.yaw);
 
 
