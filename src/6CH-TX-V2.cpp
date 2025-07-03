@@ -139,6 +139,8 @@ uint16_t levelint = 0;
 
 uint16_t levelintraw = 0;
 
+uint16_t levelintcheck = 0;
+
 uint16_t expointpitch = 0;
 uint16_t levelintpitch = 0;
 
@@ -389,7 +391,7 @@ int Border_Mapvar512(int val, int lower, int middle, int upper, bool reverse)
 int Border_Mapvar255(int val, int lower, int middle, int upper, bool reverse)
 {
    val = constrain(val, lower, upper); // Grenzen einhalten
-
+   
    if ( val < middle )
    {
 
@@ -402,10 +404,10 @@ int Border_Mapvar255(int val, int lower, int middle, int upper, bool reverse)
       expoint = expoarray[expowerta][4*diffa]/4;
       levelint = expoint * (8-levelwerta);
       levelint /= 8;
-      levelintraw = levelint;
-      levelint = map(levelint,0,127,0,(middle - lower));
-      levelint = middle - levelint;
-      levelintpitcha = levelint;
+      levelintcheck = levelint;
+      //levelint = map(levelint,0,127,0,(middle - lower));
+      //levelint = middle - levelint;
+      //levelintpitcha = levelint;
    }  
    else
    {
@@ -422,12 +424,12 @@ int Border_Mapvar255(int val, int lower, int middle, int upper, bool reverse)
       expoint = expoarray[expowertb][4*diffb]/4;
       levelint = expoint * (8-levelwertb) ;     
       levelint /= 8;
-      levelintraw = levelint;
+      levelintcheck= levelint;
       //levelint = map(levelint,0,127,0,(upper - middle));     
       //levelintpitchb = levelint;
    }
       
-   return ( reverse ? 255 - levelint : levelint );
+   return ( reverse ? 255 - levelintcheck : levelintcheck );
 }
 
 
@@ -521,13 +523,13 @@ void loop()
          Serial.print("\t ");   
          Serial.print(potgrenzearray[YAW][1]);
          Serial.print("\t* ");  
-         Serial.print("potwertarray: ");
-         Serial.print("\t ");
+         Serial.print("pw2: ");
+         //Serial.print("\t ");
          Serial.print(potwertarray[YAW]);
          Serial.print("\t ");
 
-          Serial.print("map: ");
-         Serial.print("\t ");
+         // Serial.print("map: ");
+         //Serial.print("\t ");
          //uint8_t yawmap = map(potwertarray[YAW],0,680,0,254);
          //Serial.print(yawmap);
          Serial.print(" *255*\t ");
@@ -538,14 +540,26 @@ void loop()
          uint16_t yawmap3 = Border_Map10(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],true);
          Serial.print(yawmap3);
 
-         int var = Border_Mapvar255(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],true);
+          Serial.print("\t ");
+         Serial.print("pwarray: ");
+         Serial.print(potwertarray[YAW]);
+
+
+       //  int var = Border_Mapvar255(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],true);
+         
+         
          Serial.print("\t ");
          Serial.print("intdiff: ");
          Serial.print(intdiff);
 
           Serial.print("\t ");
-         Serial.print("levelintraw: ");
-         Serial.print(levelintraw);
+         Serial.print("levelintcheck: ");
+         Serial.print(levelintcheck);
+
+
+         Serial.print("\t ");
+         Serial.print("data.yaw: ");
+         Serial.print(data.yaw);
 
 
 
@@ -693,9 +707,16 @@ void loop()
       
       
       // map(value, fromLow, fromHigh, toLow, toHigh)
-      
-      if((i == YAW) || (i == PITCH) || (i == ROLL))
-         //if(i == PITCH)
+
+      if(i == YAW) 
+      {
+         potwertarray[YAW] = potwert;
+      }
+
+
+      //if((i == YAW) || (i == PITCH) || (i == ROLL))
+      if((i == PITCH) || (i == ROLL))
+  
       {      
          potwertpitch = potwert;
          if((potwert) < mitte) // Seite A, Ziehen
@@ -769,8 +790,10 @@ void loop()
    
    //data.roll = Border_Map( impulscounter, 0, 512, 1023, true );  
    
-   data.yaw = Border_Map(potwertarray[YAW], 0, 512, 1023, true );        // CH4
+   //data.yaw = Border_Map(potwertarray[YAW], 0, 512, 1023, true );        // CH4
    //data.yaw = map(potwertarray[YAW], 0, 512, 0,254);        // CH4
+   //250703
+   data.yaw = Border_Mapvar255(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],true);
 
    
    data.pitch = Border_Map(potwertarray[PITCH], 0, 512, 1023, true );    // CH2    
