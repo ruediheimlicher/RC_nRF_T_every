@@ -29,7 +29,7 @@ uint16_t loopcounter1 = 0;
 //uint8_t balkenh = 50;
 //uint8_t balkenb = 5;
 //U8X8_SSD1327_WS_128X128_HW_I2C u8g2(A4,A5);
-#define TEST 0
+#define TEST 1
 #define CE_PIN 9
 #define CSN_PIN 10
 // instantiate an object for the nRF24L01 transceiver
@@ -62,8 +62,8 @@ uint8_t blinkcounter = 0;
 uint8_t impulscounter = 0;
 
 // RC_22
-#define POT0LO 620  // Min wert vom ADC Pot 0
-#define POT0HI 3400 // Max wert vom ADC Pot 0
+//#define POT0LO 620  // Min wert vom ADC Pot 0
+//#define POT0HI 3400 // Max wert vom ADC Pot 0
 
 #define POTLO   0
 #define POTHI  710
@@ -227,13 +227,13 @@ void setup()
    //u8g2.begin(); 
    initDisplay();
    u8g2.clearDisplay(); 
-   u8g2.setFont(u8g2_font_helvR14_tr); // https://github.com/olikraus/u8g2/wiki/fntlist12
-   //u8g2.setFont(u8g2_font_inr16_mr);  
+   //u8g2.setFont(u8g2_font_helvR14_tr); // https://github.com/olikraus/u8g2/wiki/fntlist12
+   u8g2.setFont(u8g2_font_t0_15_mr);  
    u8g2.setCursor(0, 14);
    u8g2.print(F("nRF24 T"));
    //u8g2.setFont(u8g2_font_ncenB10_tr);
    u8g2.setFontMode(0);
-   oled_vertikalbalken(80,10,balkenvb,balkenvh);
+   oled_vertikalbalken(100,10,balkenvb,balkenvh);
    
    oled_horizontalbalken(10,50,balkenhb,balkenhh);
    
@@ -309,10 +309,10 @@ void setup()
    }
    
    Serial.print("\n");
-   kanalsettingarray[0][PITCH][1] = 0x03; // level
-   kanalsettingarray[0][PITCH][2] = 0x22; // level
+   kanalsettingarray[0][PITCH][1] = 0x00; // level
+   kanalsettingarray[0][PITCH][2] = 0x00; // level
    
-   potwert = POTLO;
+   potwert = servomittearray[0];  
    
    
    
@@ -335,6 +335,102 @@ int Border_Map(int val, int lower, int middle, int upper, bool reverse)
       val = map(val, middle, upper, 128, 255);
    return ( reverse ? 255 - val : val );
 }
+
+// Joystick center and its borders 
+int Border_Map10(int val, int lower, int middle, int upper, bool reverse)
+{
+   val = constrain(val, lower, upper);
+   if ( val < middle )
+      val = map(val, lower, middle, 0, 254); // normieren auf 0-254
+
+   else
+      val = map(val, middle, upper, 255, 512); // normieren auf 255 - 512
+   return ( reverse ? 512 - val : val );
+}
+
+int Border_Mapvar512(int val, int lower, int middle, int upper, bool reverse)
+{
+   val = constrain(val, lower, upper); // Grenzen einhalten
+
+   if ( val < middle )
+   {
+      val = map(val, lower, middle, 0, 254); // normieren auf 0-512
+      intdiff =  (middle - val);// Abweichung von mitte, 
+      levelintraw = intdiff;
+      diffa = map(intdiff,0,(middle - lower), 0,512);
+      expoint = expoarray[expowerta][diffa];
+      levelint = expoint * (8-levelwerta);
+      levelint /= 8;
+      //levelintraw = levelint;
+      levelint = map(levelint,0,512,0,(middle - lower));
+      levelint = middle - levelint;
+      levelintpitcha = levelint;
+   }  
+   else
+   {
+      val = map(val, middle, upper, 255, 512); // normieren auf 0 - 512
+      intdiff =  (val - middle);// Abweichung von mitte, 
+      diffb = map(intdiff,0,(upper - middle),0,512);
+      if(diffb >= 512 )
+      {
+         diffb = 512;
+      }
+      expoint = expoarray[expowertb][diffb];
+      levelint = expoint * (8-levelwertb) ;     
+      levelint /= 8;
+      levelintraw = levelint;
+      levelint = map(levelint,0,512,0,(upper - middle));     
+      levelintpitchb = levelint;
+   }
+      
+   return ( reverse ? 512 - levelint : levelint );
+}
+
+int Border_Mapvar255(int val, int lower, int middle, int upper, bool reverse)
+{
+   val = constrain(val, lower, upper); // Grenzen einhalten
+
+   if ( val < middle )
+   {
+
+      val = map(val, lower, middle, 0, 127); // normieren auf 0-127
+      //intdiff = val;
+      intdiff =  (127 - val);// Abweichung von mitte, 
+      //levelintraw = intdiff;
+      //diffa = map(intdiff,0,(middle - lower), 0,512);
+      diffa = intdiff;
+      expoint = expoarray[expowerta][4*diffa]/4;
+      levelint = expoint * (8-levelwerta);
+      levelint /= 8;
+      levelintraw = levelint;
+      levelint = map(levelint,0,127,0,(middle - lower));
+      levelint = middle - levelint;
+      levelintpitcha = levelint;
+   }  
+   else
+   {
+      val = map(val, middle, upper, 128, 255); // normieren auf 128 - 255
+      //intdiff = val;
+      
+     intdiff =  (val - 127);// Abweichung von mitte, 
+      //diffb = map(intdiff,0,(upper - middle),0,512);
+      diffb = intdiff;
+      if(diffb >= 127 )
+      {
+         diffb = 127;
+      }
+      expoint = expoarray[expowertb][4*diffb]/4;
+      levelint = expoint * (8-levelwertb) ;     
+      levelint /= 8;
+      levelintraw = levelint;
+      //levelint = map(levelint,0,127,0,(upper - middle));     
+      //levelintpitchb = levelint;
+   }
+      
+   return ( reverse ? 255 - levelint : levelint );
+}
+
+
 
 uint16_t map_uint16(uint16_t x, uint16_t in_min, uint16_t in_max, uint16_t out_min, uint16_t out_max) 
 {
@@ -406,7 +502,7 @@ void loop()
      
       
       uint8_t wertv = map(data.pitch,85,251,2,balkenvh-2); // Platz fuer 3 pixel dicke
-      oled_vertikalbalken_setwert(80,10,balkenvb,balkenvh,wertv);
+      oled_vertikalbalken_setwert(100,10,balkenvb,balkenvh,wertv);
       
       uint8_t werth = map(data.yaw,85,251,2,balkenhb-2); // Platz fuer 3 pixel dicke
       
@@ -425,6 +521,41 @@ void loop()
          Serial.print("\t ");   
          Serial.print(potgrenzearray[YAW][1]);
          Serial.print("\t* ");  
+         Serial.print("potwertarray: ");
+         Serial.print("\t ");
+         Serial.print(potwertarray[YAW]);
+         Serial.print("\t ");
+
+          Serial.print("map: ");
+         Serial.print("\t ");
+         //uint8_t yawmap = map(potwertarray[YAW],0,680,0,254);
+         //Serial.print(yawmap);
+         Serial.print(" *255*\t ");
+         uint16_t yawmap2 = Border_Map(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],true);
+         Serial.print(yawmap2);
+         
+         Serial.print(" *512*\t ");
+         uint16_t yawmap3 = Border_Map10(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],true);
+         Serial.print(yawmap3);
+
+         int var = Border_Mapvar255(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],true);
+         Serial.print("\t ");
+         Serial.print("intdiff: ");
+         Serial.print(intdiff);
+
+          Serial.print("\t ");
+         Serial.print("levelintraw: ");
+         Serial.print(levelintraw);
+
+
+
+         //Serial.print("\t ");
+         //Serial.print("levelintpitcha: ");
+         //Serial.print(levelintpitcha);
+
+
+
+         /*
          Serial.print("PITCH\t "); 
          Serial.print(potgrenzearray[PITCH][0]);
          Serial.print("\t ");   
@@ -478,7 +609,7 @@ void loop()
          
          Serial.print("\t  data.pitch ");   
          Serial.print(data.pitch);
-         
+         */
          
          
          /*
@@ -639,7 +770,7 @@ void loop()
    //data.roll = Border_Map( impulscounter, 0, 512, 1023, true );  
    
    data.yaw = Border_Map(potwertarray[YAW], 0, 512, 1023, true );        // CH4
-   //   data.yaw = Border_Map(potwertarray[YAW], 0, 127, 255, true );        // CH4
+   //data.yaw = map(potwertarray[YAW], 0, 512, 0,254);        // CH4
 
    
    data.pitch = Border_Map(potwertarray[PITCH], 0, 512, 1023, true );    // CH2    
