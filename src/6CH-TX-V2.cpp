@@ -404,7 +404,7 @@ int Border_Mapvar255(int val, int lower, int middle, int upper, bool reverse)
       expoint = expoarray[expowerta][4*diffa]/4;
       levelint = expoint * (8-levelwerta);
       levelint /= 8;
-      levelintcheck = levelint;
+      levelintcheck = 127 + levelint;
       //levelint = map(levelint,0,127,0,(middle - lower));
       //levelint = middle - levelint;
       //levelintpitcha = levelint;
@@ -424,7 +424,7 @@ int Border_Mapvar255(int val, int lower, int middle, int upper, bool reverse)
       expoint = expoarray[expowertb][4*diffb]/4;
       levelint = expoint * (8-levelwertb) ;     
       levelint /= 8;
-      levelintcheck= levelint;
+      levelintcheck= 127 - levelint;
       //levelint = map(levelint,0,127,0,(upper - middle));     
       //levelintpitchb = levelint;
    }
@@ -799,7 +799,7 @@ void loop()
    //data.yaw = Border_Map(potwertarray[YAW], 0, 512, 1023, true );        // CH4
    //data.yaw = map(potwertarray[YAW], 0, 512, 0,254);        // CH4
    //250703
-   data.yaw = Border_Mapvar255(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],true);
+   data.yaw = Border_Mapvar255(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],false);
 
    
    data.pitch = Border_Map(potwertarray[PITCH], 0, 512, 1023, true );    // CH2    
