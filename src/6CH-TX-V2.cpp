@@ -405,9 +405,7 @@ int Border_Mapvar255(int val, int lower, int middle, int upper, bool reverse)
       levelint = expoint * (8-levelwerta);
       levelint /= 8;
       levelintcheck = 127 + levelint;
-      //levelint = map(levelint,0,127,0,(middle - lower));
-      //levelint = middle - levelint;
-      //levelintpitcha = levelint;
+      levelint = 127 + levelint;
    }  
    else
    {
@@ -425,11 +423,10 @@ int Border_Mapvar255(int val, int lower, int middle, int upper, bool reverse)
       levelint = expoint * (8-levelwertb) ;     
       levelint /= 8;
       levelintcheck= 127 - levelint;
-      //levelint = map(levelint,0,127,0,(upper - middle));     
-      //levelintpitchb = levelint;
+      levelint= 127 - levelint;
    }
       
-   return ( reverse ? 255 - levelintcheck : levelintcheck );
+   return ( reverse ? 255 - levelint : levelint );
 }
 
 
