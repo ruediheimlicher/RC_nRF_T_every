@@ -306,14 +306,19 @@ void setup()
       Serial.print(servomittearray[i]);
       Serial.print("\t");
       
-      kanalsettingarray[0][i][1] = 0x00; // level
+      kanalsettingarray[0][i][1] = 0x22; // level
       kanalsettingarray[0][i][2] = 0x22; // expo
    }
    
    Serial.print("\n");
-   kanalsettingarray[0][PITCH][1] = 0x00; // level
-   kanalsettingarray[0][PITCH][2] = 0x00; // level
-   
+   kanalsettingarray[0][PITCH][1] = 0x22; // level
+   kanalsettingarray[0][PITCH][2] = 0x22; // expo
+
+   kanalsettingarray[0][YAW][1] = 0x22; // level
+   kanalsettingarray[0][YAW][2] = 0x22; // expo
+  
+
+
    potwert = servomittearray[0];  
    
    
@@ -500,10 +505,10 @@ void loop()
       u8g2.print(data.pitch);
      
       
-      uint8_t wertv = map(data.pitch,85,251,2,balkenvh-2); // Platz fuer 3 pixel dicke
+      uint8_t wertv = map(data.pitch,0,255,2,balkenvh-2); // Platz fuer 3 pixel dicke
       oled_vertikalbalken_setwert(100,10,balkenvb,balkenvh,wertv);
       
-      uint8_t werth = map(data.yaw,85,251,2,balkenhb-2); // Platz fuer 3 pixel dicke
+      uint8_t werth = map(data.yaw,0,255,2,balkenhb-2); // Platz fuer 3 pixel dicke
       
       oled_horizontalbalken_setwert(10,50,balkenhb,balkenhh,werth);
       
@@ -711,13 +716,14 @@ void loop()
       
       // map(value, fromLow, fromHigh, toLow, toHigh)
 
-      if(i == YAW) 
+      if((i == YAW) || (i == PITCH) || (i == ROLL))
       {
-         potwertarray[YAW] = potwert;
+         potwertarray[i] = potwert;
       }
 
 
       //if((i == YAW) || (i == PITCH) || (i == ROLL))
+      /*
       if((i == PITCH) || (i == ROLL))
   
       {      
@@ -782,7 +788,7 @@ void loop()
       {
          potwertarray[i] = potwert;
       }
-      
+      */
       //potwertarray[i] = potwert;
       
       //
@@ -799,10 +805,12 @@ void loop()
    data.yaw = Border_Mapvar255(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],false);
 
    
-   data.pitch = Border_Map(potwertarray[PITCH], 0, 512, 1023, true );    // CH2    
-   
-   data.roll = Border_Map(potwertarray[ROLL], 0, 512, 1023, true );      // CH1   Note: "true" or "false" for signal direction 
-   
+   //data.pitch = Border_Map(potwertarray[PITCH], 0, 512, 1023, true );    // CH2    
+   data.pitch = Border_Mapvar255(potwertarray[PITCH],potgrenzearray[PITCH][1],servomittearray[PITCH],potgrenzearray[PITCH][0],false);
+
+   //data.roll = Border_Map(potwertarray[ROLL], 0, 512, 1023, true );      // CH1   Note: "true" or "false" for signal direction 
+   data.roll = Border_Mapvar255(potwertarray[ROLL],potgrenzearray[ROLL][1],servomittearray[ROLL],potgrenzearray[PITCH][0],false);
+  
    //data.throttle = Border_Map(potwertarray[THROTTLE],0, 30, 800, false );      // Stick
    //data.throttle = Border_Map(potwertarray[THROTTLE],0, 5, 1200, false ); 
    
