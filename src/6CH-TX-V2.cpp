@@ -2,7 +2,7 @@
 // KendinYap Channel
 
 #include <SPI.h>
-
+#include <EEPROM.h>
 //#include <Adafruit_LiquidCrystal.h>
 #include <U8g2lib.h>
 //#include <U8x8lib.h>
@@ -11,12 +11,13 @@
 #include "expo.h"
 #include <nRF24L01.h>
 #include <RF24.h>
+#include <Bounce2.h> // github.com/thomasfredericks/Bounce2
 const uint64_t pipeOut = 0xABCDABCD71LL;         // NOTE: The address in the Transmitter and Receiver code must be the same "0xABCDABCD71LL" | Verici ve Alıcı kodundaki adres aynı olmalıdır
 
 
 //U8G2_SSD1327_WS_128X128_HW_I2C u8g2(U8G2_R0,U8X8_PIN_NONE);
 
-// https://github.com/olikraus/u8g2/discussions/1865
+// github.com/olikraus/u8g2/discussions/1865
 //U8X8_SSD1327_WS_128X128_HW_I2C u8x8(U8X8_PIN_NONE);
 
 // 0.96"
@@ -29,13 +30,23 @@ uint16_t loopcounter1 = 0;
 //uint8_t balkenh = 50;
 //uint8_t balkenb = 5;
 //U8X8_SSD1327_WS_128X128_HW_I2C u8g2(A4,A5);
-#define TEST 1
+#define TEST 0
 #define CE_PIN 9
 #define CSN_PIN 10
 // instantiate an object for the nRF24L01 transceiver
 RF24 radio(CE_PIN, CSN_PIN);
 
 #define LOOPLED 4
+
+#define EEPROMTASTE  5
+
+#define EEPROM_WRITE 0
+#define EEPROM_READ  1
+
+#define EEPROMINDEX_U 0x10
+#define EEPROMINDEX_O 0x20
+#define EEPROMINDEX_M 0x30
+
 
 #define BLINKRATE 0x00fF
 
@@ -56,6 +67,13 @@ RF24 radio(CE_PIN, CSN_PIN);
 #define THROTTLE    3
 
 #define NUM_SERVOS  4
+
+#define BATT         A2
+
+#define BATTX  90
+#define BATTY  2
+#define BATTH  44
+#define BATTB  34
 
 uint16_t loopcounter = 0;
 uint8_t blinkcounter = 0;
@@ -148,15 +166,18 @@ uint16_t levelintpitcha = 0;
 
 uint16_t levelintpitchb = 0;
 
-
-
-
-
-
+uint16_t batteriespannung = 0;
+float UBatt = 0;
+uint8_t eepromstatus = 0;
+uint16_t eepromprelltimer = 0;
+Bounce2::Button eepromtaste = Bounce2::Button();
 uint16_t intdiff = 0;
 uint16_t intdiffpitch = 0;
 
-
+#define VBX   75
+#define VBY    10
+#define HBX 10
+#define HBY 55
 
 uint16_t potgrenzearray[NUM_SERVOS][2]; // obere und untere Grenze von adc
 
@@ -208,10 +229,112 @@ void updatemitte(void)
    
 }// updatemitte
 
+void eepromread()
+{
+   Serial.print("eepromread \t");
+   for (uint8_t i = 0;i<NUM_SERVOS;i++)
+         {
+
+            uint8_t l = (potgrenzearray[i][0] & 0x00FF); // lo byte
+            uint8_t h = (potgrenzearray[i][0] & 0xFF00)>>8; // hi byte
+            Serial.print("potgrenzearray 0\t");
+            Serial.print(potgrenzearray[i][0]);
+            Serial.print("\t");
+            uint16_t grenzeU = (h << 8) | l;
+            Serial.print("grenzeU\t");
+
+            uint8_t el = EEPROM.read(2*(i + EEPROMINDEX_U)); // lo byte
+            uint8_t eh = EEPROM.read(2*(i + EEPROMINDEX_U)+1); // hi byte
+            Serial.print(el);
+            Serial.print("\t");
+            Serial.print(eh);
+            Serial.print("\t");
+
+            //EEPROM.read(2*(i + EEPROMINDEX_M)); // lo byte
+            //EEPROM.read(2*(i + EEPROMINDEX_M)+1); // hi byte
+         }
+       Serial.print("\n");  
+}
+
+void eepromwrite()
+{
+   for (uint8_t i = 0;i<NUM_SERVOS;i++)
+   {
+      Serial.print("potgrenzearray raw:\t");
+      Serial.print(potgrenzearray[i][1]);
+      Serial.print("\t");
+      EEPROM.update(2*(i + EEPROMINDEX_U),(potgrenzearray[i][1] & 0x00FF)); // lo byte
+      EEPROM.update(2*(i + EEPROMINDEX_U)+1,((potgrenzearray[i][1] & 0xFF00) >> 8)); // hi byte
+
+      EEPROM.update(2*(i + EEPROMINDEX_O),(potgrenzearray[i][0] & 0x00FF)); // lo byte
+      EEPROM.update(2*(i + EEPROMINDEX_O)+1,((potgrenzearray[i][0] & 0xFF00) >> 8)); // hi byte
+
+      EEPROM.update(2*(i + EEPROMINDEX_M),(servomittearray[i] & 0x00FF)); // lo byte
+      EEPROM.update(2*(i + EEPROMINDEX_M)+1,((servomittearray[i] & 0xFF00) >> 8)); // hi byte
+      delay(20);
+      Serial.print("kontrolle i: \t*");
+      Serial.print(i);
+      Serial.print("\t");
+      uint8_t el = EEPROM.read(2*(i + EEPROMINDEX_U)); // lo byte
+      uint8_t eh = EEPROM.read(2*(i + EEPROMINDEX_U)+1); // hi byte
+      Serial.print(el);
+      Serial.print("\t");
+      Serial.print(eh);
+      Serial.print("\t");
+      uint16_t grenzeU = (eh << 8) | el;
+      Serial.print("grenzeU eeprom:\t");
+      Serial.print(grenzeU);
+      Serial.print(" *\n");
+   }
+   Serial.print("\n");
+}
+
 void setup()
 {
+   uint8_t ee[16];
+delay(50);
+for (uint8_t i=0;i<64;i++)
+{
+   //ee[i] = EEPROM.read(i);
+   EEPROM.write(i,0);
+   
+}
+
+   delay(50);
+
    Serial.begin(9600);
+   delay(500);
+  for (uint8_t i=0;i<16;i++)
+{
+   ee[i] = EEPROM.read(i);
+   Serial.print(" i: ");
+   Serial.print(i);
+   Serial.print(" ee: *");
+   Serial.print(ee[i]);
+   
+}
+Serial.print("\n");
+
+for (uint8_t i=0;i<64;i++)
+{
+   uint8_t f = EEPROM.read(i);
+   Serial.print(i);
+   Serial.print(" ");
+   Serial.println(f);
+
+}
+
+
    pinMode(LOOPLED,OUTPUT);
+
+   pinMode(BATT,INPUT);
+   //pinMode(EEPROMTASTE,INPUT_PULLUP);
+   eepromtaste.attach( EEPROMTASTE ,  INPUT_PULLUP ); 
+   eepromtaste.interval(5);
+   eepromtaste.setPressedState(LOW);
+
+
+   //digitalWrite(EEPROMTASTE, HIGH);
    
    // https://registry.platformio.org/libraries/adafruit/Adafruit%20LiquidCrystal/installation
    // set up the LCD's number of rows and columns: 
@@ -231,13 +354,15 @@ void setup()
    u8g2.clearDisplay(); 
    //u8g2.setFont(u8g2_font_helvR14_tr); // https://github.com/olikraus/u8g2/wiki/fntlist12
    u8g2.setFont(u8g2_font_t0_15_mr);  
-   u8g2.setCursor(0, 14);
+   u8g2.setCursor(4, 14);
    u8g2.print(F("nRF24 T"));
    //u8g2.setFont(u8g2_font_ncenB10_tr);
    u8g2.setFontMode(0);
-   oled_vertikalbalken(100,10,balkenvb,balkenvh);
+   oled_vertikalbalken(VBX,VBY,balkenvb,balkenvh);
    
-   oled_horizontalbalken(10,50,balkenhb,balkenhh);
+   oled_horizontalbalken(HBX,HBY,balkenhb,balkenhh);
+
+   oled_vertikalbalken(BATTX,BATTY,BATTB,BATTH);
    
    
    
@@ -316,6 +441,11 @@ void setup()
 
    kanalsettingarray[0][YAW][1] = 0x22; // level
    kanalsettingarray[0][YAW][2] = 0x22; // expo
+
+   kanalsettingarray[0][THROTTLE][1] = 0x22; // level
+   kanalsettingarray[0][THROTTLE][2] = 0x00; // expo
+
+
   
 
 
@@ -455,11 +585,17 @@ void loop()
    
    if(loopcounter >= 2*BLINKRATE)
    {
+
+
       loopcounter = 0;
       blinkcounter++;
       impulscounter+=16;
       digitalWrite(LOOPLED, ! digitalRead(LOOPLED));
       
+      batteriespannung = analogRead(BATT);
+      UBatt = float(batteriespannung) / 105;
+
+      //eepromread();
       ///*
       //u8g2.clearBuffer();                   // Clear display.
       //u8x8.setFont(u8g2_font_ncenB08_tr);    // choose a suitable font
@@ -493,26 +629,42 @@ void loop()
       uint8_t charindex = loopcounter1  & 0x7F;
       //u8g2.setDrawColor(0);
       charh = u8g2.getMaxCharHeight() ;
-      oled_delete(0,44,72);
+      oled_delete(4,44,64);
       
       //u8g2.drawGlyph(32,44,'A'+(charindex));
       // Yaw
-      u8g2.setCursor(0,46);
+      u8g2.setCursor(4,30);
       u8g2.print(data.yaw);
       
       // Pitch
-      u8g2.setCursor(32,46);
+      u8g2.setCursor(36,30);
       u8g2.print(data.pitch);
+
+      // Roll
+      u8g2.setCursor(4,46);
+      u8g2.print(data.roll);
+      
+      // Throttle
+      u8g2.setCursor(36,46);
+      u8g2.print(data.throttle);
      
       
       uint8_t wertv = map(data.pitch,0,255,2,balkenvh-2); // Platz fuer 3 pixel dicke
-      oled_vertikalbalken_setwert(100,10,balkenvb,balkenvh,wertv);
+      oled_vertikalbalken_setwert(VBX,VBY,balkenvb,balkenvh,wertv);
       
       uint8_t werth = map(data.yaw,0,255,2,balkenhb-2); // Platz fuer 3 pixel dicke
       
-      oled_horizontalbalken_setwert(10,50,balkenhb,balkenhh,werth);
+      oled_horizontalbalken_setwert(HBX,HBY,balkenhb,balkenhh,werth);
       
-      
+     oled_batteriebalken_setwert(BATTX,BATTY,BATTB,BATTH,UBatt*10);
+
+      //char buf1[4];
+       // Batt
+      //sprintf(buf1, "%1.2f", UBatt);
+      u8g2.setCursor(90,62);
+      u8g2.setDrawColor(0);
+      u8g2.print(UBatt,2);
+      u8g2.setDrawColor(1);
       u8g2.sendBuffer();
       if(loopcounter1 > 25)
       {
@@ -568,6 +720,12 @@ void loop()
          Serial.print("data.yaw: ");
          Serial.print("\t ");
          Serial.print(data.yaw);
+         Serial.print("\t ");
+         Serial.print(batteriespannung);
+
+         Serial.print("\t ");
+         
+         Serial.print(UBatt,2);
 
 
 
@@ -678,6 +836,23 @@ void loop()
       
       //Serial.print(" *\n");
    }
+   // EEPROM
+   eepromtaste.update();
+
+   if(eepromtaste.pressed())
+   //if(eepromstatus & (1<<EEPROM_WRITE))
+   {
+      {
+         Serial.print("\nEEPROM update\n");
+         analogWrite(D6,0x0F)
+         eepromwrite();
+         Serial.println("EEPROM update end\n");
+         eepromstatus &= ~(1<<EEPROM_WRITE) ;
+      }
+
+   
+   }
+   
    // pot lesen
    for (uint8_t i=0;i<NUM_SERVOS;i++)
    {
@@ -690,6 +865,8 @@ void loop()
       {
          potgrenzearray[i][1] = potwert; // potlo
       }
+      //potgrenzearray[0][0] = 17;
+      //potgrenzearray[0][1] = 33;
       
       uint16_t mitte = servomittearray[i];
       uint8_t levelwert = kanalsettingarray[curr_model][i][1]; // element 1, levelarray
@@ -717,6 +894,10 @@ void loop()
       // map(value, fromLow, fromHigh, toLow, toHigh)
 
       if((i == YAW) || (i == PITCH) || (i == ROLL))
+      {
+         potwertarray[i] = potwert;
+      }
+      else if(i == THROTTLE)
       {
          potwertarray[i] = potwert;
       }
@@ -809,7 +990,7 @@ void loop()
    data.pitch = Border_Mapvar255(potwertarray[PITCH],potgrenzearray[PITCH][1],servomittearray[PITCH],potgrenzearray[PITCH][0],false);
 
    //data.roll = Border_Map(potwertarray[ROLL], 0, 512, 1023, true );      // CH1   Note: "true" or "false" for signal direction 
-   data.roll = Border_Mapvar255(potwertarray[ROLL],potgrenzearray[ROLL][1],servomittearray[ROLL],potgrenzearray[PITCH][0],false);
+   data.roll = Border_Mapvar255(potwertarray[ROLL],potgrenzearray[ROLL][1],servomittearray[ROLL],potgrenzearray[ROLL][0],false);
   
    //data.throttle = Border_Map(potwertarray[THROTTLE],0, 30, 800, false );      // Stick
    //data.throttle = Border_Map(potwertarray[THROTTLE],0, 5, 1200, false ); 
