@@ -14,6 +14,7 @@
 #include <Bounce2.h> // github.com/thomasfredericks/Bounce2
 const uint64_t pipeOut = 0xABCDABCD71LL;         // NOTE: The address in the Transmitter and Receiver code must be the same "0xABCDABCD71LL" | Verici ve Alıcı kodundaki adres aynı olmalıdır
 
+extern "C" 
 
 //U8G2_SSD1327_WS_128X128_HW_I2C u8g2(U8G2_R0,U8X8_PIN_NONE);
 
@@ -37,6 +38,8 @@ uint16_t loopcounter1 = 0;
 RF24 radio(CE_PIN, CSN_PIN);
 
 #define LOOPLED 4
+
+#define BUZZPIN 6
 
 #define EEPROMTASTE  5
 
@@ -167,6 +170,9 @@ uint16_t levelintpitcha = 0;
 uint16_t levelintpitchb = 0;
 
 uint16_t batteriespannung = 0;
+uint16_t batteriearray[8] = {};
+uint16_t batteriemittel = 0;
+uint8_t batteriemittelwertcounter = 0;
 float UBatt = 0;
 uint8_t eepromstatus = 0;
 uint16_t eepromprelltimer = 0;
@@ -261,8 +267,14 @@ void eepromwrite()
    for (uint8_t i = 0;i<NUM_SERVOS;i++)
    {
       Serial.print("potgrenzearray raw:\t");
+      printf("i: %d \t",i);
+      Serial.print(potgrenzearray[i][0]);
+      Serial.print("\t");
       Serial.print(potgrenzearray[i][1]);
       Serial.print("\t");
+
+
+      /*
       EEPROM.update(2*(i + EEPROMINDEX_U),(potgrenzearray[i][1] & 0x00FF)); // lo byte
       EEPROM.update(2*(i + EEPROMINDEX_U)+1,((potgrenzearray[i][1] & 0xFF00) >> 8)); // hi byte
 
@@ -285,6 +297,7 @@ void eepromwrite()
       Serial.print("grenzeU eeprom:\t");
       Serial.print(grenzeU);
       Serial.print(" *\n");
+     */
    }
    Serial.print("\n");
 }
@@ -323,7 +336,7 @@ for (uint8_t i=0;i<64;i++)
    Serial.println(f);
 
 }
-
+pinMode(BUZZPIN,OUTPUT);
 
    pinMode(LOOPLED,OUTPUT);
 
@@ -421,8 +434,12 @@ for (uint8_t i=0;i<64;i++)
       potgrenzearray[i][1] = pothi;
       
       servomittearray[i] = analogRead(adcpinarray[i]);
+
+      uint8_t n = i*i+1;
+      EEPROM.write(i,n );
       
    }
+
    Serial.print("\n"); 
    for (uint8_t i=0;i<NUM_SERVOS;i++)
    {
@@ -431,16 +448,19 @@ for (uint8_t i=0;i<64;i++)
       Serial.print(servomittearray[i]);
       Serial.print("\t");
       
-      kanalsettingarray[0][i][1] = 0x22; // level
-      kanalsettingarray[0][i][2] = 0x22; // expo
+      kanalsettingarray[0][i][1] = 0x00; // level
+      kanalsettingarray[0][i][2] = 0x00; // expo
    }
    
    Serial.print("\n");
    kanalsettingarray[0][PITCH][1] = 0x22; // level
-   kanalsettingarray[0][PITCH][2] = 0x22; // expo
+   kanalsettingarray[0][PITCH][2] = 0x00; // expo
 
-   kanalsettingarray[0][YAW][1] = 0x22; // level
-   kanalsettingarray[0][YAW][2] = 0x22; // expo
+   kanalsettingarray[0][YAW][1] = 0x11; // level
+   kanalsettingarray[0][YAW][2] = 0x00; // expo
+
+   kanalsettingarray[0][ROLL][1] = 0x33; // level
+   kanalsettingarray[0][ROLL][2] = 0x00; // expo
 
    kanalsettingarray[0][THROTTLE][1] = 0x22; // level
    kanalsettingarray[0][THROTTLE][2] = 0x00; // expo
@@ -451,6 +471,17 @@ for (uint8_t i=0;i<64;i++)
 
    potwert = servomittearray[0];  
    
+   Serial.print("EEPRM read 2\n ");
+     for (uint8_t i=0;i<16;i++)
+{
+   ee[i] = EEPROM.read(i);
+   Serial.print(" i: ");
+   Serial.print(i);
+   Serial.print(" ee: ");
+   Serial.print(ee[i]);
+   Serial.print("\n");
+}
+Serial.print("\n");
    
    
 } // setup
@@ -582,7 +613,8 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
 void loop()
 {                                  
    loopcounter++;
-   
+   //digitalWrite(BUZZPIN,!(digitalRead(BUZZPIN)));
+
    if(loopcounter >= 2*BLINKRATE)
    {
 
@@ -593,7 +625,20 @@ void loop()
       digitalWrite(LOOPLED, ! digitalRead(LOOPLED));
       
       batteriespannung = analogRead(BATT);
-      UBatt = float(batteriespannung) / 105;
+      batteriearray[batteriemittelwertcounter] = batteriespannung;
+      batteriemittelwertcounter++;
+      batteriemittelwertcounter &= 0x07;
+      batteriemittel = 0;
+      for(uint8_t i=0;i<8;i++)
+      {
+         batteriemittel += batteriearray[i];
+      }
+      batteriemittel /= 8;
+      //Serial.println(batteriemittel);
+
+      UBatt = float(batteriespannung) / 107;
+
+      
 
       //eepromread();
       ///*
@@ -624,6 +669,7 @@ void loop()
       //Serial.print(" M: ");
       //if(abs(servomittearray[ROLL] - potwertarray[ROLL]) > 2)
       
+
       // 0.96
       loopcounter1++;
       uint8_t charindex = loopcounter1  & 0x7F;
@@ -840,18 +886,23 @@ void loop()
    eepromtaste.update();
 
    if(eepromtaste.pressed())
-   //if(eepromstatus & (1<<EEPROM_WRITE))
    {
       {
          Serial.print("\nEEPROM update\n");
-         analogWrite(D6,0x0F)
-         eepromwrite();
+         analogWrite(6,0x0F);
+         //eepromwrite();
          Serial.println("EEPROM update end\n");
          eepromstatus &= ~(1<<EEPROM_WRITE) ;
       }
 
    
    }
+
+   if(UBatt < 4.07)
+      {
+         //digitalWrite(BUZZPIN,!(digitalRead(BUZZPIN)));
+
+      }
    
    // pot lesen
    for (uint8_t i=0;i<NUM_SERVOS;i++)
@@ -1010,6 +1061,8 @@ void loop()
    }
    else
    {
+      Serial.print("radio error\n");
+      digitalWrite(BUZZPIN,!(digitalRead(BUZZPIN)));
       errcounter++;
    }
 }
