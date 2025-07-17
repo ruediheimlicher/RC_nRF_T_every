@@ -50,6 +50,8 @@ RF24 radio(CE_PIN, CSN_PIN);
 #define EEPROMINDEX_O 0x20
 #define EEPROMINDEX_M 0x30
 
+#define EEPROMSETTINGS  0x32
+
 
 #define BLINKRATE 0x00fF
 
@@ -123,11 +125,11 @@ uint16_t schritt = 32;
 
 
 volatile uint16_t          impulstimearray[NUM_SERVOS] = {};
-const int           adcpinarray[NUM_SERVOS] = {A3,A6,A1,A0};    // pins der Pots
+const int                  adcpinarray[NUM_SERVOS] = {A3,A6,A1,A0};    // pins der Pots
 
-uint8_t kanalsettingarray[ANZAHLMODELLE][NUM_SERVOS][KANALSETTINGBREITE] = {};
+uint8_t                    kanalsettingarray[ANZAHLMODELLE][NUM_SERVOS][KANALSETTINGBREITE] = {};
 
-uint16_t          servomittearray[NUM_SERVOS] = {}; // Werte fuer Mitte
+uint16_t                   servomittearray[NUM_SERVOS] = {}; // Werte fuer Mitte
 
 uint8_t levelwert= 0;
 uint8_t levelwerta = 0;
@@ -185,6 +187,8 @@ uint16_t intdiffpitch = 0;
 #define HBX 10
 #define HBY 55
 
+uint8_t taskarray[4] = {'Y', 'P', 'R', 'T'};
+
 uint16_t potgrenzearray[NUM_SERVOS][2]; // obere und untere Grenze von adc
 
 volatile float quot = (ppmhi - ppmlo)/(pothi - potlo);
@@ -193,7 +197,7 @@ volatile float expoquot = (ppmhi - ppmlo)/2/0x200; // umrechnen der max expo (51
 
 //volatile float quotarray[NUM_SERVOS] = {}; // Umrechnungsfaktor pro Pot
 
-uint8_t curr_model = 0;
+
 
 // OLED > in display.cpp
 volatile uint16_t pot0 = 0;
@@ -202,6 +206,40 @@ uint16_t potwert = 0;
 
 uint16_t errcounter = 0;
 uint16_t radiocounter = 0;
+
+// Menu
+volatile uint8_t                 curr_model=0; // aktuelles modell
+volatile uint8_t                 speichermodel=0;
+volatile uint8_t                 curr_kanal=0; // aktueller kanal
+volatile uint8_t                 curr_impuls=0; // aktueller impuls
+
+volatile uint8_t                 curr_setting=0; // aktuelles Setting fuer Modell
+uint8_t                          speichersetting=0;
+
+volatile uint8_t                 curr_trimmkanal=0; // aktueller  Kanal fuerTrimmung
+volatile uint8_t                 curr_trimmung=0; // aktuelle  Trimmung fuer Trimmkanal
+
+
+volatile uint8_t                 curr_screen = 0; // aktueller screen
+volatile uint8_t                 last_screen=0; // letzter screen
+
+volatile uint8_t                 curr_page=7; // aktuelle page
+volatile uint8_t                 curr_col=0; // aktuelle colonne
+
+volatile uint8_t                 curr_cursorzeile=0; // aktuelle zeile des cursors
+volatile uint8_t                 curr_cursorspalte=0; // aktuelle colonne des cursors
+volatile uint8_t                 last_cursorzeile=0; // letzte zeile des cursors
+volatile uint8_t                 last_cursorspalte=0; // letzte colonne des cursors
+
+// Tastatur
+volatile uint8_t                 Tastenindex=0;
+volatile uint16_t                Tastenwert=0;
+volatile uint8_t                 adcswitch=0;
+volatile uint16_t                lastTastenwert=0;
+volatile int16_t                 Tastenwertdiff=0;
+volatile uint16_t                tastaturcounter=0;
+
+
 
 struct Signal 
 {
@@ -235,12 +273,89 @@ void updatemitte(void)
    
 }// updatemitte
 
+void printgrenzen()
+{
+   Serial.print("\nprintgrenzen\n");  
+   for (uint8_t i = 0;i<NUM_SERVOS;i++)
+   {
+      Serial.print("grenzen i:\t");
+      Serial.print(i);
+      Serial.print("\t");
+      Serial.write(taskarray[i]);
+      Serial.print("\t");
+      Serial.print("potgrenze HI:\t");
+      Serial.print(potgrenzearray[i][0]);
+      Serial.print("\t");
+      Serial.print("potgrenze LO:\t");
+      Serial.print(potgrenzearray[i][1]);
+      Serial.print("\t");
+      Serial.print("servomitte:\t");
+      Serial.print(servomittearray[i]);
+      Serial.print("\n");
+   }
+   Serial.print("end printgrenzen\n");  
+}
+
+void printeeprom(uint8_t zeilen)
+{
+   Serial.print("printeeprom\n");
+   for (uint8_t i=0;i<zeilen;i++)
+   {
+      //Serial.write(taskarray[i]);
+      //Serial.print("\t");
+      uint8_t f = EEPROM.read(i);
+      
+      if ((i+1)%8==0 )
+      {
+         //Serial.print(i);
+         //Serial.print(": ");
+   
+         Serial.print(f);
+         Serial.print("\n");
+      }
+      else
+      {
+         //Serial.print(i);
+         //Serial.print(": ");
+   
+         Serial.print(f);
+         Serial.print("\t");
+      }
+      
+   }
+   Serial.print("\n");
+   uint8_t eepromyawlo = EEPROM.read(2*(0 + EEPROMINDEX_U));
+   uint8_t eepromyawhi = EEPROM.read(2*(0 + EEPROMINDEX_U)+1);
+   uint16_t eepromyaw = (eepromyawhi << 8) | eepromyawlo;
+
+   Serial.print("eeprompitch U: \t");
+   Serial.print(eepromyawlo);
+   Serial.print("\t");
+   Serial.print(eepromyawhi);
+   Serial.print("\t");
+   Serial.print(eepromyaw);
+   Serial.print("\n");
+
+   eepromyawlo = EEPROM.read(2*(0 + EEPROMINDEX_O));
+   eepromyawhi = EEPROM.read(2*(0 + EEPROMINDEX_O)+1);
+   eepromyaw = (eepromyawhi << 8) | eepromyawlo;
+
+   Serial.print("eeprompitch O: \t");
+   Serial.print(eepromyawlo);
+   Serial.print("\t");
+   Serial.print(eepromyawhi);
+   Serial.print("\t");
+   Serial.print(eepromyaw);
+   Serial.print("\n");
+}
+
 void eepromread()
 {
    Serial.print("eepromread \t");
    for (uint8_t i = 0;i<NUM_SERVOS;i++)
          {
-
+             Serial.write(taskarray[i]);
+            Serial.print("\t");
             uint8_t l = (potgrenzearray[i][0] & 0x00FF); // lo byte
             uint8_t h = (potgrenzearray[i][0] & 0xFF00)>>8; // hi byte
             Serial.print("potgrenzearray 0\t");
@@ -249,32 +364,64 @@ void eepromread()
             uint16_t grenzeU = (h << 8) | l;
             Serial.print("grenzeU\t");
 
-            uint8_t el = EEPROM.read(2*(i + EEPROMINDEX_U)); // lo byte
-            uint8_t eh = EEPROM.read(2*(i + EEPROMINDEX_U)+1); // hi byte
+            uint8_t el = 0;
+            uint8_t  eh = 0;
+            el = EEPROM.read(2*(i + EEPROMINDEX_U)); // lo byte
+            eh = EEPROM.read(2*(i + EEPROMINDEX_U)+1); // hi byte
             Serial.print(el);
             Serial.print("\t");
             Serial.print(eh);
             Serial.print("\t");
 
-            //EEPROM.read(2*(i + EEPROMINDEX_M)); // lo byte
-            //EEPROM.read(2*(i + EEPROMINDEX_M)+1); // hi byte
-         }
+            potgrenzearray[i][1] = (eh << 8) | el;
+
+            el = EEPROM.read(2*(i + EEPROMINDEX_O)); // lo byte
+            eh = EEPROM.read(2*(i + EEPROMINDEX_O)+1); // hi byte
+            Serial.print(el);
+            Serial.print("\t");
+            Serial.print(eh);
+            Serial.print("\t");
+
+            potgrenzearray[i][0] = (eh << 8) | el;
+
+
+            
+         } // for i
        Serial.print("\n");  
 }
 
 void eepromwrite()
 {
+Serial.print("eepromwrite\n");  
    for (uint8_t i = 0;i<NUM_SERVOS;i++)
    {
-      Serial.print("potgrenzearray raw:\t");
-      printf("i: %d \t",i);
+      Serial.print("potgrenzearray raw i:\t");
+      Serial.print(i);
+      Serial.print("\t");
+       Serial.write(taskarray[i]);
+      Serial.print("\t");
+      Serial.print("potgrenze HI:\t");
       Serial.print(potgrenzearray[i][0]);
       Serial.print("\t");
+      Serial.print("potgrenze LO:\t");
       Serial.print(potgrenzearray[i][1]);
       Serial.print("\t");
+      Serial.print("servomitte:\t");
+      Serial.print(servomittearray[i]);
+       Serial.print("\t");
+       Serial.print("adresse U:\t");
+       uint8_t addresseU_LO = 2*(i + EEPROMINDEX_U);
+       Serial.print(addresseU_LO);
+       Serial.print("\t");
+       Serial.print("adresse H:\t");
+       uint8_t addresseU_HI = 2*(i + EEPROMINDEX_U)+1;
+      Serial.print(addresseU_HI);
+      
+      
+      Serial.print("\n");
 
 
-      /*
+      
       EEPROM.update(2*(i + EEPROMINDEX_U),(potgrenzearray[i][1] & 0x00FF)); // lo byte
       EEPROM.update(2*(i + EEPROMINDEX_U)+1,((potgrenzearray[i][1] & 0xFF00) >> 8)); // hi byte
 
@@ -283,7 +430,13 @@ void eepromwrite()
 
       EEPROM.update(2*(i + EEPROMINDEX_M),(servomittearray[i] & 0x00FF)); // lo byte
       EEPROM.update(2*(i + EEPROMINDEX_M)+1,((servomittearray[i] & 0xFF00) >> 8)); // hi byte
+      
+      EEPROM.update(2*(i + EEPROMSETTINGS),(kanalsettingarray[curr_model][i][1] )); // level
+      EEPROM.update(2*(i + EEPROMSETTINGS)+1,(kanalsettingarray[curr_model][i][2] )); // expo
+
+      
       delay(20);
+      /*
       Serial.print("kontrolle i: \t*");
       Serial.print(i);
       Serial.print("\t");
@@ -299,44 +452,47 @@ void eepromwrite()
       Serial.print(" *\n");
      */
    }
-   Serial.print("\n");
+
+   Serial.print("eepromwrite end\n");
 }
 
 void setup()
 {
-   uint8_t ee[16];
-delay(50);
-for (uint8_t i=0;i<64;i++)
-{
-   //ee[i] = EEPROM.read(i);
-   EEPROM.write(i,0);
    
-}
+   uint8_t ee[16];
+   delay(50);
+   for (uint8_t i=0;i<64;i++)
+   {
+      //ee[i] = EEPROM.read(i);
+      //EEPROM.write(i,0);
+      
+   }
 
    delay(50);
 
    Serial.begin(9600);
    delay(500);
-  for (uint8_t i=0;i<16;i++)
-{
-   ee[i] = EEPROM.read(i);
-   Serial.print(" i: ");
-   Serial.print(i);
-   Serial.print(" ee: *");
-   Serial.print(ee[i]);
-   
-}
-Serial.print("\n");
+   /*
+   for (uint8_t i=0;i<16;i++)
+   {
+      ee[i] = EEPROM.read(i);
+      Serial.print(" i: ");
+      Serial.print(i);
+      Serial.print(" ee: *");
+      Serial.print(ee[i]);
+      
+   }
+   Serial.print("\n");
+   */
+   Serial.println(__DATE__);
+   Serial.println(__TIME__);
 
-for (uint8_t i=0;i<64;i++)
-{
-   uint8_t f = EEPROM.read(i);
-   Serial.print(i);
-   Serial.print(" ");
-   Serial.println(f);
+   printeeprom(128);
 
-}
-pinMode(BUZZPIN,OUTPUT);
+   eepromread();
+
+
+   pinMode(BUZZPIN,OUTPUT);
 
    pinMode(LOOPLED,OUTPUT);
 
@@ -378,7 +534,7 @@ pinMode(BUZZPIN,OUTPUT);
    oled_vertikalbalken(BATTX,BATTY,BATTB,BATTH);
    
    
-   
+   //setHomeScreen();
    
    
    
@@ -424,19 +580,31 @@ pinMode(BUZZPIN,OUTPUT);
     adcpinarray[2] = ROLL_PIN;
     adcpinarray[3] = THROTTLE_PIN;
     */
+
+   Serial.print("servomitte\n");
    for (uint8_t i=0;i<NUM_SERVOS;i++)
    {
       uint16_t wert = 500 + i * 50;
       wert = 750;
       impulstimearray[i] = wert; // mittelwert
       
-      potgrenzearray[i][0] = potlo;
-      potgrenzearray[i][1] = pothi;
+      //potgrenzearray[i][0] = potlo;
+      //potgrenzearray[i][1] = pothi;
       
       servomittearray[i] = analogRead(adcpinarray[i]);
+      Serial.print("i:\t");
+      Serial.print(i);
+      Serial.print("\t");
+      Serial.print(servomittearray[i]);
+      Serial.print("\t lo: ");
+      Serial.print(servomittearray[i] & 0x00FF);
+      Serial.print("\t hi: ");
+      Serial.print((servomittearray[i]& 0xFF00) >> 8);
+      Serial.print("\n");
 
-      uint8_t n = i*i+1;
-      EEPROM.write(i,n );
+
+      //uint8_t n = i*i+1;
+      //EEPROM.write(i,0 );
       
    }
 
@@ -449,18 +617,20 @@ pinMode(BUZZPIN,OUTPUT);
       Serial.print("\t");
       
       kanalsettingarray[0][i][1] = 0x00; // level
-      kanalsettingarray[0][i][2] = 0x00; // expo
+      kanalsettingarray[0][i][2] = 0x11; // expo
    }
    
    Serial.print("\n");
-   kanalsettingarray[0][PITCH][1] = 0x22; // level
-   kanalsettingarray[0][PITCH][2] = 0x00; // expo
 
    kanalsettingarray[0][YAW][1] = 0x11; // level
    kanalsettingarray[0][YAW][2] = 0x00; // expo
 
+   kanalsettingarray[0][PITCH][1] = 0x22; // level
+   kanalsettingarray[0][PITCH][2] = 0x00; // expo
+
+
    kanalsettingarray[0][ROLL][1] = 0x33; // level
-   kanalsettingarray[0][ROLL][2] = 0x00; // expo
+   kanalsettingarray[0][ROLL][2] = 0x13; // expo
 
    kanalsettingarray[0][THROTTLE][1] = 0x22; // level
    kanalsettingarray[0][THROTTLE][2] = 0x00; // expo
@@ -470,19 +640,28 @@ pinMode(BUZZPIN,OUTPUT);
 
 
    potwert = servomittearray[0];  
+
+   Serial.print("setup EEPROM\n");
+   printeeprom(128);
    
-   Serial.print("EEPRM read 2\n ");
-     for (uint8_t i=0;i<16;i++)
-{
-   ee[i] = EEPROM.read(i);
-   Serial.print(" i: ");
-   Serial.print(i);
-   Serial.print(" ee: ");
-   Serial.print(ee[i]);
-   Serial.print("\n");
-}
-Serial.print("\n");
-   
+
+/*
+for (uint8_t i = 0;i<NUM_SERVOS;i++)
+   {
+      EEPROM.update(2*(i + EEPROMINDEX_U),(potgrenzearray[i][1] & 0x00FF)); // lo byte
+      EEPROM.update(2*(i + EEPROMINDEX_U)+1,((potgrenzearray[i][1] & 0xFF00) >> 8)); // hi byte
+      EEPROM.update(2*(i + EEPROMINDEX_O),(potgrenzearray[i][0] & 0x00FF)); // lo byte
+      EEPROM.update(2*(i + EEPROMINDEX_O)+1,((potgrenzearray[i][0] & 0xFF00) >> 8)); // hi byte
+
+      EEPROM.update(2*(i + EEPROMINDEX_M),(servomittearray[i] & 0x00FF)); // lo byte
+      EEPROM.update(2*(i + EEPROMINDEX_M)+1,((servomittearray[i] & 0xFF00) >> 8)); // hi byte
+ 
+   }
+   //EEPROM.update(127,13);
+delay(4);
+*/
+
+//printeeprom(128);
    
 } // setup
 
@@ -636,6 +815,7 @@ void loop()
       batteriemittel /= 8;
       //Serial.println(batteriemittel);
 
+      
       UBatt = float(batteriespannung) / 107;
 
       
@@ -702,7 +882,16 @@ void loop()
       
       oled_horizontalbalken_setwert(HBX,HBY,balkenhb,balkenhh,werth);
       
-     oled_batteriebalken_setwert(BATTX,BATTY,BATTB,BATTH,UBatt*10);
+      uint16_t batterieanzeige = (0x50*batteriespannung)/0x6B/8; // resp. /107
+      /*
+      Serial.print(batteriespannung);
+      Serial.print("\t");
+      Serial.print(batterieanzeige);
+      Serial.print("\t");
+      Serial.println(UBatt);
+      */
+      //oled_batteriebalken_setwert(BATTX,BATTY,BATTB,BATTH,float(batteriespannung) / 10.7);
+      oled_batteriebalken_setwert(BATTX,BATTY,BATTB,BATTH,batterieanzeige);
 
       //char buf1[4];
        // Batt
@@ -889,11 +1078,18 @@ void loop()
    {
       {
          Serial.print("\nEEPROM update\n");
-         analogWrite(6,0x0F);
-         //eepromwrite();
+         printgrenzen();
+         void setHomeScreen();
+         u8g2.sendBuffer();
+         //analogWrite(6,0x0F);
+         eepromwrite();
+         //tone(6,440,250);
          Serial.println("EEPROM update end\n");
          eepromstatus &= ~(1<<EEPROM_WRITE) ;
       }
+
+      delay(4);
+      printeeprom(128);
 
    
    }
@@ -1041,8 +1237,13 @@ void loop()
    data.pitch = Border_Mapvar255(potwertarray[PITCH],potgrenzearray[PITCH][1],servomittearray[PITCH],potgrenzearray[PITCH][0],false);
 
    //data.roll = Border_Map(potwertarray[ROLL], 0, 512, 1023, true );      // CH1   Note: "true" or "false" for signal direction 
+   
+   potgrenzearray[ROLL][0] = servomittearray[ROLL];
+   potgrenzearray[ROLL][1] = servomittearray[ROLL];
+
    data.roll = Border_Mapvar255(potwertarray[ROLL],potgrenzearray[ROLL][1],servomittearray[ROLL],potgrenzearray[ROLL][0],false);
-  
+     
+
    //data.throttle = Border_Map(potwertarray[THROTTLE],0, 30, 800, false );      // Stick
    //data.throttle = Border_Map(potwertarray[THROTTLE],0, 5, 1200, false ); 
    

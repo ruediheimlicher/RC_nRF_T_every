@@ -27,8 +27,10 @@ void oled_vertikalbalken(uint8_t x,uint8_t y, uint8_t b, uint8_t h);
 void oled_vertikalbalken_setwert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,uint8_t wert);
 void oled_horizontalbalken(uint8_t x,uint8_t y, uint8_t b, uint8_t h);
 void oled_horizontalbalken_setwert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,uint8_t wert);
-void oled_batteriebalken_setwert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,uint8_t wert);
+void oled_batteriebalken_setwert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,uint16_t wert);
 
+
+void setHomeScreen();
 
 
 #endif

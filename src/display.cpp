@@ -77,7 +77,7 @@ void oled_vertikalbalken_setwert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,uint8
 
 }
 
-void oled_batteriebalken_setwert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,uint8_t wert)
+void oled_batteriebalken_setwert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,uint16_t wert)
 {
  uint8_t anzeige = map(wert-30,0,12,0,h); // Bereich 3-4.2V, 1.2V
  uint8_t min = map(2,0,12,0,h);
@@ -121,5 +121,20 @@ void oled_horizontalbalken_setwert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,uin
   u8g2.drawVLine(x+b-wert,y,h);
   //u8g2.drawHLine(x+b-wert-1,y,h);
   //u8g2.drawHLine(x+b-wert+1,y,h);
+
+}
+
+
+
+
+void setHomeScreen()
+{
+   u8g2.clear();
+   u8g2.setDrawColor(1);
+   //u8g2.setCursor(2,12);
+   u8g2.drawGlyph(2,12,62);
+   u8g2.drawFrame(2,12,40,10);
+
+
 
 }
