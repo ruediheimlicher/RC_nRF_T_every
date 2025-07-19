@@ -1,6 +1,7 @@
 // 6 Channel Transmitter | 6 Kanal Verici
 // KendinYap Channel
 
+#include "main.h"
 #include <SPI.h>
 #include <EEPROM.h>
 //#include <Adafruit_LiquidCrystal.h>
@@ -76,10 +77,7 @@ RF24 radio(CE_PIN, CSN_PIN);
 
 #define BATT         A2
 
-#define BATTX  90
-#define BATTY  2
-#define BATTH  44
-#define BATTB  34
+
 
 uint16_t loopcounter = 0;
 uint8_t blinkcounter = 0;
@@ -176,6 +174,7 @@ uint16_t batteriespannung = 0;
 uint16_t batteriearray[8] = {};
 uint16_t batteriemittel = 0;
 uint8_t batteriemittelwertcounter = 0;
+uint16_t batterieanzeige = 0;
 float UBatt = 0;
 uint8_t eepromstatus = 0;
 uint16_t eepromprelltimer = 0;
@@ -183,10 +182,11 @@ Bounce2::Button eepromtaste = Bounce2::Button();
 uint16_t intdiff = 0;
 uint16_t intdiffpitch = 0;
 
-#define VBX   75
-#define VBY    10
-#define HBX 10
-#define HBY 55
+// balken
+#define VBX   64
+#define VBY    12
+#define HBX    6
+#define HBY    54
 
 uint8_t taskarray[4] = {'Y', 'P', 'R', 'T'};
 
@@ -242,16 +242,9 @@ volatile uint16_t                tastaturcounter=0;
 
 
 
-struct Signal 
-{
-   byte throttle;
-   byte pitch;
-   byte roll;
-   byte yaw;
-   byte aux1;
-   byte aux2;
-   
-};
+
+
+
 Signal data;
 void ResetData() 
 {
@@ -533,6 +526,8 @@ void setup()
    // 0.96"
    //u8g2.begin(); 
    initDisplay();
+
+   /*
    u8g2.clearDisplay(); 
    //u8g2.setFont(u8g2_font_helvR14_tr); // https://github.com/olikraus/u8g2/wiki/fntlist12
    u8g2.setFont(u8g2_font_t0_15_mr);  
@@ -543,11 +538,11 @@ void setup()
    oled_vertikalbalken(VBX,VBY,balkenvb,balkenvh);
    
    oled_horizontalbalken(HBX,HBY,balkenhb,balkenhh);
-
+   */
    oled_vertikalbalken(BATTX,BATTY,BATTB,BATTH);
    
    
-   //setHomeScreen();
+   setHomeScreen();
    
    
    
@@ -868,34 +863,44 @@ void loop()
       uint8_t charindex = loopcounter1  & 0x7F;
       //u8g2.setDrawColor(0);
       charh = u8g2.getMaxCharHeight() ;
-      oled_delete(4,44,64);
+      //oled_delete(4,44,64);
       
       //u8g2.drawGlyph(32,44,'A'+(charindex));
+      char buf0[4];
+/*
       // Yaw
-      u8g2.setCursor(4,30);
-      u8g2.print(data.yaw);
+      //u8g2.setCursor(4,30);
+      //u8g2.print(data.yaw);
+      sprintf(buf0, "%3d", data.yaw);
+      u8g2.drawStr(4,30,buf0);
       
       // Pitch
-      u8g2.setCursor(36,30);
-      u8g2.print(data.pitch);
+     // u8g2.setCursor(36,30);
+     // u8g2.print(data.pitch);
+      sprintf(buf0, "%3d", data.pitch);
+      u8g2.drawStr(32,30,buf0);
 
       // Roll
-      u8g2.setCursor(4,46);
-      u8g2.print(data.roll);
+      //u8g2.setCursor(4,46);
+      //u8g2.print(data.roll);
+      sprintf(buf0, "%3d", data.roll);
+      u8g2.drawStr(4,42,buf0);
       
       // Throttle
-      u8g2.setCursor(36,46);
-      u8g2.print(data.throttle);
-     
+      //u8g2.setCursor(36,46);
+      //u8g2.print(data.throttle);
+      sprintf(buf0, "%3d", data.throttle);
+      u8g2.drawStr(32,42,buf0);
+     */
       
       uint8_t wertv = map(data.pitch,0,255,2,balkenvh-2); // Platz fuer 3 pixel dicke
-      oled_vertikalbalken_setwert(VBX,VBY,balkenvb,balkenvh,wertv);
+      //oled_vertikalbalken_setwert(VBX,VBY,balkenvb,balkenvh,wertv);
       
       uint8_t werth = map(data.yaw,0,255,2,balkenhb-2); // Platz fuer 3 pixel dicke
       
-      oled_horizontalbalken_setwert(HBX,HBY,balkenhb,balkenhh,werth);
+      //oled_horizontalbalken_setwert(HBX,HBY,balkenhb,balkenhh,werth);
       
-      uint16_t batterieanzeige = (0x50*batteriespannung)/0x6B/8; // resp. /107
+      batterieanzeige = (0x50*batteriespannung)/0x6B/8; // resp. /107
       /*
       Serial.print(batteriespannung);
       Serial.print("\t");
@@ -903,9 +908,10 @@ void loop()
       Serial.print("\t");
       Serial.println(UBatt);
       */
-      //oled_batteriebalken_setwert(BATTX,BATTY,BATTB,BATTH,float(batteriespannung) / 10.7);
-      oled_batteriebalken_setwert(BATTX,BATTY,BATTB,BATTH,batterieanzeige);
-
+      //oled_batteriebalken_setwert(BATTX,BATTY,BATTB,BATTH,batterieanzeige);
+      //oled_setBatterieWert(BATTX,BATTY+BATTH+16,BATTB,24,UBatt);
+      updateHomeScreen();
+      /*
       //char buf1[4];
        // Batt
       //sprintf(buf1, "%1.2f", UBatt);
@@ -913,6 +919,7 @@ void loop()
       u8g2.setDrawColor(0);
       u8g2.print(UBatt,2);
       u8g2.setDrawColor(1);
+      */
       u8g2.sendBuffer();
       if(loopcounter1 > 25)
       {

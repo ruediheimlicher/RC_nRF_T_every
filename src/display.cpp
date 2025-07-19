@@ -1,14 +1,37 @@
 
 #include <inttypes.h>
+#include "main.h"
 #include "display.h"
+
+extern uint16_t currentexpoarray[5][513];
+
+extern volatile uint8_t                 curr_model; // aktuelles modell
+extern volatile uint8_t                 speichermodel;
+extern volatile uint8_t                 curr_kanal; // aktueller kanal
+extern volatile uint8_t                 curr_setting; // aktuelles Setting fuer Modell
+extern volatile uint8_t                 curr_screen; // aktueller screen
+extern volatile uint8_t                 last_screen; // letzter screen
+
+extern volatile uint8_t                 curr_page; // aktuelle page
+extern volatile uint8_t                 curr_col; // aktuelle colonne
+
+extern volatile uint8_t                 curr_cursorzeile; // aktuelle zeile des cursors
+extern volatile uint8_t                 curr_cursorspalte; // aktuelle colonne des cursors
+extern volatile uint8_t                 last_cursorzeile; // letzte zeile des cursors
+extern volatile uint8_t                 last_cursorspalte; // letzte colonne des cursors
+
+extern float UBatt;
+extern uint16_t batterieanzeige;
+extern Signal data;
+
 
 uint8_t charh = 0;
 uint8_t balkenh = 50;
 uint8_t balkenb = 5;
-uint8_t balkenvh = 50;
+uint8_t balkenvh = 40;
  uint8_t balkenvb = 5;
- uint8_t balkenhh = 5;
- uint8_t balkenhb = 60;
+ uint8_t balkenhh = 3;
+ uint8_t balkenhb = 40;
 
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE);
 
@@ -94,7 +117,19 @@ void oled_batteriebalken_setwert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,uint1
   u8g2.drawHLine(x,y+h-min-1,b);
   u8g2.setDrawColor(1);
 
+       // Batt
+      //sprintf(buf1, "%1.1f", UBatt);
 
+
+
+}
+
+void oled_setBatterieWert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,float wert)
+{
+      u8g2.setCursor(x,y);
+      u8g2.setDrawColor(0);
+      u8g2.print(wert,1);
+      u8g2.setDrawColor(1);
 }
 
 void oled_horizontalbalken(uint8_t x,uint8_t y, uint8_t b, uint8_t h)
@@ -130,11 +165,46 @@ void oled_horizontalbalken_setwert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,uin
 void setHomeScreen()
 {
    u8g2.clear();
-   u8g2.setDrawColor(1);
-   //u8g2.setCursor(2,12);
-   u8g2.drawGlyph(2,12,62);
-   u8g2.drawFrame(2,12,40,10);
+   u8g2.setFont(u8g2_font_t0_15_mr);  
+   u8g2.setCursor(4, 14);
+   u8g2.print(F("nRF24 T"));
 
+    oled_vertikalbalken(BATTX,BATTY,BATTB,BATTH);
 
 
 }
+
+void updateHomeScreen()
+{
+
+   char buf0[4];
+
+      // Yaw
+      //u8g2.setCursor(4,30);
+      //u8g2.print(data.yaw);
+      sprintf(buf0, "%3d", data.yaw);
+      u8g2.drawStr(4,30,buf0);
+      
+      // Pitch
+     // u8g2.setCursor(36,30);
+     // u8g2.print(data.pitch);
+      sprintf(buf0, "%3d", data.pitch);
+      u8g2.drawStr(32,30,buf0);
+
+      // Roll
+      //u8g2.setCursor(4,46);
+      //u8g2.print(data.roll);
+      sprintf(buf0, "%3d", data.roll);
+      u8g2.drawStr(4,42,buf0);
+      
+      // Throttle
+      //u8g2.setCursor(36,46);
+      //u8g2.print(data.throttle);
+      sprintf(buf0, "%3d", data.throttle);
+      u8g2.drawStr(32,42,buf0);
+     
+   uint8_t p = curr_model;
+   oled_batteriebalken_setwert(BATTX,BATTY,BATTB,BATTH,batterieanzeige);
+   oled_setBatterieWert(BATTX,BATTY+BATTH+16,BATTB,24,UBatt);
+}
+

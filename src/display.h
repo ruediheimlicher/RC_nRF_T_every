@@ -16,6 +16,11 @@ extern uint8_t balkenvb;
 extern uint8_t balkenhh;
 extern uint8_t balkenhb;
 
+#define BATTX  90
+#define BATTY  2
+#define BATTH  44
+#define BATTB  34
+
 extern U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2;
 
 void initDisplay();
@@ -28,9 +33,11 @@ void oled_vertikalbalken_setwert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,uint8
 void oled_horizontalbalken(uint8_t x,uint8_t y, uint8_t b, uint8_t h);
 void oled_horizontalbalken_setwert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,uint8_t wert);
 void oled_batteriebalken_setwert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,uint16_t wert);
+void oled_setBatterieWert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,float wert);
 
 
 void setHomeScreen();
+void updateHomeScreen();
 
 
 #endif
