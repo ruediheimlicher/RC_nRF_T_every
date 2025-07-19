@@ -50,7 +50,8 @@ RF24 radio(CE_PIN, CSN_PIN);
 #define EEPROMINDEX_O 0x20
 #define EEPROMINDEX_M 0x30
 
-#define EEPROMSETTINGS  0x32
+#define EEPROMLEVELSETTINGS  0x32
+#define EEPROMEXPOSETTINGS  0x36
 
 
 #define BLINKRATE 0x00fF
@@ -428,11 +429,23 @@ Serial.print("eepromwrite\n");
       EEPROM.update(2*(i + EEPROMINDEX_O),(potgrenzearray[i][0] & 0x00FF)); // lo byte
       EEPROM.update(2*(i + EEPROMINDEX_O)+1,((potgrenzearray[i][0] & 0xFF00) >> 8)); // hi byte
 
+      
+      
+     
+
       EEPROM.update(2*(i + EEPROMINDEX_M),(servomittearray[i] & 0x00FF)); // lo byte
       EEPROM.update(2*(i + EEPROMINDEX_M)+1,((servomittearray[i] & 0xFF00) >> 8)); // hi byte
       
-      EEPROM.update(2*(i + EEPROMSETTINGS),(kanalsettingarray[curr_model][i][1] )); // level
-      EEPROM.update(2*(i + EEPROMSETTINGS)+1,(kanalsettingarray[curr_model][i][2] )); // expo
+
+      for (uint8_t i=0;i<8;i++)
+      {
+            EEPROM.write(2*(i + EEPROMLEVELSETTINGS)+i,255); // lo byte
+            EEPROM.write(2*(i + EEPROMEXPOSETTINGS)+i,255);
+
+      }
+
+      EEPROM.update(2*(i + EEPROMLEVELSETTINGS),(kanalsettingarray[curr_model][i][1] )); // level
+      EEPROM.update(2*(i + EEPROMEXPOSETTINGS),(kanalsettingarray[curr_model][i][2] )); // expo
 
       
       delay(20);
@@ -623,17 +636,17 @@ void setup()
    Serial.print("\n");
 
    kanalsettingarray[0][YAW][1] = 0x11; // level
-   kanalsettingarray[0][YAW][2] = 0x00; // expo
+   kanalsettingarray[0][YAW][2] = 0x01; // expo
 
    kanalsettingarray[0][PITCH][1] = 0x22; // level
-   kanalsettingarray[0][PITCH][2] = 0x00; // expo
+   kanalsettingarray[0][PITCH][2] = 0x02; // expo
 
 
    kanalsettingarray[0][ROLL][1] = 0x33; // level
    kanalsettingarray[0][ROLL][2] = 0x13; // expo
 
    kanalsettingarray[0][THROTTLE][1] = 0x22; // level
-   kanalsettingarray[0][THROTTLE][2] = 0x00; // expo
+   kanalsettingarray[0][THROTTLE][2] = 0x02; // expo
 
 
   
