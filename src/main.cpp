@@ -445,23 +445,23 @@ uint8_t Joystick_Tastenwahl(uint16_t Tastaturwert)
 {
    //return 0;
    if (Tastaturwert < JOYSTICKTASTE1) 
-      return 5;
+      return 2;
    if (Tastaturwert < JOYSTICKTASTE2)
-      return 9;
+      return 1;
    if (Tastaturwert < JOYSTICKTASTE3)
-      return 6;
+      return 4;
    if (Tastaturwert < JOYSTICKTASTE4)
-      return 3;
+      return 7;
    if (Tastaturwert < JOYSTICKTASTE5)
       return 8;
    if (Tastaturwert < JOYSTICKTASTE6)
-      return 7;
+      return 3;
    if (Tastaturwert < JOYSTICKTASTE7)
-      return 4;
+      return 6;
    if (Tastaturwert < JOYSTICKTASTE8)
-      return 1;
+      return 9;
    if (Tastaturwert < JOYSTICKTASTE9)
-      return 2;
+      return 5;
       /*
    if (Tastaturwert < JOYSTICKTASTEL)
       return 10;
@@ -477,7 +477,7 @@ uint8_t Joystick_Tastenwahl(uint16_t Tastaturwert)
 void tastenfunktion(uint16_t Tastenwert)
 {  
    tastaturcounter++;   
-   if (Tastenwert>50) // ca Minimalwert der Matrix
+   if (Tastenwert>10) // ca Minimalwert der Matrix
    {      
       //Serial.print(Tastenwert);
       //Serial.print("\t");
@@ -485,26 +485,18 @@ void tastenfunktion(uint16_t Tastenwert)
 
       //Serial.print("\n");
                
-      //if (tastaturcounter>=50)   //   Prellen
+      if (tastaturcounter>=50)   //   Prellen
       {        
          
          tastaturcounter=0x00;
+         //Serial.println("Taste down");
          if (!(tastaturstatus & (1<<TASTE_OK))) // Taste noch nicht gedrueckt
          {
            
-            //Serial.println(Tastenwert);
+            Serial.println(Tastenwert);
             //Taste = 0;
             //tastaturstatus |= (1<<TASTE_ON); // nur einmal   
             tastaturstatus |= (1<<TASTE_OK); // nur einmal   
-            //Taste= Joystick_Tastenwahl(Tastenwert);
-
-
-            //;
-         }
-         else // Taste neu gedrückt
-         {
-            Taste = 0;
-            //tastaturstatus |= (1<<TASTE_ON); // nur einmal   
             Taste= Joystick_Tastenwahl(Tastenwert);
             tastaturstatus |= (1<<AKTION_OK);
             if(OLED && Taste) // Taste und Tastenwert anzeigen
@@ -518,7 +510,30 @@ void tastenfunktion(uint16_t Tastenwert)
                u8g2.sendBuffer(); 
 
             }
-            
+
+
+            //;
+         }
+         else // Taste neu gedrückt
+         {
+            /*
+            Taste = 0;
+            //tastaturstatus |= (1<<TASTE_ON); // nur einmal 
+
+            Taste= Joystick_Tastenwahl(Tastenwert);
+            tastaturstatus |= (1<<AKTION_OK);
+            if(OLED && Taste) // Taste und Tastenwert anzeigen
+            {
+               oled_delete(0,62,40);
+               u8g2.setCursor(0,62);
+               //u8g2.print(tastaturwert);
+               u8g2.print("T ");
+               u8g2.print(Taste);
+               
+               u8g2.sendBuffer(); 
+
+            }
+            */
 
          }
       }
@@ -530,7 +545,7 @@ void tastenfunktion(uint16_t Tastenwert)
       //if (tastaturstatus & (1<<TASTE_ON))
       {
 
-         tastaturstatus &= ~(1<<TASTE_OK);
+         //tastaturstatus &= ~(1<<TASTE_OK);
       }
    }
 
@@ -886,9 +901,11 @@ void loop()
    //digitalWrite(BUZZPIN,!(digitalRead(BUZZPIN)));
       tastaturwert = analogRead(TASTATUR_PIN);
       tastenfunktion(tastaturwert);
+      
 
    if (tastaturstatus & (1<<TASTE_OK) && Taste) // Menu ansteuern
    {
+
       switch (Taste)
       {
          case 0: // null-pos, nichts tun

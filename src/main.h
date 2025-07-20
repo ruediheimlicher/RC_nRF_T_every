@@ -53,21 +53,21 @@ struct Signal
 
 // Joystick
 
-#define OLED 1
+#define OLED 0
 
 #define TASTE_OK           1
 #define AKTION_OK           2
 #define UPDATE_OK           3
 
-#define JOYSTICKTASTE1 189
-#define JOYSTICKTASTE2 273
-#define JOYSTICKTASTE3 331
-#define JOYSTICKTASTE4 391
-#define JOYSTICKTASTE5 452
-#define JOYSTICKTASTE6 506
-#define JOYSTICKTASTE7 576
-#define JOYSTICKTASTE8 627
-#define JOYSTICKTASTE9 661
+#define JOYSTICKTASTE1 70
+#define JOYSTICKTASTE2 121
+#define JOYSTICKTASTE3 192
+#define JOYSTICKTASTE4 246
+#define JOYSTICKTASTE5 308
+#define JOYSTICKTASTE6 368
+#define JOYSTICKTASTE7 426
+#define JOYSTICKTASTE8 510
+#define JOYSTICKTASTE9 580
 
 #define TAB0    2
 #define TAB1    4
