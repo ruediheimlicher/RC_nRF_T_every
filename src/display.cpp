@@ -166,7 +166,7 @@ void setHomeScreen()
 {
    u8g2.clear();
    u8g2.setFont(u8g2_font_t0_15_mr);  
-   u8g2.setCursor(4, 14);
+   u8g2.setCursor(TAB0, 14);
    u8g2.print(F("nRF24 T"));
 
     oled_vertikalbalken(BATTX,BATTY,BATTB,BATTH);
@@ -183,7 +183,7 @@ void updateHomeScreen()
       //u8g2.setCursor(4,30);
       //u8g2.print(data.yaw);
       sprintf(buf0, "%3d", data.yaw);
-      u8g2.drawStr(4,30,buf0);
+      u8g2.drawStr(TAB0,30,buf0);
       
       // Pitch
      // u8g2.setCursor(36,30);
@@ -195,7 +195,7 @@ void updateHomeScreen()
       //u8g2.setCursor(4,46);
       //u8g2.print(data.roll);
       sprintf(buf0, "%3d", data.roll);
-      u8g2.drawStr(4,42,buf0);
+      u8g2.drawStr(TAB0,42,buf0);
       
       // Throttle
       //u8g2.setCursor(36,46);

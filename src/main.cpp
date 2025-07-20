@@ -66,16 +66,12 @@ RF24 radio(CE_PIN, CSN_PIN);
 #define ROLL_PIN      A1
 #define THROTTLE_PIN  A0  
 
+#define TASTATUR_PIN A7
+#define TASTE_OFF  0
+#define TASTE_ON  1
 
-// defines for array pos
-#define YAW         0
-#define PITCH       1
-#define ROLL        2
-#define THROTTLE    3
 
-#define NUM_SERVOS  4
-
-#define BATT         A2
+#define BATT_PIN         A2
 
 
 
@@ -96,27 +92,6 @@ uint8_t impulscounter = 0;
 
 #define MINDIFF 4
 
-#define  ANZAHLMODELLE        5
-#define  KANALSETTINGBREITE   4
-#define  MODELSETTINGBREITE   32 // nur Kanalsettings. Anschliessend MixingSettings
-#define  EEPROM_MODELSETTINGBREITE 64 //Kanalsettings und MixingSettings
-
-#define  STATUS_OFFSET     0 
-#define  LEVEL_OFFSET      1 //0x20 // 32
-#define  EXPO_OFFSET       2 //0x30 // 48
-#define  FUNKTION_OFFSET   3 // 96
-
-
-#define DEVICE_OFFSET      0x70 // 122
-#define AUSGANG_OFFSET     0x80 // 128
-
-#define SAVE_STATUS      0
-#define SAVE_LEVEL      1
-#define SAVE_MIX        2
-#define SAVE_EXPO       3
-#define SAVE_FUNKTION   4
-#define SAVE_DEVICE     5
-#define SAVE_AUSGANG    6
 
 
 uint16_t schritt = 32;
@@ -181,6 +156,11 @@ uint16_t eepromprelltimer = 0;
 Bounce2::Button eepromtaste = Bounce2::Button();
 uint16_t intdiff = 0;
 uint16_t intdiffpitch = 0;
+
+uint16_t tastaturwert = 0;
+uint8_t tastencounter = 0;
+uint8_t tastaturstatus = 0;
+uint8_t Taste = 0;
 
 // balken
 #define VBX   64
@@ -461,6 +441,105 @@ Serial.print("eepromwrite\n");
 
    Serial.print("eepromwrite end\n");
 }
+uint8_t Joystick_Tastenwahl(uint16_t Tastaturwert)
+{
+   //return 0;
+   if (Tastaturwert < JOYSTICKTASTE1) 
+      return 5;
+   if (Tastaturwert < JOYSTICKTASTE2)
+      return 9;
+   if (Tastaturwert < JOYSTICKTASTE3)
+      return 6;
+   if (Tastaturwert < JOYSTICKTASTE4)
+      return 3;
+   if (Tastaturwert < JOYSTICKTASTE5)
+      return 8;
+   if (Tastaturwert < JOYSTICKTASTE6)
+      return 7;
+   if (Tastaturwert < JOYSTICKTASTE7)
+      return 4;
+   if (Tastaturwert < JOYSTICKTASTE8)
+      return 1;
+   if (Tastaturwert < JOYSTICKTASTE9)
+      return 2;
+      /*
+   if (Tastaturwert < JOYSTICKTASTEL)
+      return 10;
+   if (Tastaturwert < JOYSTICKTASTE0)
+      return 0;
+   if (Tastaturwert < JOYSTICKTASTER)
+      return 12;
+      */
+   return 0;
+}
+ // tastenwahl
+
+void tastenfunktion(uint16_t Tastenwert)
+{  
+   tastaturcounter++;   
+   if (Tastenwert>50) // ca Minimalwert der Matrix
+   {      
+      //Serial.print(Tastenwert);
+      //Serial.print("\t");
+      //Serial.print(tastaturcounter);
+
+      //Serial.print("\n");
+               
+      //if (tastaturcounter>=50)   //   Prellen
+      {        
+         
+         tastaturcounter=0x00;
+         if (!(tastaturstatus & (1<<TASTE_OK))) // Taste noch nicht gedrueckt
+         {
+           
+            //Serial.println(Tastenwert);
+            //Taste = 0;
+            //tastaturstatus |= (1<<TASTE_ON); // nur einmal   
+            tastaturstatus |= (1<<TASTE_OK); // nur einmal   
+            //Taste= Joystick_Tastenwahl(Tastenwert);
+
+
+            //;
+         }
+         else // Taste neu gedrückt
+         {
+            Taste = 0;
+            //tastaturstatus |= (1<<TASTE_ON); // nur einmal   
+            Taste= Joystick_Tastenwahl(Tastenwert);
+            tastaturstatus |= (1<<AKTION_OK);
+            if(OLED && Taste) // Taste und Tastenwert anzeigen
+            {
+               oled_delete(0,62,40);
+               u8g2.setCursor(0,62);
+               //u8g2.print(tastaturwert);
+               u8g2.print("T ");
+               u8g2.print(Taste);
+               
+               u8g2.sendBuffer(); 
+
+            }
+            
+
+         }
+      }
+
+
+   }// if tastenwert
+   else 
+   {
+      //if (tastaturstatus & (1<<TASTE_ON))
+      {
+
+         tastaturstatus &= ~(1<<TASTE_OK);
+      }
+   }
+
+
+
+
+
+
+}//tastenfunktion
 
 void setup()
 {
@@ -502,7 +581,11 @@ void setup()
 
    pinMode(LOOPLED,OUTPUT);
 
-   pinMode(BATT,INPUT);
+   pinMode(BATT_PIN,INPUT);
+
+   pinMode(TASTATUR_PIN,INPUT);
+
+
    //pinMode(EEPROMTASTE,INPUT_PULLUP);
    eepromtaste.attach( EEPROMTASTE ,  INPUT_PULLUP ); 
    eepromtaste.interval(5);
@@ -801,17 +884,112 @@ void loop()
 {                                  
    loopcounter++;
    //digitalWrite(BUZZPIN,!(digitalRead(BUZZPIN)));
+      tastaturwert = analogRead(TASTATUR_PIN);
+      tastenfunktion(tastaturwert);
+
+   if (tastaturstatus & (1<<TASTE_OK) && Taste) // Menu ansteuern
+   {
+      switch (Taste)
+      {
+         case 0: // null-pos, nichts tun
+         {
+
+         }break;
+
+         case 1:
+         {
+            Serial.print("T 1");
+           
+         }break;
+
+         case 2:
+         {
+            Serial.print("T 2");
+            if (tastaturstatus & (1<<AKTION_OK))
+            {
+               Serial.print("T 2 up");
+               tastaturstatus &=  ~(1<<AKTION_OK);
+               tastaturstatus |= (1<<UPDATE_OK);
+               
+            }
+           
+         }break;
+
+         case 3:
+         {
+            Serial.print("T 3");
+           
+         }break;
+
+         case 4:
+         {
+            Serial.print("T 4");
+           
+         }break;
+
+         case 5:
+         {
+            Serial.print("T 5");
+           
+         }break;
+
+         case 6:
+         {
+            Serial.print("T 6");
+           
+         }break;
+
+         case 7:
+         {
+            Serial.print("T 7");
+           
+         }break;
+
+         case 8:
+         {
+            Serial.print("T 8");
+           
+         }break;
+
+         case 9:
+         {
+            Serial.print("T 9");
+           
+         }break;
+
+
+
+      }//switch (Taste)
+      if(Taste)
+      {
+         Serial.print("\n");
+         Taste = 0;
+         tastaturstatus &= ~(1<<TASTE_OK);
+      }
+      
+
+      
+   }// if TASTE_OK
 
    if(loopcounter >= 2*BLINKRATE)
    {
-
-
+      if(Taste)
+      {
+         Serial.print(tastaturwert);
+         Serial.print(" Taste: ");
+         Serial.print(Taste);
+         Serial.print("\n");
+         
+            
+      }
       loopcounter = 0;
       blinkcounter++;
       impulscounter+=16;
       digitalWrite(LOOPLED, ! digitalRead(LOOPLED));
+
       
-      batteriespannung = analogRead(BATT);
+
+      batteriespannung = analogRead(BATT_PIN);
       batteriearray[batteriemittelwertcounter] = batteriespannung;
       batteriemittelwertcounter++;
       batteriemittelwertcounter &= 0x07;
@@ -925,7 +1103,10 @@ void loop()
       {
          loopcounter1 = 0;
       }
-      if (TEST)
+
+      
+
+      if (TEST == 1)
       {
          Serial.print("YAW\t "); 
          Serial.print(potgrenzearray[YAW][0]);
@@ -951,7 +1132,7 @@ void loop()
          Serial.print("\t ");
          Serial.print(yawmap3);
 
-          Serial.print("\t ");
+         Serial.print("\t ");
          Serial.print("pwarray: ");
          Serial.print("\t ");
          Serial.print(potwertarray[YAW]);
@@ -965,7 +1146,7 @@ void loop()
          Serial.print("\t ");
          Serial.print(intdiff);
 
-          Serial.print("\t ");
+         Serial.print("\t ");
          Serial.print("levelintcheck: ");
          Serial.print("\t ");
          Serial.print(levelintcheck);
@@ -1055,7 +1236,7 @@ void loop()
           */
          
          Serial.print(" *\n");
-      } // if TEST
+      } // if TEST 1
       
       /*
        Serial.print(" \t");

@@ -16,10 +16,7 @@ extern uint8_t balkenvb;
 extern uint8_t balkenhh;
 extern uint8_t balkenhb;
 
-#define BATTX  90
-#define BATTY  2
-#define BATTH  44
-#define BATTB  34
+
 
 extern U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2;
 
