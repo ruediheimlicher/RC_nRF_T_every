@@ -55,10 +55,12 @@ struct Signal
 
 #define OLED 1
 
+#define ANZ_SCREEN         3
 #define TASTE_OK           1
 #define AKTION_OK           2
 #define UPDATE_OK           3
 #define T5_WAIT              4 // Warten auf 3 Impulse
+#define MENU_ON            5
 
 #define JOYSTICKTASTE1 70
 #define JOYSTICKTASTE2 121

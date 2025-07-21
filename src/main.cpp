@@ -963,20 +963,31 @@ void loop()
 
                Serial.print("T 5 in ");
 
-               if ((curr_screen == 0) && (taste5counter < 3))
+               if ((curr_screen == 0) ) //&& (taste5counter < 3))
                {
+                  tastaturstatus |= (1<<T5_WAIT); // Warten auf 3 Impulse
+                  {
+                  
                   taste5counter++;
                   Serial.print("taste5counter: ");
                   Serial.println(taste5counter);
                   tastaturcounter = 300; // Mehrfachklick ermoeglichen
-                  curr_screen = 1;
+                  if (taste5counter == 3)
+                  {
+                     curr_screen = 1;
+                     taste5counter = 0;
+                     tastaturstatus |= ~(1<<T5_WAIT); // Warten beendet
+
+                  }
+                  //
+                  }
                }
-               else
+               else if (!(tastaturstatus & (1<<T5_WAIT))) // kein Warten
                {
                   taste5counter = 0;
                   if(curr_screen < 3)
                   {
-                     curr_screen++;
+                     //curr_screen++;
                   }
                }
                    Serial.print("curr_screen: ");
