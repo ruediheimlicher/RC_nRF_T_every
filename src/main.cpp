@@ -17,6 +17,10 @@ const uint64_t pipeOut = 0xABCDABCD71LL;         // NOTE: The address in the Tra
 
 extern "C" 
 
+
+
+
+
 //U8G2_SSD1327_WS_128X128_HW_I2C u8g2(U8G2_R0,U8X8_PIN_NONE);
 
 // github.com/olikraus/u8g2/discussions/1865
@@ -163,6 +167,15 @@ uint8_t tastaturstatus = 0;
 uint8_t Taste = 0;
 uint8_t taste5counter = 0;
 
+// Menu
+uint8_t startcounter = 0;
+uint8_t settingstartcounter = 0;
+uint8_t cursortab[10] = {cursortab0,cursortab1,cursortab2,cursortab3,cursortab4,cursortab5,cursortab6,cursortab7,cursortab0,cursortab0};
+uint8_t itemtab[10] = {itemtab0,itemtab1,itemtab2,itemtab3,itemtab4,itemtab5,itemtab6,itemtab7,itemtab0,itemtab0};
+
+
+
+
 // balken
 #define VBX   64
 #define VBY    12
@@ -190,28 +203,9 @@ uint16_t errcounter = 0;
 uint16_t radiocounter = 0;
 
 // Menu
-volatile uint8_t                 curr_model=0; // aktuelles modell
-volatile uint8_t                 speichermodel=0;
-volatile uint8_t                 curr_kanal=0; // aktueller kanal
-volatile uint8_t                 curr_impuls=0; // aktueller impuls
+ uint8_t                 speichermodel=0;
+ uint8_t                 last_screen=0; // letzter screen
 
-volatile uint8_t                 curr_setting=0; // aktuelles Setting fuer Modell
-uint8_t                          speichersetting=0;
-
-volatile uint8_t                 curr_trimmkanal=0; // aktueller  Kanal fuerTrimmung
-volatile uint8_t                 curr_trimmung=0; // aktuelle  Trimmung fuer Trimmkanal
-
-
-volatile uint8_t                 curr_screen = 0; // aktueller screen
-volatile uint8_t                 last_screen=0; // letzter screen
-
-volatile uint8_t                 curr_page=7; // aktuelle page
-volatile uint8_t                 curr_col=0; // aktuelle colonne
-
-volatile uint8_t                 curr_cursorzeile=0; // aktuelle zeile des cursors
-volatile uint8_t                 curr_cursorspalte=0; // aktuelle colonne des cursors
-volatile uint8_t                 last_cursorzeile=0; // letzte zeile des cursors
-volatile uint8_t                 last_cursorspalte=0; // letzte colonne des cursors
 
 // Tastatur
 volatile uint8_t                 Tastenindex=0;
@@ -974,10 +968,18 @@ void loop()
                   tastaturcounter = 300; // Mehrfachklick ermoeglichen
                   if (taste5counter == 3)
                   {
-                     curr_screen = 1;
+                     curr_screen = MODELLSCREEN;
                      taste5counter = 0;
-                     tastaturstatus |= ~(1<<T5_WAIT); // Warten beendet
-
+                     tastaturstatus &= ~(1<<T5_WAIT); // Warten beendet
+                     tastaturstatus |= (1<<MENU_ON); // Menu-bearbeitung ist offen
+                     // Ausgangsposition setzen
+                     curr_cursorspalte=0;
+                     curr_cursorzeile=0;
+                     last_cursorspalte=0;
+                     last_cursorzeile=0;
+                     blink_cursorpos = 0xFFFF;
+                     settingstartcounter=0;
+                     startcounter=0;
                   }
                   //
                   }
@@ -1022,6 +1024,14 @@ void loop()
                   {
                      curr_screen--;
                   }
+                  switch (curr_screen)
+                  {
+                     case 0:
+                     {
+                        setHomeScreen();
+                     }break;
+                  }
+
                Serial.print("T7 curr_screen: ");
                Serial.println(curr_screen);              
 

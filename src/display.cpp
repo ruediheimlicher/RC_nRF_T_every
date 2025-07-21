@@ -5,20 +5,20 @@
 
 extern uint16_t currentexpoarray[5][513];
 
-extern volatile uint8_t                 curr_model; // aktuelles modell
-extern volatile uint8_t                 speichermodel;
-extern volatile uint8_t                 curr_kanal; // aktueller kanal
-extern volatile uint8_t                 curr_setting; // aktuelles Setting fuer Modell
-extern volatile uint8_t                 curr_screen; // aktueller screen
-extern volatile uint8_t                 last_screen; // letzter screen
+extern  uint8_t                 curr_model; // aktuelles modell
+extern  uint8_t                 speichermodel;
+extern  uint8_t                 curr_kanal; // aktueller kanal
+extern  uint8_t                 curr_setting; // aktuelles Setting fuer Modell
+extern  uint8_t                 curr_screen; // aktueller screen
+extern  uint8_t                 last_screen; // letzter screen
 
-extern volatile uint8_t                 curr_page; // aktuelle page
-extern volatile uint8_t                 curr_col; // aktuelle colonne
+extern  uint8_t                 curr_page; // aktuelle page
+extern  uint8_t                 curr_col; // aktuelle colonne
 
-extern volatile uint8_t                 curr_cursorzeile; // aktuelle zeile des cursors
-extern volatile uint8_t                 curr_cursorspalte; // aktuelle colonne des cursors
-extern volatile uint8_t                 last_cursorzeile; // letzte zeile des cursors
-extern volatile uint8_t                 last_cursorspalte; // letzte colonne des cursors
+extern  uint8_t                 curr_cursorzeile; // aktuelle zeile des cursors
+extern  uint8_t                 curr_cursorspalte; // aktuelle colonne des cursors
+extern  uint8_t                 last_cursorzeile; // letzte zeile des cursors
+extern  uint8_t                 last_cursorspalte; // letzte colonne des cursors
 
 extern float UBatt;
 extern uint16_t batterieanzeige;
