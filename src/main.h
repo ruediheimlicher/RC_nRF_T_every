@@ -53,11 +53,12 @@ struct Signal
 
 // Joystick
 
-#define OLED 0
+#define OLED 1
 
 #define TASTE_OK           1
 #define AKTION_OK           2
 #define UPDATE_OK           3
+#define T5_WAIT              4 // Warten auf 3 Impulse
 
 #define JOYSTICKTASTE1 70
 #define JOYSTICKTASTE2 121

@@ -161,6 +161,7 @@ uint16_t tastaturwert = 0;
 uint8_t tastencounter = 0;
 uint8_t tastaturstatus = 0;
 uint8_t Taste = 0;
+uint8_t taste5counter = 0;
 
 // balken
 #define VBX   64
@@ -219,6 +220,7 @@ volatile uint8_t                 adcswitch=0;
 volatile uint16_t                lastTastenwert=0;
 volatile int16_t                 Tastenwertdiff=0;
 volatile uint16_t                tastaturcounter=0;
+volatile uint16_t                tastaturdelaycounter=0;
 
 
 
@@ -485,7 +487,7 @@ void tastenfunktion(uint16_t Tastenwert)
 
       //Serial.print("\n");
                
-      if (tastaturcounter>=50)   //   Prellen
+      if (tastaturcounter>=400)   //   Prellen
       {        
          
          tastaturcounter=0x00;
@@ -493,8 +495,9 @@ void tastenfunktion(uint16_t Tastenwert)
          if (!(tastaturstatus & (1<<TASTE_OK))) // Taste noch nicht gedrueckt
          {
            
-            Serial.println(Tastenwert);
+            //Serial.println(Tastenwert);
             //Taste = 0;
+            
             //tastaturstatus |= (1<<TASTE_ON); // nur einmal   
             tastaturstatus |= (1<<TASTE_OK); // nur einmal   
             Taste= Joystick_Tastenwahl(Tastenwert);
@@ -896,7 +899,8 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
 
 
 void loop()
-{                                  
+{                
+  //            
    loopcounter++;
    //digitalWrite(BUZZPIN,!(digitalRead(BUZZPIN)));
       tastaturwert = analogRead(TASTATUR_PIN);
@@ -905,7 +909,7 @@ void loop()
 
    if (tastaturstatus & (1<<TASTE_OK) && Taste) // Menu ansteuern
    {
-
+      tastaturcounter = 0;
       switch (Taste)
       {
          case 0: // null-pos, nichts tun
@@ -921,7 +925,7 @@ void loop()
 
          case 2:
          {
-            Serial.print("T 2");
+            //Serial.print("T 2");
             if (tastaturstatus & (1<<AKTION_OK))
             {
                Serial.print("T 2 up");
@@ -940,31 +944,93 @@ void loop()
 
          case 4:
          {
-            Serial.print("T 4");
+            //Serial.print("T 4");
+            
+            if (tastaturstatus & (1<<AKTION_OK))
+            {
+               Serial.print("T 4 left");
+               tastaturstatus &=  ~(1<<AKTION_OK);
+               tastaturstatus |= (1<<UPDATE_OK);
+               
+            }
            
          }break;
 
-         case 5:
+         case 5: // Ebene tiefer
          {
-            Serial.print("T 5");
+            if (tastaturstatus & (1<<AKTION_OK))
+            {
+
+               Serial.print("T 5 in ");
+
+               if ((curr_screen == 0) && (taste5counter < 3))
+               {
+                  taste5counter++;
+                  Serial.print("taste5counter: ");
+                  Serial.println(taste5counter);
+                  tastaturcounter = 300; // Mehrfachklick ermoeglichen
+                  curr_screen = 1;
+               }
+               else
+               {
+                  taste5counter = 0;
+                  if(curr_screen < 3)
+                  {
+                     curr_screen++;
+                  }
+               }
+                   Serial.print("curr_screen: ");
+                  Serial.println(curr_screen);              
+               tastaturstatus &=  ~(1<<AKTION_OK);
+               tastaturstatus |= (1<<UPDATE_OK);
+               
+            }
            
          }break;
 
          case 6:
          {
             Serial.print("T 6");
+            if (tastaturstatus & (1<<AKTION_OK))
+            {
+               Serial.print("T 6 right");
+               tastaturstatus &=  ~(1<<AKTION_OK);
+               tastaturstatus |= (1<<UPDATE_OK);
+               
+            }
            
          }break;
 
          case 7:
          {
-            Serial.print("T 7");
+            
+            if (tastaturstatus & (1<<AKTION_OK))
+            {
+               Serial.print("T 7 back ");
+               if(curr_screen )
+                  {
+                     curr_screen--;
+                  }
+               Serial.print("T7 curr_screen: ");
+               Serial.println(curr_screen);              
+
+               tastaturstatus &=  ~(1<<AKTION_OK);
+               tastaturstatus |= (1<<UPDATE_OK);
+               
+            }
            
          }break;
 
          case 8:
          {
             Serial.print("T 8");
+            if (tastaturstatus & (1<<AKTION_OK))
+            {
+               Serial.print("T 8 down");
+               tastaturstatus &=  ~(1<<AKTION_OK);
+               tastaturstatus |= (1<<UPDATE_OK);
+               
+            }
            
          }break;
 
