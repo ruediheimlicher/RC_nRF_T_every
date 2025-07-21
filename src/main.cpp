@@ -189,10 +189,18 @@ uint16_t potwert = 0;
 uint16_t errcounter = 0;
 uint16_t radiocounter = 0;
 
+volatile uint16_t                posregister[8][8]={}; // Aktueller screen: werte fuer page und daraufliegende col fuer Menueintraege (hex). geladen aus progmem
+
+volatile uint16_t                cursorpos[8][8]={}; // Aktueller screen: werte fuer page und darauf liegende col fuer den cursor
+
+unsigned char char_x = 0;
+unsigned char char_y = 0;
+uint8_t blink_cursorpos;
+
 // Menu
 volatile uint8_t                 curr_model=0; // aktuelles modell
 volatile uint8_t                 speichermodel=0;
-volatile uint8_t                 curr_kanal=0; // aktueller kanal
+volatile uint8_t                 curr_funktion=0; // aktueller kanal
 volatile uint8_t                 curr_impuls=0; // aktueller impuls
 
 volatile uint8_t                 curr_setting=0; // aktuelles Setting fuer Modell
@@ -929,9 +937,28 @@ void loop()
             if (tastaturstatus & (1<<AKTION_OK))
             {
                Serial.print("T 2 up");
+
                tastaturstatus &=  ~(1<<AKTION_OK);
                tastaturstatus |= (1<<UPDATE_OK);
-               
+               switch (curr_screen)
+               {
+                  case 0: // HOMESCREEN
+                  {
+
+                  }break;
+                  case 1: // MENUSCREEN
+                  {
+                     if(curr_model)
+                     {
+                        curr_model--;
+                        updateMenuScreen();
+                        u8g2.sendBuffer();
+
+                     }
+                     
+                  }
+
+               }// switch (curr_screen)
             }
            
          }break;
@@ -977,21 +1004,44 @@ void loop()
                      curr_screen = 1;
                      taste5counter = 0;
                      tastaturstatus |= ~(1<<T5_WAIT); // Warten beendet
-
+                     Serial.print("T5 setMenuScreen ");
+                     //u8g2.clear();
+                     setMenuScreen();
+                     u8g2.sendBuffer();
                   }
                   //
                   }
                }
-               else if (!(tastaturstatus & (1<<T5_WAIT))) // kein Warten
+               else //if (!(tastaturstatus & (1<<T5_WAIT))) // kein Warten
                {
                   taste5counter = 0;
+
                   if(curr_screen < 3)
                   {
-                     //curr_screen++;
+                     Serial.print("T 5 klick ");
+                     Serial.println(curr_screen);
+                     switch (curr_screen)
+                     {
+                        case 1: // MENUSCREEN
+                        {
+                           Serial.print("> Modellscreen ");
+                           Serial.println(curr_model);
+                           setModellScreen();
+                           curr_screen = 2;
+                           u8g2.sendBuffer();
+                        }break;
+
+                        case 2:
+                        {
+
+                        }break;
+                     }// switch (curr_screen)
+
+
                   }
                }
-                   Serial.print("curr_screen: ");
-                  Serial.println(curr_screen);              
+               Serial.print("curr_screen: ");
+               Serial.println(curr_screen);              
                tastaturstatus &=  ~(1<<AKTION_OK);
                tastaturstatus |= (1<<UPDATE_OK);
                
@@ -1021,6 +1071,7 @@ void loop()
                if(curr_screen )
                   {
                      curr_screen--;
+                     u8g2.clear();
                   }
                Serial.print("T7 curr_screen: ");
                Serial.println(curr_screen);              
@@ -1040,7 +1091,30 @@ void loop()
                Serial.print("T 8 down");
                tastaturstatus &=  ~(1<<AKTION_OK);
                tastaturstatus |= (1<<UPDATE_OK);
-               
+               switch (curr_screen)
+               {
+                  case 0: // HOMESCREEN
+                  {
+
+                  }break;
+                  case 1: // MENUSCREEN
+                  {
+                     if(curr_model < 5)
+                     {
+                        curr_model++;
+                        updateMenuScreen();
+                        u8g2.sendBuffer();
+
+                     }
+                     
+                  }break;
+
+                  case 2: 
+                  {
+
+                  }break;
+
+               }// switch (curr_screen)
             }
            
          }break;
@@ -1182,7 +1256,8 @@ void loop()
       */
       //oled_batteriebalken_setwert(BATTX,BATTY,BATTB,BATTH,batterieanzeige);
       //oled_setBatterieWert(BATTX,BATTY+BATTH+16,BATTB,24,UBatt);
-      updateHomeScreen();
+      
+      
       /*
       //char buf1[4];
        // Batt
@@ -1192,7 +1267,12 @@ void loop()
       u8g2.print(UBatt,2);
       u8g2.setDrawColor(1);
       */
-      u8g2.sendBuffer();
+     if(curr_screen == 0)
+     {
+         updateHomeScreen();
+         u8g2.sendBuffer();
+     }
+      
       if(loopcounter1 > 25)
       {
          loopcounter1 = 0;

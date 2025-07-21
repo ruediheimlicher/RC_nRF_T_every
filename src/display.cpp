@@ -2,12 +2,13 @@
 #include <inttypes.h>
 #include "main.h"
 #include "display.h"
+#include "text.h"
 
 extern uint16_t currentexpoarray[5][513];
 
 extern volatile uint8_t                 curr_model; // aktuelles modell
 extern volatile uint8_t                 speichermodel;
-extern volatile uint8_t                 curr_kanal; // aktueller kanal
+extern volatile uint8_t                 curr_funktion; // aktueller kanal
 extern volatile uint8_t                 curr_setting; // aktuelles Setting fuer Modell
 extern volatile uint8_t                 curr_screen; // aktueller screen
 extern volatile uint8_t                 last_screen; // letzter screen
@@ -20,9 +21,55 @@ extern volatile uint8_t                 curr_cursorspalte; // aktuelle colonne d
 extern volatile uint8_t                 last_cursorzeile; // letzte zeile des cursors
 extern volatile uint8_t                 last_cursorspalte; // letzte colonne des cursors
 
+extern uint8_t blink_cursorpos;
+
+#define cursortab0 2
+#define cursortab1 26
+#define cursortab2 46
+#define cursortab3 54
+#define cursortab4 66
+#define cursortab5 78
+#define cursortab6 90
+#define cursortab7 100
+extern  volatile uint8_t cursortab[10] = {cursortab0,cursortab1,cursortab2,cursortab3,cursortab4,cursortab5,cursortab6,cursortab7,cursortab0,cursortab0};
+extern volatile uint16_t  cursorpos[8][8]; // Aktueller screen: werte fuer page und daraufliegende col fuer cursor (hex). geladen aus progmem
+
+#define itemtab0  10
+#define itemtab1  34
+#define itemtab2  50
+#define itemtab3  62
+#define itemtab4  74
+#define itemtab5  88
+#define itemtab6  110
+#define itemtab7  118
+
+extern volatile uint8_t itemtab[10] = {itemtab0,itemtab1,itemtab2,itemtab3,itemtab4,itemtab5,itemtab6,itemtab7,itemtab0,itemtab0};
+
+extern volatile uint16_t  posregister[8][8]; // Aktueller screen: werte fuer page und daraufliegende col fuer Menueintraege (hex). geladen aus progmem
+
+#define  taby0    16
+#define  taby1    24
+#define  taby2    32
+#define  taby3    40
+#define  taby4    48
+#define  taby5    56
+#define  taby6    56
+#define  taby7    56
+
+extern volatile uint8_t taby[8] = {taby0,taby1,taby2,taby3,taby4,taby5,taby6,taby7};
+
+#define menu0  24
+#define menu1  40
+#define menu2  56
+
+#define menuh 20
+
 extern float UBatt;
 extern uint16_t batterieanzeige;
 extern Signal data;
+
+
+
 
 
 uint8_t charh = 0;
@@ -32,6 +79,10 @@ uint8_t balkenvh = 40;
  uint8_t balkenvb = 5;
  uint8_t balkenhh = 3;
  uint8_t balkenhb = 40;
+
+char menubuffer[20];
+char titelbuffer[20];
+
 
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE);
 
@@ -159,7 +210,17 @@ void oled_horizontalbalken_setwert(uint8_t x,uint8_t y, uint8_t b, uint8_t h,uin
 
 }
 
-
+void resetRegister(void)
+{
+   uint8_t i=0,k=0;
+   for(i=0;i<8;i++)
+   {
+      for (k=0;k<8;k++)
+      {
+         posregister[i][k]=0xFFFF;
+      }
+   }
+}
 
 
 void setHomeScreen()
@@ -170,7 +231,7 @@ void setHomeScreen()
    u8g2.print(F("nRF24 T"));
 
     oled_vertikalbalken(BATTX,BATTY,BATTB,BATTH);
-
+   u8g2.sendBuffer();
 
 }
 
@@ -206,5 +267,141 @@ void updateHomeScreen()
    uint8_t p = curr_model;
    oled_batteriebalken_setwert(BATTX,BATTY,BATTB,BATTH,batterieanzeige);
    oled_setBatterieWert(BATTX,BATTY+BATTH+16,BATTB,24,UBatt);
+   //u8g2.sendBuffer();
 }
 
+void setMenuScreen()
+{
+   u8g2.clear();
+   resetRegister();
+   blink_cursorpos=0xFFFF;
+   
+   
+   char_x = 58;
+   char_y = taby[0];
+   u8g2.drawStr(2,char_y,SettingTable[0]);
+
+   updateMenuScreen();
+   return;
+   char_y = 2;
+   uint8_t i = 0;
+   while (char_y < 64)
+   {
+      if(i==curr_model)
+      {
+         //u8g2.drawButtonUTF8(char_x,char_y, U8G2_BTN_INV, 50, 1, 1, ModelTable[i]);
+           u8g2.setDrawColor(1);
+         u8g2.drawFrame(char_x,char_y,54,18);
+         u8g2.setDrawColor(1);
+         u8g2.drawStr(char_x,char_y + charh, ModelTable[i]);
+
+      }
+      else
+      {
+         //u8g2.drawButtonUTF8(char_x,char_y, U8G2_BTN_BW0, 50, 1, 1, ModelTable[i]);
+           u8g2.setDrawColor(0);
+         u8g2.drawFrame(char_x,char_y,54,18);
+         u8g2.setDrawColor(1);
+         u8g2.drawStr(char_x,char_y + charh, ModelTable[i]);
+
+      }
+      //u8g2.drawFrame(char_x,char_y,50,24);
+      //u8g2.drawStr(char_x+2,char_y,ModelTable[i]);
+      char_y += menuh;
+      i++;
+   }
+
+}
+
+
+void updateMenuScreen()
+{
+   uint8_t z =  curr_cursorzeile;
+   
+   char_y = 2;
+   uint8_t i = 0;
+   charh = u8g2.getMaxCharHeight()-1;
+   char_x = 58;
+   while (char_y < 64)
+   {
+      if(i==curr_model)
+      {
+         u8g2.setDrawColor(1);
+         u8g2.drawFrame(char_x,char_y,64,18);
+         //u8g2.setDrawColor(1);
+         //u8g2.drawStr(char_x+2,char_y + charh, ModelTable[i]);
+         //u8g2.drawButtonUTF8(char_x,char_y, U8G2_BTN_BW1, 50, 1, 1, ModelTable[i]);
+
+      }
+      else
+      {
+         u8g2.setDrawColor(0);
+         u8g2.drawFrame(char_x,char_y,64,18);
+         //u8g2.setDrawColor(1);
+         //u8g2.drawStr(char_x+2,char_y + charh, ModelTable[i]);
+         //8g2.drawButtonUTF8(char_x,char_y, U8G2_BTN_BW0, 50, 1, 1, ModelTable[i]);
+
+      }
+      u8g2.setDrawColor(1);
+      u8g2.drawStr(char_x+2,char_y + charh-1, ModelTable[i]);
+      //u8g2.drawFrame(char_x,char_y,50,24);
+      //u8g2.drawStr(char_x+2,char_y,ModelTable[i]);
+      char_y += menuh;
+      i++;
+   }
+}
+
+void setModellScreen()
+{
+   u8g2.clear();
+   resetRegister();
+   blink_cursorpos=0xFFFF;
+   char_x = 2;
+   char_y = 1;
+   //u8g2.drawFrame(char_y,char_y,64,18);
+   u8g2.setDrawColor(1);
+   u8g2.drawStr(char_y+2,char_y + charh,ModelTable[curr_model]);
+   
+   char_y = taby[3];
+   updateModellScreen();
+   //u8g2.drawStr(2,char_y,SettingTable[1]);
+
+}
+
+void updateModellScreen(void)
+{
+   char_y = 2;
+   uint8_t i = 0;
+   charh = u8g2.getMaxCharHeight()-1;
+   char_x = 56;
+   while (char_y < 64)
+   {
+      if(i==curr_funktion)
+      {
+         u8g2.setDrawColor(0);
+         //u8g2.drawFrame(char_x,char_y,64,18);
+         //u8g2.setDrawColor(1);
+         u8g2.drawStr(char_x+2,char_y + charh, FunktionTable[i]);
+         u8g2.setDrawColor(1);
+         //u8g2.drawButtonUTF8(char_x,char_y, U8G2_BTN_BW1, 50, 1, 1, ModelTable[i]);
+
+      }
+      else
+      {
+         u8g2.setDrawColor(1);
+         //u8g2.drawFrame(char_x,char_y,64,18);
+         
+         u8g2.drawStr(char_x+2,char_y + charh, FunktionTable[i]);
+
+
+      }
+      u8g2.setDrawColor(1);
+      //u8g2.drawStr(char_x+2,char_y + charh-1, FunktionTable[i]);
+      //u8g2.drawFrame(char_x,char_y,50,24);
+      //u8g2.drawStr(char_x+2,char_y,ModelTable[i]);
+      char_y += 16;
+      i++;
+   }
+
+
+}

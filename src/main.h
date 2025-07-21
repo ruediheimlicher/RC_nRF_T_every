@@ -79,6 +79,12 @@ struct Signal
 
 #define TAB4    80
 #define TAB5    100
+
+
+
+
+
+
 #endif
 
 
