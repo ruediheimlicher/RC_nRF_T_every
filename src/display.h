@@ -44,6 +44,11 @@ void updateMenuScreen(void);
 
 void setModellScreen(void);
 void updateModellScreen(void);
+
+void setFunktionScreen(void);
+void updateFunktionScreen(void);
+
+
 #endif
 
 

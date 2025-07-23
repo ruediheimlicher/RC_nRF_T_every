@@ -1072,10 +1072,26 @@ void loop()
                   {
                      curr_screen--;
                      u8g2.clear();
+                     switch (curr_screen)
+                     {
+                        case 0: // HOMESCREEN
+                        {
+                           setHomeScreen();
+
+                        }break;
+                        case 1: // MENUSCREEN
+                        {
+                           setMenuScreen();
+                        }break;
+                        case 2: // MODELLSCREEN
+                        {
+                           setModellScreen();
+                        }break;
+                     }// switch curr_screen
                   }
                Serial.print("T7 curr_screen: ");
                Serial.println(curr_screen);              
-
+               u8g2.sendBuffer();
                tastaturstatus &=  ~(1<<AKTION_OK);
                tastaturstatus |= (1<<UPDATE_OK);
                

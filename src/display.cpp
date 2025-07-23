@@ -275,12 +275,13 @@ void setMenuScreen()
    u8g2.clear();
    resetRegister();
    blink_cursorpos=0xFFFF;
-   
-   
-   char_x = 58;
-   char_y = taby[0];
-   u8g2.drawStr(2,char_y,SettingTable[0]);
+   charh = u8g2.getMaxCharHeight()-1;
 
+   char_x = 30;
+   char_y = 45;
+   u8g2.setFontDirection(3);
+   u8g2.drawStr(char_x,char_y +charh,SettingTable[0]);
+   u8g2.setFontDirection(0);
    updateMenuScreen();
    return;
    char_y = 2;
@@ -321,7 +322,7 @@ void updateMenuScreen()
    char_y = 2;
    uint8_t i = 0;
    charh = u8g2.getMaxCharHeight()-1;
-   char_x = 58;
+   char_x = 48;
    while (char_y < 64)
    {
       if(i==curr_model)
@@ -356,12 +357,13 @@ void setModellScreen()
    u8g2.clear();
    resetRegister();
    blink_cursorpos=0xFFFF;
-   char_x = 2;
-   char_y = 1;
+   char_x = 30;
+   char_y = 45;
    //u8g2.drawFrame(char_y,char_y,64,18);
    u8g2.setDrawColor(1);
-   u8g2.drawStr(char_y+2,char_y + charh,ModelTable[curr_model]);
-   
+   u8g2.setFontDirection(3);
+   u8g2.drawStr(char_x,char_y + charh,ModelTable[curr_model]);
+   u8g2.setFontDirection(0);
    char_y = taby[3];
    updateModellScreen();
    //u8g2.drawStr(2,char_y,SettingTable[1]);
@@ -370,38 +372,51 @@ void setModellScreen()
 
 void updateModellScreen(void)
 {
-   char_y = 2;
+   char_y = 4;
    uint8_t i = 0;
+   u8g2.setFont(u8g2_font_t0_14_mr);  
    charh = u8g2.getMaxCharHeight()-1;
-   char_x = 56;
+   char_x = 48;
    while (char_y < 64)
    {
+       u8g2.setDrawColor(1);
+      u8g2.drawStr(char_x+2,char_y + charh, FunktionTable[i]);
       if(i==curr_funktion)
       {
-         u8g2.setDrawColor(0);
-         //u8g2.drawFrame(char_x,char_y,64,18);
-         //u8g2.setDrawColor(1);
-         u8g2.drawStr(char_x+2,char_y + charh, FunktionTable[i]);
          u8g2.setDrawColor(1);
+         u8g2.drawFrame(char_x,char_y,64,14);
+         //u8g2.setDrawColor(1);
+         //u8g2.drawStr(char_x+2,char_y + charh, FunktionTable[i]);
+         //u8g2.setDrawColor(1);
          //u8g2.drawButtonUTF8(char_x,char_y, U8G2_BTN_BW1, 50, 1, 1, ModelTable[i]);
 
       }
       else
       {
-         u8g2.setDrawColor(1);
-         //u8g2.drawFrame(char_x,char_y,64,18);
+         u8g2.setDrawColor(0);
+         u8g2.drawFrame(char_x,char_y,64,14);
          
-         u8g2.drawStr(char_x+2,char_y + charh, FunktionTable[i]);
+         //u8g2.drawStr(char_x+2,char_y + charh, FunktionTable[i]);
 
 
       }
-      u8g2.setDrawColor(1);
-      //u8g2.drawStr(char_x+2,char_y + charh-1, FunktionTable[i]);
+      
+     
       //u8g2.drawFrame(char_x,char_y,50,24);
       //u8g2.drawStr(char_x+2,char_y,ModelTable[i]);
       char_y += 16;
       i++;
    }
-
+   u8g2.setFont(u8g2_font_t0_15_mr);  
 
 }
+
+void setFunktionScreen()
+{
+
+}// setFunktionScreen
+
+void updateFunktionScreen()
+{
+
+}// updateFunktionScreen
