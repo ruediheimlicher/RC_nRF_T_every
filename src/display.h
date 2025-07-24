@@ -48,6 +48,10 @@ void updateModellScreen(void);
 void setFunktionScreen(void);
 void updateFunktionScreen(void);
 
+void setAktionScreen(void);
+void updateAktionScreen(void);
+
+
 
 #endif
 

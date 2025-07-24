@@ -52,18 +52,19 @@ const char ausgang[]  = "Ausgang";
 const char *SettingTable[]  = {menutitel, model, setting, kanal,  mix, zuteilung,ausgang};
 
 
-// Kanalscreen
-const char kanaltitel[]  = "Kan:";
-const char richtung[]  = "Ri:";
-const char funktion[]  = "Fkt:";
+// Funktionscreen
+//const char kanaltitel[]  = "Kan:";
+//const char richtung[]  = "Ri:";
+//const char funktion[]  = "Fkt:";
 const char level[]  = "Level";
 const char expo[]  = "Expo";
+const char richtung[]  = "Ri:";
 
-const char seitea[]  = "A:";
-const char seiteb[]  = "B:";
-const char kanaltyp[]  = "Typ:";
+//const char seitea[]  = "A:";
+//const char seiteb[]  = "B:";
+const char typ[]  = "Typ:";
 
-const char *KanalTable[]  = {kanaltitel, richtung, funktion, level, expo, seitea, seiteb,kanaltyp};
+const char *AktionTable[]  = { level, expo, richtung, typ};
 
 
 // Kanaltyp
@@ -76,7 +77,7 @@ const char *KanalTypTable[]  = {pitchtyp,schiebertyp,schaltertyp};
 
 // Mix
 const char mixtitel[]  = "Mixing";
-const char MixTable[]  = {mixtitel};
+const char *MixTable[]  = {mixtitel};
 
 // Mixtyp
 const char nada[]  = "OFF ";
@@ -88,7 +89,7 @@ const char *MixTypTable[]  = {nada,vmix,butterfly,A};
 
 // Zuteilung
 const char zuteilungtitel[]  = "Zuteilung";
-const char ZuteilungTable[]  = {zuteilungtitel};
+const char *ZuteilungTable[]  = {zuteilungtitel};
 
 // Sichern
 const char frage[]  = "Aenderungen sichern";

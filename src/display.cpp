@@ -6,11 +6,15 @@
 
 extern uint16_t currentexpoarray[5][513];
 
-extern volatile uint8_t                 curr_model; // aktuelles modell
+extern uint8_t kanalsettingarray[5][4][4];
+
+extern  uint8_t                 curr_model; // aktuelles modell
 extern volatile uint8_t                 speichermodel;
-extern volatile uint8_t                 curr_funktion; // aktueller kanal
-extern volatile uint8_t                 curr_setting; // aktuelles Setting fuer Modell
-extern volatile uint8_t                 curr_screen; // aktueller screen
+extern  uint8_t                 curr_funktion; // aktueller kanal
+extern  uint8_t                 curr_aktion;
+
+extern  uint8_t                 curr_setting; // aktuelles Setting fuer Modell
+extern  uint8_t                 curr_screen; // aktueller screen
 extern volatile uint8_t                 last_screen; // letzter screen
 
 extern volatile uint8_t                 curr_page; // aktuelle page
@@ -352,7 +356,7 @@ void updateMenuScreen()
    }
 }
 
-void setModellScreen()
+void setModellScreen() // Auswahl Funktion
 {
    u8g2.clear();
    resetRegister();
@@ -362,7 +366,7 @@ void setModellScreen()
    //u8g2.drawFrame(char_y,char_y,64,18);
    u8g2.setDrawColor(1);
    u8g2.setFontDirection(3);
-   u8g2.drawStr(char_x,char_y + charh,ModelTable[curr_model]);
+   u8g2.drawStr(char_x,char_y + charh, ModelTable[curr_model]);
    u8g2.setFontDirection(0);
    char_y = taby[3];
    updateModellScreen();
@@ -385,25 +389,15 @@ void updateModellScreen(void)
       {
          u8g2.setDrawColor(1);
          u8g2.drawFrame(char_x,char_y,64,14);
-         //u8g2.setDrawColor(1);
-         //u8g2.drawStr(char_x+2,char_y + charh, FunktionTable[i]);
-         //u8g2.setDrawColor(1);
-         //u8g2.drawButtonUTF8(char_x,char_y, U8G2_BTN_BW1, 50, 1, 1, ModelTable[i]);
-
+         
       }
       else
       {
          u8g2.setDrawColor(0);
          u8g2.drawFrame(char_x,char_y,64,14);
-         
-         //u8g2.drawStr(char_x+2,char_y + charh, FunktionTable[i]);
-
 
       }
-      
-     
-      //u8g2.drawFrame(char_x,char_y,50,24);
-      //u8g2.drawStr(char_x+2,char_y,ModelTable[i]);
+   
       char_y += 16;
       i++;
    }
@@ -411,12 +405,139 @@ void updateModellScreen(void)
 
 }
 
-void setFunktionScreen()
+void setFunktionScreen() // Auswahl Aktion
 {
-
+   u8g2.clear();
+   resetRegister();
+   blink_cursorpos=0xFFFF;
+   char_x = 18;
+   char_y = 45;
+   //u8g2.drawFrame(char_y,char_y,64,18);
+   u8g2.setDrawColor(1);
+   u8g2.setFontDirection(3);
+   u8g2.drawStr(char_x,char_y + charh,FunktionTable[curr_funktion]);
+   u8g2.setFontDirection(0);
+   updateFunktionScreen();
 }// setFunktionScreen
 
 void updateFunktionScreen()
 {
+   char_y = 4;
+   uint8_t i = 0;
+   //u8g2.setFont(u8g2_font_t0_14_mr);  
+   u8g2.setFont(u8g2_font_t0_15_mr);  
+   charh = u8g2.getMaxCharHeight()-1;
+   char_x = 36;
+
+   uint8_t feldx = 110;
+   uint8_t feldyO = 6;
+   uint8_t feldb = 16;
+   uint8_t feldh = 16;
+   uint8_t fkt = 0;
+
+   while (char_y < 64)
+   {
+      u8g2.setDrawColor(1);
+      u8g2.drawStr(char_x+2,char_y + charh, AktionTable[i]);
+      u8g2.setFont(u8g2_font_unifont_t_symbols);
+      u8g2.drawGlyph(86,char_y + 6, 0x23F6);
+      u8g2.drawGlyph(86,char_y + 22, 0x23F7);
+       
+      u8g2.setFont(u8g2_font_t0_15_mr);  
+
+      uint8_t level = kanalsettingarray[curr_model][fkt][1];
+   
+      uint8_t expo = kanalsettingarray[curr_model][fkt][2];
+      Serial.print("updatefunktionscreen level: ");
+      Serial.print(level);
+      Serial.print(" expo: ");
+      Serial.println(expo);
+      uint8_t levelO = (level & 0xF0) >> 4;
+      uint8_t levelU = (level & 0x0F);
+      uint8_t expoO = (expo & 0xF0) >> 4;
+      uint8_t expoU = expo & 0x0F;
+      u8g2.setCursor(itemtab[6], char_y + 6);
+      u8g2.print(levelO);
+      u8g2.setCursor(itemtab[6], char_y + 22);
+      u8g2.print(levelU);
+
+      u8g2.setCursor(itemtab[6], char_y + 36 + 6);
+      u8g2.print(expoO);
+      u8g2.setCursor(itemtab[6], char_y + 36 + 22);
+      u8g2.print(expoU);
+     
+
+
+      if(i==curr_aktion)
+      {
+         u8g2.setDrawColor(1);
+         u8g2.drawFrame(char_x,char_y,48,16);
+         
+         
+
+      }
+      else
+      {
+         u8g2.setDrawColor(0);
+         u8g2.drawFrame(char_x,char_y,48,16);
+         
+
+
+      }
+       switch (curr_cursorspalte)
+      {
+         case 0:
+         {
+
+         }break;
+         case 1: // Level, expo up, down
+         {
+
+         }break;
+      }// switch curr_cursorspalte
+
+      char_y += 36;
+      fkt++;
+      i++;
+   }
+
+   u8g2.setFont(u8g2_font_t0_15_mr);  
 
 }// updateFunktionScreen
+
+void setAktionScreen()
+{
+   u8g2.clear();
+   resetRegister();
+   blink_cursorpos=0xFFFF;
+   char_x = 3;
+   char_y = 4;
+   //u8g2.drawFrame(char_y,char_y,64,18);
+   u8g2.setDrawColor(1);
+   u8g2.setFontDirection(3);
+   u8g2.drawStr(char_x,char_y + charh,AktionTable[curr_aktion]); // "YAW"
+   u8g2.setFontDirection(0);
+
+   updateAktionScreen();
+}
+
+void updateAktionScreen()
+{
+   char_y = 40;
+   uint8_t i = 0;
+   u8g2.setFont(u8g2_font_t0_14_mr);  
+   charh = u8g2.getMaxCharHeight()-1;
+   char_x = 32;
+   uint8_t level = kanalsettingarray[curr_model][curr_funktion][1];
+
+   u8g2.setCursor(4,40);
+   u8g2.print(level);
+   char_y = 32;
+   u8g2.drawStr(char_x,char_y + charh,AktionTable[1]);
+
+  uint8_t expo = kanalsettingarray[curr_model][curr_funktion][2];
+   u8g2.setCursor(30,40);
+   u8g2.print(expo);
+   
+   u8g2.setFont(u8g2_font_t0_15_mr);  
+} // updateAktionScreen
