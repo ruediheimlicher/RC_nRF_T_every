@@ -13,6 +13,10 @@
 #include <nRF24L01.h>
 #include <RF24.h>
 #include <Bounce2.h> // github.com/thomasfredericks/Bounce2
+
+#include <elapsedMillis.h>
+
+
 const uint64_t pipeOut = 0xABCDABCD71LL;         // NOTE: The address in the Transmitter and Receiver code must be the same "0xABCDABCD71LL" | Verici ve Alıcı kodundaki adres aynı olmalıdır
 
 extern "C" 
@@ -117,6 +121,22 @@ uint16_t          externpotwertarray[NUM_SERVOS] = {}; // Werte von extern  pro 
 
 uint16_t currentexpoarray[5][513] = {};
 
+uint8_t                                  curr_pfeil = 0;
+
+ uint16_t      blink_cursorpos=0xFFFF;
+ uint8_t blinkstatus = 0;
+
+ uint16_t stopsekunde=0;
+ uint16_t stopminute=0;
+ uint16_t motorsekunde=0;
+ uint16_t motorminute=0;
+ uint8_t motorstunde=0;
+
+ uint16_t sendesekunde=0;
+ uint16_t sendeminute=0;
+ uint8_t sendestunde=0;
+
+
 
 float potlo = POTLO; // min pot
 float pothi = POTHI; // max pot
@@ -195,14 +215,19 @@ volatile uint16_t                cursorpos[8][8]={}; // Aktueller screen: werte 
 
 unsigned char char_x = 0;
 unsigned char char_y = 0;
-uint8_t blink_cursorpos;
 
 // Menu
 volatile uint8_t                 curr_model=0; // aktuelles modell
 volatile uint8_t                 speichermodel=0;
 volatile uint8_t                 curr_funktion=0; // aktuelle funktion
 volatile uint8_t                 curr_aktion=0; // aktuelle aktion
+
+uint8_t                            curr_wert = 0;
+
 volatile uint8_t                 curr_impuls=0; // aktueller impuls
+
+
+
 
 volatile uint8_t                 curr_setting=0; // aktuelles Setting fuer Modell
 uint8_t                          speichersetting=0;
@@ -231,9 +256,9 @@ volatile int16_t                 Tastenwertdiff=0;
 volatile uint16_t                tastaturcounter=0;
 volatile uint16_t                tastaturdelaycounter=0;
 
-
-
-
+elapsedMillis   zeitintervall;
+uint8_t           sekundencounter = 0;
+elapsedMillis   sinceLastBlink = 0;
 
 
 Signal data;
@@ -915,7 +940,21 @@ void loop()
    //digitalWrite(BUZZPIN,!(digitalRead(BUZZPIN)));
       tastaturwert = analogRead(TASTATUR_PIN);
       tastenfunktion(tastaturwert);
-      
+
+   if (zeitintervall > 500) 
+   { 
+      zeitintervall = 0;
+      sekundencounter++;
+      if (sekundencounter%2)
+      {
+         blinkstatus = 1;
+      }
+      else
+      {
+         blinkstatus = 0;
+      }
+      //refreshScreen();
+   }  
 
    if (tastaturstatus & (1<<TASTE_OK) && Taste) // Menu ansteuern
    {
@@ -987,9 +1026,35 @@ void loop()
 
 
                         }break;
+
+
+
                      }// switch curr_cursorspalte
+
                      
                   }break;
+
+                  case 4: // T2 AKTIONSCREEN
+                  {
+                     switch (curr_cursorspalte)
+                     {
+                        case 0:
+                        {
+                           if(curr_wert )
+                           {
+                              curr_wert--;
+                              
+                           }
+                        }break;
+                        case 1: // UP DOWN
+                        {
+
+                        }break;
+                     }// switch curr_cursorspalte
+                     updateAktionScreen();
+                     u8g2.sendBuffer();
+                  }break;
+
                   
 
                }// switch (curr_screen)
@@ -1013,7 +1078,58 @@ void loop()
                tastaturstatus &=  ~(1<<AKTION_OK);
                tastaturstatus |= (1<<UPDATE_OK);
                
+                             switch (curr_screen)
+               {
+                  case 0: // HOMESCREEN // Umschalten Simulator/Modell, TO DO
+                  {
+                     if(curr_cursorspalte)
+                     {
+                        curr_cursorspalte--;
+                     }
+                  }break;
+
+                  case 1: // MENUSCREEN
+                  {
+
+                  }break;
+                  case 2: // MODELLSCREEN
+                  {
+
+                  }break;
+                  case 3: // FUNKTIONSCREEN
+                  {
+                     
+                     switch (curr_cursorspalte)
+                     {
+                        case 0: 
+                        {
+                           
+
+                           updateFunktionScreen();
+                           u8g2.sendBuffer();
+
+                           
+                        }break;
+                        case 1: // up, down enabled
+                        {
+                           curr_cursorspalte--;
+                        }break;
+                     }// switch curr_cursorspalte
+                  }break;
+
+                  case 4: // AKTIONSCREEN
+                  {
+                     Serial.print("T4 case 4: curr_screen: ");
+                     Serial.println(curr_screen);
+                     curr_cursorspalte = 0;
+                     updateAktionScreen();
+                     u8g2.sendBuffer();
+                  }break;
+               }// swich curr_screen
+               
             }
+
+            
            
          }break;
 
@@ -1083,13 +1199,21 @@ void loop()
                            u8g2.sendBuffer();
                         }break;
 
+                        case 4: 
+                        {
+                           Serial.print("screen 4 curr_wert: ");
+                           Serial.println(curr_wert);
+
+
+                        }break;
+
                         
                      }// switch (curr_screen)
 
 
                   }
                }
-               Serial.print("curr_screen: ");
+               Serial.print("T5 end: curr_screen: ");
                Serial.println(curr_screen);              
                tastaturstatus &=  ~(1<<AKTION_OK);
                tastaturstatus |= (1<<UPDATE_OK);
@@ -1103,33 +1227,39 @@ void loop()
             Serial.print("T 6");
             if (tastaturstatus & (1<<AKTION_OK))
             {
-               Serial.print("T 6 right");
+               Serial.println("T 6 right");
                tastaturstatus &=  ~(1<<AKTION_OK);
                tastaturstatus |= (1<<UPDATE_OK);
                switch (curr_screen)
                {
-                  case 0: // HOMESCREEN
+                  case 0: // HOMESCREEN // Umschalten Simulator/Modell, TO DO
                   {
+                     if(curr_cursorspalte == 0) // nur eine Moeglichkeit
+                     {
+                        curr_cursorspalte++;
+                     }
+                           
 
                   }break;
 
-                  case 1: // MENUSCREEN
+                  case 1: // MODELLSCREEN
                   {
 
                   }break;
-                  case 2: // MODELLSCREEN
+                  case 2: // FUNKIONSCREEN
                   {
 
                   }break;
                   case 3: // FUNKTIONSCREEN
                   {
-                     
+                     Serial.print("T6 case 3: curr_screen: ");
+                     Serial.println(curr_screen);
                      switch (curr_cursorspalte)
                      {
-                        case 0:
+                        case 0: 
                         {
-                           curr_cursorspalte++;
-
+                           curr_cursorspalte++; // max 1
+                           
                            updateFunktionScreen();
                            u8g2.sendBuffer();
 
@@ -1138,8 +1268,50 @@ void loop()
                         case 1: // up, down enabled
                         {
 
+                           switch (curr_aktion)
+                           {
+                              case 0: // Level
+                              {
+
+                                 uint8_t level = kanalsettingarray[curr_model][curr_funktion][1];
+                                 uint8_t levelO = (level & 0xF0) >> 4;
+                                 uint8_t levelU = (level & 0x0F);
+                                 if(curr_pfeil == PFEIL_UP)
+                                 {
+
+                                    blink_cursorpos = 86<<8 | 22;
+                                    u8g2.setDrawColor(1);
+                                    u8g2.drawFrame(88,char_y,48,16);
+                                 }
+                              
+                              }break;
+                              case 1: // expo
+                              {
+                                 uint8_t expo = kanalsettingarray[curr_model][curr_funktion][2];
+                                 uint8_t expoO = (expo & 0xF0) >> 4;
+                                 uint8_t expoU = expo & 0x0F;
+
+
+                              }break;
+                           }// switch curr_aktion
                         }break;
                      }// switch curr_cursorspalte
+                  }break;
+                  case 4: // AKTIONSCREEN
+                  {
+                     Serial.print("T6 case 4: curr_screen: ");
+                     Serial.println(curr_screen);
+                     switch (curr_cursorspalte)
+                     {
+                        case 0:
+                        {
+                           curr_cursorspalte = 1;
+                        }break;
+                     }// switch
+                     
+                     updateAktionScreen();
+                     u8g2.sendBuffer();
+
                   }break;
 
                }// swich curr_screen
@@ -1236,8 +1408,52 @@ void loop()
 
                      }
                   }break;
+                  case 4: // T8 AKTIONSCREEN
+                  {
+                     switch (curr_cursorspalte)
+                     {
+                        case 0:
+                        {
+                           if(curr_wert <2)
+                           {
+                              curr_wert++;
+                              updateAktionScreen();
+                              u8g2.sendBuffer();
+                           }
+                        }break;
+                        case 1: // UP DOWN
+                        {
+                           uint8_t level = kanalsettingarray[curr_model][curr_funktion][1];
+                           uint8_t levelO = (level & 0xF0) >> 4;
+                           uint8_t levelU = (level & 0x0F);
+                           switch (curr_wert)
+                           {
+                              case 0: // UP
+                              {
+                                 if(levelO < 4)
+                                 {
+                                    levelO++;
+                                 }
+                              }break;
+                              case 1: // DOWN
+                              {
+                                 if (levelO < 4)
+                                 {
+                                    levelU++;
+                                 }
+                              }break;
+                           }
+                           level = (levelO << 4) | levelU;
+                            kanalsettingarray[curr_model][curr_funktion][1] = level;
+                            updateAktionScreen();
+                           u8g2.sendBuffer();
+                        }break;
+
+                     }// switch curr_cursorspalte
+                  }break;
 
                }// switch (curr_screen)
+
             }
            
          }break;

@@ -27,6 +27,12 @@ struct Signal
 #define ROLL        2
 #define THROTTLE    3
 
+#define PFEIL_UP     0
+#define PFEIL_DOWN   1
+#define PFEIL_LEFT   2
+#define PFEIL_RIGHT  3
+
+
 #define NUM_SERVOS  4
 
 #define  ANZAHLMODELLE        5

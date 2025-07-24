@@ -51,7 +51,7 @@ void updateFunktionScreen(void);
 void setAktionScreen(void);
 void updateAktionScreen(void);
 
-
+void refreshScreen(void);
 
 #endif
 
