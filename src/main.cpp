@@ -1029,31 +1029,68 @@ void loop()
                               curr_wert--;                              
                            }
                         }break;
-                        case 1: // UP DOWN
+                        case 1: // T2 UP DOWN
                         {
                            uint8_t level = kanalsettingarray[curr_model][curr_funktion][1];
                            uint8_t levelO = (level & 0xF0) >> 4;
                            uint8_t levelU = (level & 0x0F);
-                           switch (curr_wert)
+
+                           uint8_t expo = kanalsettingarray[curr_model][curr_funktion][2];
+                           uint8_t expoO = (expo & 0xF0) >> 4;
+                           uint8_t expoU = (expo & 0x0F);
+
+                           switch (curr_aktion)
                            {
-                              case 0: // UP
+                              case 0: //LEVEL
                               {
-                                 if(levelO < 4)
+                                 switch (curr_wert)
                                  {
-                                    levelO++;
+                                    case 0: // UP
+                                    {
+                                       if(levelO < 4)
+                                       {
+                                          levelO++;
+                                       }
+                                    }break;
+                                    case 1: // DOWN
+                                    {
+                                       if (levelU < 4)
+                                       {
+                                          levelU++;
+                                       }
+                                    }break;
                                  }
+                                 level = (levelO << 4) | levelU;
+                                 kanalsettingarray[curr_model][curr_funktion][1] = level; 
                               }break;
-                              case 1: // DOWN
+
+                              case 1: // EXPO
                               {
-                                 if (levelU < 4)
+                                switch (curr_wert)
                                  {
-                                    levelU++;
+                                    case 0: // UP
+                                    {
+                                       if(expoO < 4)
+                                       {
+                                          expoO++;
+                                       }
+                                    }break;
+                                    case 1: // DOWN
+                                    {
+                                       if (expoU < 4)
+                                       {
+                                          expoU++;
+                                       }
+                                    }break;
                                  }
+                                 expo = (expoO << 4) | expoU;
+                                 kanalsettingarray[curr_model][curr_funktion][2] = expo; 
+
                               }break;
-                           }
-                           level = (levelO << 4) | levelU;
-                            kanalsettingarray[curr_model][curr_funktion][1] = level;                         
+
+                           }// switch curr_aktion                        
                         }break;
+
                      }// switch curr_cursorspalte
                      updateAktionScreen();
                      u8g2.sendBuffer();
