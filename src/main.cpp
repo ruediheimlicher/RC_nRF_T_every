@@ -102,7 +102,7 @@ uint16_t schritt = 32;
 
 
 
-volatile uint16_t          impulstimearray[NUM_SERVOS] = {};
+ uint16_t          impulstimearray[NUM_SERVOS] = {};
 const int                  adcpinarray[NUM_SERVOS] = {A3,A6,A1,A0};    // pins der Pots
 
 uint8_t                    kanalsettingarray[ANZAHLMODELLE][NUM_SERVOS][KANALSETTINGBREITE] = {};
@@ -119,7 +119,7 @@ uint8_t expowertb = 0;
 uint16_t          potwertarray[NUM_SERVOS] = {}; // Werte fuer Mitte
 uint16_t          externpotwertarray[NUM_SERVOS] = {}; // Werte von extern  pro servo
 
-uint16_t currentexpoarray[5][513] = {};
+//uint16_t currentexpoarray[5][513] = {};
 
 uint8_t                                  curr_pfeil = 0;
 
@@ -193,68 +193,68 @@ uint8_t taskarray[4] = {'Y', 'P', 'R', 'T'};
 
 uint16_t potgrenzearray[NUM_SERVOS][2]; // obere und untere Grenze von adc
 
-volatile float quot = (ppmhi - ppmlo)/(pothi - potlo);
+ float quot = (ppmhi - ppmlo)/(pothi - potlo);
 
-volatile float expoquot = (ppmhi - ppmlo)/2/0x200; // umrechnen der max expo (512) auf PPM  
+ float expoquot = (ppmhi - ppmlo)/2/0x200; // umrechnen der max expo (512) auf PPM  
 
-//volatile float quotarray[NUM_SERVOS] = {}; // Umrechnungsfaktor pro Pot
+// float quotarray[NUM_SERVOS] = {}; // Umrechnungsfaktor pro Pot
 
 
 
 // OLED > in display.cpp
-volatile uint16_t pot0 = 0;
+ uint16_t pot0 = 0;
 
 uint16_t potwert = 0;
 
 uint16_t errcounter = 0;
 uint16_t radiocounter = 0;
 
-volatile uint16_t                posregister[8][8]={}; // Aktueller screen: werte fuer page und daraufliegende col fuer Menueintraege (hex). geladen aus progmem
+// uint16_t                posregister[8][8]={}; // Aktueller screen: werte fuer page und daraufliegende col fuer Menueintraege (hex). geladen aus progmem
 
-volatile uint16_t                cursorpos[8][8]={}; // Aktueller screen: werte fuer page und darauf liegende col fuer den cursor
+ uint16_t                cursorpos[8][8]={}; // Aktueller screen: werte fuer page und darauf liegende col fuer den cursor
 
 unsigned char char_x = 0;
 unsigned char char_y = 0;
 
 // Menu
-volatile uint8_t                 curr_model=0; // aktuelles modell
-volatile uint8_t                 speichermodel=0;
-volatile uint8_t                 curr_funktion=0; // aktuelle funktion
-volatile uint8_t                 curr_aktion=0; // aktuelle aktion
+ uint8_t                 curr_model=0; // aktuelles modell
+ uint8_t                 speichermodel=0;
+ uint8_t                 curr_funktion=0; // aktuelle funktion
+ uint8_t                 curr_aktion=0; // aktuelle aktion
 
 uint8_t                            curr_wert = 0;
 
-volatile uint8_t                 curr_impuls=0; // aktueller impuls
+ uint8_t                 curr_impuls=0; // aktueller impuls
 
 
 
 
-volatile uint8_t                 curr_setting=0; // aktuelles Setting fuer Modell
+ uint8_t                 curr_setting=0; // aktuelles Setting fuer Modell
 uint8_t                          speichersetting=0;
 
-volatile uint8_t                 curr_trimmkanal=0; // aktueller  Kanal fuerTrimmung
-volatile uint8_t                 curr_trimmung=0; // aktuelle  Trimmung fuer Trimmkanal
+ uint8_t                 curr_trimmkanal=0; // aktueller  Kanal fuerTrimmung
+ uint8_t                 curr_trimmung=0; // aktuelle  Trimmung fuer Trimmkanal
 
 
-volatile uint8_t                 curr_screen = 0; // aktueller screen
-volatile uint8_t                 last_screen=0; // letzter screen
+ uint8_t                 curr_screen = 0; // aktueller screen
+ uint8_t                 last_screen=0; // letzter screen
 
-volatile uint8_t                 curr_page=7; // aktuelle page
-volatile uint8_t                 curr_col=0; // aktuelle colonne
+ uint8_t                 curr_page=7; // aktuelle page
+ uint8_t                 curr_col=0; // aktuelle colonne
 
-volatile uint8_t                 curr_cursorzeile=0; // aktuelle zeile des cursors
-volatile uint8_t                 curr_cursorspalte=0; // aktuelle colonne des cursors
-volatile uint8_t                 last_cursorzeile=0; // letzte zeile des cursors
-volatile uint8_t                 last_cursorspalte=0; // letzte colonne des cursors
+ uint8_t                 curr_cursorzeile=0; // aktuelle zeile des cursors
+ uint8_t                 curr_cursorspalte=0; // aktuelle colonne des cursors
+ uint8_t                 last_cursorzeile=0; // letzte zeile des cursors
+ uint8_t                 last_cursorspalte=0; // letzte colonne des cursors
 
 // Tastatur
-volatile uint8_t                 Tastenindex=0;
-volatile uint16_t                Tastenwert=0;
-volatile uint8_t                 adcswitch=0;
-volatile uint16_t                lastTastenwert=0;
-volatile int16_t                 Tastenwertdiff=0;
-volatile uint16_t                tastaturcounter=0;
-volatile uint16_t                tastaturdelaycounter=0;
+ uint8_t                 Tastenindex=0;
+ uint16_t                Tastenwert=0;
+ uint8_t                 adcswitch=0;
+ uint16_t                lastTastenwert=0;
+ int16_t                 Tastenwertdiff=0;
+ uint16_t                tastaturcounter=0;
+ uint16_t                tastaturdelaycounter=0;
 
 elapsedMillis   zeitintervall;
 uint8_t           sekundencounter = 0;

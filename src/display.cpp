@@ -4,27 +4,27 @@
 #include "display.h"
 #include "text.h"
 
-extern uint16_t currentexpoarray[5][513];
+//extern uint16_t currentexpoarray[5][513];
 
 extern uint8_t kanalsettingarray[5][4][4];
 
 extern  uint8_t                 curr_model; // aktuelles modell
-extern volatile uint8_t                 speichermodel;
+extern  uint8_t                 speichermodel;
 extern  uint8_t                 curr_funktion; // aktueller kanal
 extern  uint8_t                 curr_aktion;
 extern  uint8_t                 curr_wert;
 
 extern  uint8_t                 curr_setting; // aktuelles Setting fuer Modell
 extern  uint8_t                 curr_screen; // aktueller screen
-extern volatile uint8_t                 last_screen; // letzter screen
+extern  uint8_t                 last_screen; // letzter screen
 
-extern volatile uint8_t                 curr_page; // aktuelle page
-extern volatile uint8_t                 curr_col; // aktuelle colonne
+extern  uint8_t                 curr_page; // aktuelle page
+extern  uint8_t                 curr_col; // aktuelle colonne
 
-extern volatile uint8_t                 curr_cursorzeile; // aktuelle zeile des cursors
-extern volatile uint8_t                 curr_cursorspalte; // aktuelle colonne des cursors
-extern volatile uint8_t                 last_cursorzeile; // letzte zeile des cursors
-extern volatile uint8_t                 last_cursorspalte; // letzte colonne des cursors
+extern  uint8_t                 curr_cursorzeile; // aktuelle zeile des cursors
+extern  uint8_t                 curr_cursorspalte; // aktuelle colonne des cursors
+extern  uint8_t                 last_cursorzeile; // letzte zeile des cursors
+extern  uint8_t                 last_cursorspalte; // letzte colonne des cursors
 
 extern uint8_t                                  curr_pfeil;
 
@@ -42,8 +42,8 @@ extern uint8_t       blinkstatus;
 #define cursortab5 78
 #define cursortab6 90
 #define cursortab7 100
-extern  volatile uint8_t cursortab[10] = {cursortab0,cursortab1,cursortab2,cursortab3,cursortab4,cursortab5,cursortab6,cursortab7,cursortab0,cursortab0};
-extern volatile uint16_t  cursorpos[8][8]; // Aktueller screen: werte fuer page und daraufliegende col fuer cursor (hex). geladen aus progmem
+extern   uint8_t cursortab[10] = {cursortab0,cursortab1,cursortab2,cursortab3,cursortab4,cursortab5,cursortab6,cursortab7,cursortab0,cursortab0};
+extern  uint16_t  cursorpos[8][8]; // Aktueller screen: werte fuer page und daraufliegende col fuer cursor (hex). geladen aus progmem
 
 #define itemtab0  10
 #define itemtab1  34
@@ -54,9 +54,9 @@ extern volatile uint16_t  cursorpos[8][8]; // Aktueller screen: werte fuer page 
 #define itemtab6  110
 #define itemtab7  118
 
-extern volatile uint8_t itemtab[10] = {itemtab0,itemtab1,itemtab2,itemtab3,itemtab4,itemtab5,itemtab6,itemtab7,itemtab0,itemtab0};
+extern  uint8_t itemtab[10] = {itemtab0,itemtab1,itemtab2,itemtab3,itemtab4,itemtab5,itemtab6,itemtab7,itemtab0,itemtab0};
 
-extern volatile uint16_t  posregister[8][8]; // Aktueller screen: werte fuer page und daraufliegende col fuer Menueintraege (hex). geladen aus progmem
+//extern  uint16_t  posregister[8][8]; // Aktueller screen: werte fuer page und daraufliegende col fuer Menueintraege (hex). geladen aus progmem
 
 #define  taby0    16
 #define  taby1    24
@@ -67,7 +67,7 @@ extern volatile uint16_t  posregister[8][8]; // Aktueller screen: werte fuer pag
 #define  taby6    56
 #define  taby7    56
 
-extern volatile uint8_t taby[8] = {taby0,taby1,taby2,taby3,taby4,taby5,taby6,taby7};
+extern  uint8_t taby[8] = {taby0,taby1,taby2,taby3,taby4,taby5,taby6,taby7};
 
 #define menu0  24
 #define menu1  40
@@ -91,8 +91,8 @@ uint8_t balkenvh = 40;
  uint8_t balkenhh = 3;
  uint8_t balkenhb = 40;
 
-char menubuffer[20];
-char titelbuffer[20];
+//char menubuffer[20];
+//char titelbuffer[20];
 
 
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE);
@@ -228,7 +228,7 @@ void resetRegister(void)
    {
       for (k=0;k<8;k++)
       {
-         posregister[i][k]=0xFFFF;
+         //posregister[i][k]=0xFFFF;
       }
    }
 }
