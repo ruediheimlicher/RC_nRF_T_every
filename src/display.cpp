@@ -562,7 +562,6 @@ void updateAktionScreen()
          u8g2.setCursor(char_x + 48,char_y + charh);
          u8g2.print(levelO);
 
-         
          u8g2.drawStr(char_x,char_y + charh + dy,"DOWN");
          u8g2.setCursor(char_x + 48 ,char_y + charh + dy);
          u8g2.print(levelU);
@@ -597,6 +596,54 @@ void updateAktionScreen()
          }
       
       }break;
+
+      case 1: // EXPO
+      {
+         uint8_t expo = kanalsettingarray[curr_model][curr_funktion][2];
+         uint8_t expoO = (expo & 0xF0) >> 4;
+         uint8_t expoU = (expo & 0x0F);
+         char_x += 8;
+         char_y += 24;
+         uint8_t dy = 20; // Abstand 2. Zeile
+         u8g2.drawStr(char_x,char_y + charh,"UP");
+        
+         u8g2.setCursor(char_x + 48,char_y + charh);
+         u8g2.print(expoO);
+
+         u8g2.drawStr(char_x,char_y + charh + dy,"DOWN");
+         u8g2.setCursor(char_x + 48 ,char_y + charh + dy);
+         u8g2.print(expoU);
+         for (uint8_t i=0;i<2;i++)
+         {
+            if(i==curr_wert)
+            {
+               u8g2.setDrawColor(1);
+               u8g2.drawFrame(char_x-2,char_y + i*dy,38,16);
+               if(curr_cursorspalte == 1) // Wert einstellen
+               {
+                  u8g2.drawFrame(char_x + 44,char_y + i*dy-1,18,18);
+               
+               }
+               else
+               {
+                  u8g2.setDrawColor(0);
+                  u8g2.drawFrame(char_x + 44,char_y + i*dy-1,18,18);
+                  u8g2.setDrawColor(1);
+               }
+
+            }
+            else
+            {
+               u8g2.setDrawColor(0);
+               u8g2.drawFrame(char_x-2,char_y + i*dy,38,16);
+               u8g2.drawFrame(char_x + 44,char_y + i*dy-1,18,18);
+               
+               u8g2.setDrawColor(1);
+            }
+         }
+
+      }break;
+
 
    }//switch curr_aktion
 

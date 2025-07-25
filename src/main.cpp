@@ -158,8 +158,6 @@ uint16_t levelintraw = 0;
 
 uint16_t levelintcheck = 0;
 
-uint16_t expointpitch = 0;
-uint16_t levelintpitch = 0;
 
 uint16_t levelintpitcha = 0;
 
@@ -780,9 +778,6 @@ void setup()
    kanalsettingarray[0][THROTTLE][2] = 0x02; // expo
 
 
-  
-
-
    potwert = servomittearray[0];  
 
    Serial.print("setup EEPROM\n");
@@ -855,7 +850,7 @@ int Border_Mapvar512(int val, int lower, int middle, int upper, bool reverse)
       //levelintraw = levelint;
       levelint = map(levelint,0,512,0,(middle - lower));
       levelint = middle - levelint;
-      levelintpitcha = levelint;
+      //levelintpitcha = levelint;
    }  
    else
    {
@@ -871,7 +866,7 @@ int Border_Mapvar512(int val, int lower, int middle, int upper, bool reverse)
       levelint /= 8;
       levelintraw = levelint;
       levelint = map(levelint,0,512,0,(upper - middle));     
-      levelintpitchb = levelint;
+      //levelintpitchb = levelint;
    }
       
    return ( reverse ? 512 - levelint : levelint );
@@ -1245,12 +1240,12 @@ void loop()
                                  uint8_t level = kanalsettingarray[curr_model][curr_funktion][1];
                                  uint8_t levelO = (level & 0xF0) >> 4;
                                  uint8_t levelU = (level & 0x0F);
-                                 if(curr_pfeil == PFEIL_UP)
+                                 //if(curr_pfeil == PFEIL_UP)
                                  {
 
-                                    blink_cursorpos = 86<<8 | 22;
-                                    u8g2.setDrawColor(1);
-                                    u8g2.drawFrame(88,char_y,48,16);
+                                    //blink_cursorpos = 86<<8 | 22;
+                                    //u8g2.setDrawColor(1);
+                                    //u8g2.drawFrame(88,char_y,48,16);
                                  }                             
                               }break;
                               case 1: // expo
@@ -1258,6 +1253,8 @@ void loop()
                                  uint8_t expo = kanalsettingarray[curr_model][curr_funktion][2];
                                  uint8_t expoO = (expo & 0xF0) >> 4;
                                  uint8_t expoU = expo & 0x0F;
+
+
                               }break;
                            }// switch curr_aktion
                         }break;
