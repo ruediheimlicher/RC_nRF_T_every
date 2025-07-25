@@ -1048,7 +1048,29 @@ void loop()
                         }break;
                         case 1: // UP DOWN
                         {
-
+                           uint8_t level = kanalsettingarray[curr_model][curr_funktion][1];
+                           uint8_t levelO = (level & 0xF0) >> 4;
+                           uint8_t levelU = (level & 0x0F);
+                           switch (curr_wert)
+                           {
+                              case 0: // UP
+                              {
+                                 if(levelO < 4)
+                                 {
+                                    levelO++;
+                                 }
+                              }break;
+                              case 1: // DOWN
+                              {
+                                 if (levelU < 4)
+                                 {
+                                    levelU++;
+                                 }
+                              }break;
+                           }
+                           level = (levelO << 4) | levelU;
+                            kanalsettingarray[curr_model][curr_funktion][1] = level;
+                          
                         }break;
                      }// switch curr_cursorspalte
                      updateAktionScreen();
@@ -1430,16 +1452,16 @@ void loop()
                            {
                               case 0: // UP
                               {
-                                 if(levelO < 4)
+                                 if(levelO)
                                  {
-                                    levelO++;
+                                    levelO--;
                                  }
                               }break;
                               case 1: // DOWN
                               {
-                                 if (levelO < 4)
+                                 if (levelU)
                                  {
-                                    levelU++;
+                                    levelU--;
                                  }
                               }break;
                            }
