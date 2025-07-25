@@ -117,7 +117,7 @@ uint8_t expowert = 0;
 uint8_t expowerta = 0;
 uint8_t expowertb = 0;
 uint16_t          potwertarray[NUM_SERVOS] = {}; // Werte fuer Mitte
-uint16_t          externpotwertarray[NUM_SERVOS] = {}; // Werte von extern  pro servo
+//uint16_t          externpotwertarray[NUM_SERVOS] = {}; // Werte von extern  pro servo
 
 //uint16_t currentexpoarray[5][513] = {};
 
@@ -1739,7 +1739,7 @@ void loop()
       {
          Serial.print("\nEEPROM update\n");
          printgrenzen();
-         void setHomeScreen();
+         setHomeScreen();
          u8g2.sendBuffer();
          //analogWrite(6,0x0F);
          eepromwrite();
