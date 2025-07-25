@@ -1116,6 +1116,7 @@ void loop()
                {
                   case 0: // HOMESCREEN // Umschalten Simulator/Modell, TO DO
                   {
+                     u8g2.setFontMode(0);
                      if(curr_cursorspalte)
                      {
                         curr_cursorspalte--;
@@ -1144,11 +1145,13 @@ void loop()
                         }break;
                      }// switch curr_cursorspalte
                   }break;
+
                   case 4: // AKTIONSCREEN
                   {
                      Serial.print("T4 case 4: curr_screen: ");
                      Serial.println(curr_screen);
                      curr_cursorspalte = 0;
+                     curr_wert = 0;
                      updateAktionScreen();
                      u8g2.sendBuffer();
                   }break;
@@ -1340,8 +1343,12 @@ void loop()
                         }break;
                         case 3: // FUNKTIONSCREEN
                         {
+                           curr_aktion = 0;
+                           curr_cursorspalte = 0;
                            setFunktionScreen();
                         }break;
+                     
+                     
                      }// switch curr_screen
                   }
                Serial.print("T7 curr_screen: ");
@@ -1414,7 +1421,11 @@ void loop()
                            uint8_t level = kanalsettingarray[curr_model][curr_funktion][1];
                            uint8_t levelO = (level & 0xF0) >> 4;
                            uint8_t levelU = (level & 0x0F);
-                           
+
+                           uint8_t expo = kanalsettingarray[curr_model][curr_funktion][2];
+                           uint8_t expoO = (expo & 0xF0) >> 4;
+                           uint8_t expoU = (expo & 0x0F);
+
                            switch (curr_aktion)
                            {
                               case 0: //LEVEL
@@ -1440,6 +1451,31 @@ void loop()
                                  kanalsettingarray[curr_model][curr_funktion][1] = level;
                               
                               }break;
+                              case 1: //EXPO
+                              {
+                                 switch (curr_wert)
+                                 {
+                                    case 0: // UP
+                                    {
+                                       if(expoO)
+                                       {
+                                          expoO--;
+                                       }
+                                    }break;
+                                    case 1: // DOWN
+                                    {
+                                       if (expoU)
+                                       {
+                                          expoU--;
+                                       }
+                                    }break;
+                                 } // switch curr_wert
+                                 expo = (expoO << 4) | expoU;
+                                 kanalsettingarray[curr_model][curr_funktion][2] = expo;
+                                 
+                              }break;
+                           
+                              
                            
                            }// switch curr_aktion
                             
