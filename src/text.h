@@ -68,7 +68,7 @@ const char *AktionTable[]  = { level, expo, richtung, typ};
 
 
 // Kanaltyp
-const char pitchtyp[]  = "Pitch";
+const char pitchtyp[]     = "Pitch";
 const char schiebertyp[]  = "Schieber";
 const char schaltertyp[]  = "Schalter";
 

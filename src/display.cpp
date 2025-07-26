@@ -26,7 +26,9 @@ extern  uint8_t                 curr_cursorspalte; // aktuelle colonne des curso
 extern  uint8_t                 last_cursorzeile; // letzte zeile des cursors
 extern  uint8_t                 last_cursorspalte; // letzte colonne des cursors
 
-extern uint8_t                                  curr_pfeil;
+extern uint8_t                  curr_pfeil;
+
+extern uint8_t                   steuerstatus;
 
 extern uint16_t      blink_cursorpos;
 extern uint8_t       blinkstatus;
@@ -241,7 +243,7 @@ void setHomeScreen()
    u8g2.setCursor(TAB0, 14);
    u8g2.print(F("nRF24 T"));
 
-    oled_vertikalbalken(BATTX,BATTY,BATTB,BATTH);
+   oled_vertikalbalken(BATTX,BATTY,BATTB,BATTH);
    u8g2.sendBuffer();
 
 }
@@ -291,6 +293,7 @@ void setMenuScreen()
    char_x = 30;
    char_y = 45;
    u8g2.setFontDirection(3);
+   u8g2.setDrawColor(1);
    u8g2.drawStr(char_x,char_y +charh,SettingTable[0]);
    u8g2.setFontDirection(0);
    updateMenuScreen();
@@ -302,7 +305,7 @@ void setMenuScreen()
       if(i==curr_model)
       {
          //u8g2.drawButtonUTF8(char_x,char_y, U8G2_BTN_INV, 50, 1, 1, ModelTable[i]);
-           u8g2.setDrawColor(1);
+         u8g2.setDrawColor(1);
          u8g2.drawFrame(char_x,char_y,54,18);
          u8g2.setDrawColor(1);
          u8g2.drawStr(char_x,char_y + charh, ModelTable[i]);
@@ -311,7 +314,7 @@ void setMenuScreen()
       else
       {
          //u8g2.drawButtonUTF8(char_x,char_y, U8G2_BTN_BW0, 50, 1, 1, ModelTable[i]);
-           u8g2.setDrawColor(0);
+         u8g2.setDrawColor(0);
          u8g2.drawFrame(char_x,char_y,54,18);
          u8g2.setDrawColor(1);
          u8g2.drawStr(char_x,char_y + charh, ModelTable[i]);
@@ -402,7 +405,7 @@ void updateModellScreen(void)
       {
          u8g2.setDrawColor(0);
          u8g2.drawFrame(char_x,char_y,64,14);
-
+         u8g2.setDrawColor(1);
       }
    
       char_y += 16;
@@ -493,7 +496,7 @@ void updateFunktionScreen()
       {
          u8g2.setDrawColor(0);
          u8g2.drawFrame(char_x,char_y,48,16);
-         
+         u8g2.setDrawColor(1);
       }
        switch (curr_cursorspalte)
       {
@@ -650,6 +653,65 @@ void updateAktionScreen()
    u8g2.setFont(u8g2_font_t0_15_mr);  
 } // updateAktionScreen
 
+void setSaveScreen(void)
+{
+
+   u8g2.clear();
+   resetRegister();
+   blink_cursorpos=0xFFFF;
+   char_x = 18;
+   char_y = 25;
+   u8g2.setFont(u8g2_font_t0_15_mr);
+   u8g2.drawStr(char_x,char_y + charh ,"Save Changes?");
+
+}
+
+void setModusScreen(void)
+{
+    u8g2.clear();
+   resetRegister();
+   blink_cursorpos=0xFFFF;
+   char_x = 14;
+   char_y = 5;
+   u8g2.setFont(u8g2_font_t0_15_mr);
+   u8g2.drawStr(char_x,char_y + charh ,"MODUS");
+   char_y = 30;
+   u8g2.drawStr(char_x,char_y + charh ,"MODELL");
+   char_x = 70;
+   u8g2.drawStr(char_x,char_y + charh ,"SIM");
+   updateModusScreen();
+
+   
+}
+
+void updateModusScreen(void)
+{
+   char_x = 14;
+   char_y = 30;
+   charh = u8g2.getMaxCharHeight()-1;
+   switch (curr_cursorspalte)
+   {
+      case 0: //MODELL
+      {
+         char_x = 14;
+         u8g2.setDrawColor(0);
+         u8g2.drawFrame(char_x-2+60,char_y ,48,16);
+         u8g2.setDrawColor(1);
+         u8g2.drawFrame(char_x-2,char_y ,48,16);
+      }break;
+      case 1: // SIM
+      {
+         char_x = 14;
+         u8g2.setDrawColor(0);
+         u8g2.drawFrame(char_x-2,char_y ,48,16);
+         u8g2.setDrawColor(1);
+         
+         u8g2.drawFrame(char_x-2+60,char_y ,48,16);
+      }break;
+
+   }// switch curr_cursorspalte
+
+}
 
 void refreshScreen(void)
 {

@@ -55,8 +55,8 @@ RF24 radio(CE_PIN, CSN_PIN);
 #define EEPROMINDEX_O 0x20
 #define EEPROMINDEX_M 0x30
 
-#define EEPROMLEVELSETTINGS  0x32
-#define EEPROMEXPOSETTINGS  0x36
+#define EEPROMLEVELSETTINGS  0x40
+#define EEPROMEXPOSETTINGS  0x48
 
 
 #define BLINKRATE 0x00fF
@@ -136,7 +136,9 @@ uint8_t                                  curr_pfeil = 0;
  uint16_t sendeminute=0;
  uint8_t sendestunde=0;
 
-
+uint8_t steuerstatus = 0;
+#define  MODELL         0
+#define  SIM            1
 
 float potlo = POTLO; // min pot
 float pothi = POTHI; // max pot
@@ -348,7 +350,7 @@ void printeeprom(uint8_t zeilen)
    eepromyawhi = EEPROM.read(2*(0 + EEPROMINDEX_O)+1);
    eepromyaw = (eepromyawhi << 8) | eepromyawlo;
 
-   Serial.print("eeprompitch O: \t");
+   Serial.print("eepromyaw O: \t");
    Serial.print(eepromyawlo);
    Serial.print("\t");
    Serial.print(eepromyawhi);
@@ -391,6 +393,15 @@ void eepromread()
             Serial.print("\t");
 
             potgrenzearray[i][0] = (eh << 8) | el;
+
+            el = EEPROM.read(2*(i + EEPROMLEVELSETTINGS));
+            kanalsettingarray[0][i][1] = el; // modell 0
+
+            eh = EEPROM.read(2*(i + EEPROMEXPOSETTINGS));
+            kanalsettingarray[0][i][2] = eh; // modell 0
+
+
+            
 
 
             
@@ -436,9 +447,6 @@ Serial.print("eepromwrite\n");
       EEPROM.update(2*(i + EEPROMINDEX_O),(potgrenzearray[i][0] & 0x00FF)); // lo byte
       EEPROM.update(2*(i + EEPROMINDEX_O)+1,((potgrenzearray[i][0] & 0xFF00) >> 8)); // hi byte
 
-      
-      
-     
 
       EEPROM.update(2*(i + EEPROMINDEX_M),(servomittearray[i] & 0x00FF)); // lo byte
       EEPROM.update(2*(i + EEPROMINDEX_M)+1,((servomittearray[i] & 0xFF00) >> 8)); // hi byte
@@ -446,14 +454,18 @@ Serial.print("eepromwrite\n");
 
       for (uint8_t i=0;i<8;i++)
       {
-            EEPROM.write(2*(i + EEPROMLEVELSETTINGS)+i,255); // lo byte
-            EEPROM.write(2*(i + EEPROMEXPOSETTINGS)+i,255);
+       //     EEPROM.write(2*(i + EEPROMLEVELSETTINGS)+i,255); // lo byte
+        //    EEPROM.write(2*(i + EEPROMEXPOSETTINGS)+i,255);
 
       }
 
       EEPROM.update(2*(i + EEPROMLEVELSETTINGS),(kanalsettingarray[curr_model][i][1] )); // level
       EEPROM.update(2*(i + EEPROMEXPOSETTINGS),(kanalsettingarray[curr_model][i][2] )); // expo
+      
+      //EEPROM.update(2*(i + EEPROMLEVELSETTINGS),(47+i)); // level
+      //EEPROM.update(2*(i + EEPROMEXPOSETTINGS),(63+i )); // expo
 
+      
       
       delay(20);
       /*
@@ -586,11 +598,32 @@ void tastenfunktion(uint16_t Tastenwert)
    }
 
 
-
-
-
-
 }//tastenfunktion
+
+void setModus(void)
+{
+   switch (steuerstatus)
+   {
+      case MODELL:
+      {
+         eepromread();
+      }break;
+
+      case SIM:
+      {
+         for (uint8_t i=0;i<NUM_SERVOS;i++)
+         {
+            //Serial.print(adcpinarray[i]);
+            //Serial.print("\t");
+            //Serial.print(servomittearray[i]);
+            //Serial.print("\t");
+            
+         //   kanalsettingarray[0][i][1] = 0x00; // level
+         //   kanalsettingarray[0][i][2] = 0x00; // expo
+         }
+      }break;
+   }// switch steuerstatus
+}
 
 void setup()
 {
@@ -607,6 +640,9 @@ void setup()
    delay(50);
 
    Serial.begin(9600);
+
+   steuerstatus = MODELL;
+
    delay(500);
    /*
    for (uint8_t i=0;i<16;i++)
@@ -623,7 +659,7 @@ void setup()
    Serial.println(__DATE__);
    Serial.println(__TIME__);
 
-   printeeprom(128);
+   printeeprom(160);
 
    eepromread();
 
@@ -758,31 +794,31 @@ void setup()
       Serial.print(servomittearray[i]);
       Serial.print("\t");
       
-      kanalsettingarray[0][i][1] = 0x11; // level
-      kanalsettingarray[0][i][2] = 0x33; // expo
+      //kanalsettingarray[0][i][1] = 0x11; // level
+      //kanalsettingarray[0][i][2] = 0x33; // expo
    }
    
    Serial.print("\n");
+/*
+   kanalsettingarray[0][YAW][1] = 0x12; // level
+   kanalsettingarray[0][YAW][2] = 0x23; // expo
 
-   kanalsettingarray[0][YAW][1] = 0x11; // level
-   kanalsettingarray[0][YAW][2] = 0x01; // expo
-
-   kanalsettingarray[0][PITCH][1] = 0x23; // level
-   kanalsettingarray[0][PITCH][2] = 0x32; // expo
+   kanalsettingarray[0][PITCH][1] = 0x22; // level
+   kanalsettingarray[0][PITCH][2] = 0x02; // expo
 
 
    kanalsettingarray[0][ROLL][1] = 0x33; // level
-   kanalsettingarray[0][ROLL][2] = 0x21; // expo
+   kanalsettingarray[0][ROLL][2] = 0x02; // expo
 
-   kanalsettingarray[0][THROTTLE][1] = 0x22; // level
-   kanalsettingarray[0][THROTTLE][2] = 0x02; // expo
+   kanalsettingarray[0][THROTTLE][1] = 0x32; // level
+   kanalsettingarray[0][THROTTLE][2] = 0x03; // expo
 
 
    potwert = servomittearray[0];  
 
    Serial.print("setup EEPROM\n");
-   printeeprom(128);
-   
+   printeeprom(160);
+*/
 
 /*
 for (uint8_t i = 0;i<NUM_SERVOS;i++)
@@ -800,7 +836,7 @@ for (uint8_t i = 0;i<NUM_SERVOS;i++)
 delay(4);
 */
 
-//printeeprom(128);
+//printeeprom(160);
    
 } // setup
 
@@ -962,7 +998,18 @@ void loop()
          }break;
          case 1:
          {
-            Serial.print("T 1");           
+            Serial.print("T 1");   
+            switch (curr_screen)
+            {
+               case 1: //MENUSCREEN
+               {
+                  curr_screen = 5;
+                  curr_cursorspalte = 0;
+                  setModusScreen();
+                  u8g2.sendBuffer();
+
+               }break;
+            }     // switch curr_screen  
          }break;
 
          case 2:
@@ -1101,7 +1148,18 @@ void loop()
 
          case 3:
          {
-            Serial.print("T 3");          
+            Serial.print("T 3");   
+            switch (curr_screen)
+               {
+                  case 0: // HOMESCREEN
+                  {
+                     // EEPROM lesen
+                     eepromread();
+                     printeeprom(160);
+                  }break;
+
+               } // switch curr_screen
+            
          }break;
 
          case 4:
@@ -1154,6 +1212,21 @@ void loop()
                      curr_wert = 0;
                      updateAktionScreen();
                      u8g2.sendBuffer();
+                  }break;
+
+                  case 5: //ModusScreen
+                  {
+                     if(curr_cursorspalte)
+                     {
+                        curr_cursorspalte--;
+                        if(curr_cursorspalte == 0)
+                        {
+                           steuerstatus = MODELL;
+                           setModus();
+                        }
+                        updateModusScreen();
+                        u8g2.sendBuffer();
+                     }
                   }break;
                }// swich curr_screen
                
@@ -1314,6 +1387,22 @@ void loop()
                      updateAktionScreen();
                      u8g2.sendBuffer();
                   }break;
+
+                  case 5: //ModusScreen
+                  {
+                     if(curr_cursorspalte<2)
+                     {
+                        curr_cursorspalte++;
+                        if(curr_cursorspalte == 1)
+                        {
+                           steuerstatus = SIM;
+                           setModus();
+                        }
+                        updateModusScreen();
+                        u8g2.sendBuffer();
+                     }
+                  }break;
+                 
                }// swich curr_screen  
             }
          }break;
@@ -1331,14 +1420,18 @@ void loop()
                      {
                         case 0: // HOMESCREEN
                         {
+
                            setHomeScreen();
                         }break;
                         case 1: // MENUSCREEN
                         {
+                           //setSaveScreen();
+                           //  u8g2.sendBuffer();
                            setMenuScreen();
                         }break;
                         case 2: // MODELLSCREEN
-                        {
+                        {                 
+
                            setModellScreen();
                         }break;
                         case 3: // FUNKTIONSCREEN
@@ -1830,7 +1923,7 @@ void loop()
       }
 
       delay(4);
-      printeeprom(128);
+      printeeprom(160);
 
    
    }
@@ -1890,88 +1983,9 @@ void loop()
          potwertarray[i] = potwert;
       }
 
-
-      //if((i == YAW) || (i == PITCH) || (i == ROLL))
-      /*
-      if((i == PITCH) || (i == ROLL))
-  
-      {      
-         potwertpitch = potwert;
-         if((potwert) < mitte) // Seite A, Ziehen
-         {
-            intdiff =  (mitte - potwert); // Abweichung von mitte
-            //constrain(intdiff, 0,mitte);
-            intdiffpitch = intdiff;
-            //if (intdiff > MINDIFF)
-            {
-               diffa = map(intdiff,0,(mitte - potgrenzearray[i][1]), 0,512); 
-               
-               expoint = expoarray[expowerta][diffa];
-               //expoint umrechnen mit level
-               levelint = expoint * (8-levelwerta);
-               
-               levelint /= 8;
-               levelintraw = levelint;
-               levelint = map(levelint,0,512,0,(mitte - potgrenzearray[i][1]));
-               //constrain(levelint, 0,mitte);
-               levelint = mitte - levelint;
-               
-               //levelint = mitte - diffa;
-               levelintpitcha = levelint;
-               potwertarray[i] = levelint;
-            }
-            
-         }
-         else // Seite B potwert > mitte Stossen
-         {
-            intdiff = (potwert - mitte);
-            //constrain(intdiff, 0,mitte);
-            intdiffpitch = intdiff;
-            
-            //if (intdiff > MINDIFF)
-            {
-               diffb = map(intdiff,0,(potgrenzearray[i][0] - mitte),0,512);
-               if(diffb >= 512 )
-               {
-                  diffb = 512;
-               }
-               //constrain(diffb, 0, 512);
-               expoint = expoarray[expowertb][diffb];
-               levelint = expoint * (8-levelwertb) ;
-               
-               levelint /= 8;
-               levelintraw = levelint;
-               
-               levelint = map(levelint,0,512,0,(potgrenzearray[i][0] - mitte));
-               
-               levelint = mitte + levelint;
-               levelintpitchb = levelint;
-               potwertarray[i] = levelint;
-               
-               //potwertarray[i] = potwert;
-            }
-         }
-         
-      }
-      else
-      {
-         potwertarray[i] = potwert;
-      }
-      */
-      //potwertarray[i] = potwert;
-      
-      //
    } // for i
-   
-   // Border_Map(val, lower, middle, upper, reverse)
-   
-   
-   //data.roll = Border_Map( impulscounter, 0, 512, 1023, true );  
-   
-   //data.yaw = Border_Map(potwertarray[YAW], 0, 512, 1023, true );        // CH4
-   //data.yaw = map(potwertarray[YAW], 0, 512, 0,254);        // CH4
-   //250703
-   data.yaw = Border_Mapvar255(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],false);
+  
+     data.yaw = Border_Mapvar255(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],false);
 
    
    //data.pitch = Border_Map(potwertarray[PITCH], 0, 512, 1023, true );    // CH2    

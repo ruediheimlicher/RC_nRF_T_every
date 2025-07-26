@@ -53,6 +53,12 @@ void updateAktionScreen(void);
 
 void refreshScreen(void);
 
+void setSaveScreen(void);
+
+void setModusScreen(void);
+void updateModusScreen(void);
+
+
 #endif
 
 
