@@ -67,29 +67,7 @@ const char typ[]  = "Typ:";
 const char *AktionTable[]  = { level, expo, richtung, typ};
 
 
-// Kanaltyp
-const char pitchtyp[]     = "Pitch";
-const char schiebertyp[]  = "Schieber";
-const char schaltertyp[]  = "Schalter";
 
-const char *KanalTypTable[]  = {pitchtyp,schiebertyp,schaltertyp};
-
-
-// Mix
-const char mixtitel[]  = "Mixing";
-const char *MixTable[]  = {mixtitel};
-
-// Mixtyp
-const char nada[]  = "OFF ";
-const char vmix[]  = "V-Mix";
-const char butterfly[]  = "B-fly";
-const char A[]  = "ABCD ";
-
-const char *MixTypTable[]  = {nada,vmix,butterfly,A};
-
-// Zuteilung
-const char zuteilungtitel[]  = "Zuteilung";
-const char *ZuteilungTable[]  = {zuteilungtitel};
 
 // Sichern
 const char frage[]  = "Aenderungen sichern";
@@ -111,31 +89,7 @@ const char funktion7[]  = "Aux  ";
 
 const char *FunktionTable[]  = {funktion0, funktion1, funktion2, funktion3, funktion4, funktion5, funktion6, funktion7};
 
-// Ausgang
 
-const char ausgang0[]  = "Imp";
-const char ausgang1[]  = "Kan";
-const char ausgang2[]  = "Dev";
-const char ausgang3[]  = "Fkt";
-const char ausgang4[]  = " ";
-const char ausgang5[]  = "Quer R\0";
-const char ausgang6[]  = "Lande \0";
-const char ausgang7[]  = "Aux    \0";
-
-const char *AusgangTable[]  = {ausgang0, ausgang1, ausgang2, ausgang3, ausgang4, ausgang5, ausgang6, ausgang7};
-
-
-// Zuteilung an device auf dem Sender
-const char device0[]  = "L-H\0"; // Pitch links horizontal
-const char device1[]  = "L-V\0"; // Pitch links vertikal
-const char device2[]  = "R-H\0";
-const char device3[]  = "R-V\0";
-const char device4[]  = "S-L\0"; // Schieber links
-const char device5[]  = "S-R\0"; // Schieber rechts
-const char device6[]  = "Sch\0"; // Schalter
-const char device7[]  = "Aux\0";
-
-const char *DeviceTable[]  = {device0, device1, device2, device3, device4, device5, device6, device7};
 
 
 #endif

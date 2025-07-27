@@ -9,7 +9,8 @@
 //#include <U8x8lib.h>
 //#include <Wire.h>
 #include "display.h"
-#include "expo.h"
+//#include "expo.h"
+#include "expo8.h"
 #include <nRF24L01.h>
 #include <RF24.h>
 #include <Bounce2.h> // github.com/thomasfredericks/Bounce2
@@ -875,43 +876,6 @@ int Border_Map10(int val, int lower, int middle, int upper, bool reverse)
    return ( reverse ? 512 - val : val );
 }
 
-int Border_Mapvar512(int val, int lower, int middle, int upper, bool reverse)
-{
-   val = constrain(val, lower, upper); // Grenzen einhalten
-
-   if ( val < middle )
-   {
-      val = map(val, lower, middle, 0, 254); // normieren auf 0-512
-      intdiff =  (middle - val);// Abweichung von mitte, 
-      levelintraw = intdiff;
-      diffa = map(intdiff,0,(middle - lower), 0,512);
-      expoint = expoarray[expowerta][diffa];
-      levelint = expoint * (8-levelwerta);
-      levelint /= 8;
-      //levelintraw = levelint;
-      levelint = map(levelint,0,512,0,(middle - lower));
-      levelint = middle - levelint;
-      //levelintpitcha = levelint;
-   }  
-   else
-   {
-      val = map(val, middle, upper, 255, 512); // normieren auf 0 - 512
-      intdiff =  (val - middle);// Abweichung von mitte, 
-      diffb = map(intdiff,0,(upper - middle),0,512);
-      if(diffb >= 512 )
-      {
-         diffb = 512;
-      }
-      expoint = expoarray[expowertb][diffb];
-      levelint = expoint * (8-levelwertb) ;     
-      levelint /= 8;
-      levelintraw = levelint;
-      levelint = map(levelint,0,512,0,(upper - middle));     
-      //levelintpitchb = levelint;
-   }
-      
-   return ( reverse ? 512 - levelint : levelint );
-}
 
 int Border_Mapvar255(int val, int lower, int middle, int upper, bool reverse)
 {
@@ -926,7 +890,8 @@ int Border_Mapvar255(int val, int lower, int middle, int upper, bool reverse)
       //levelintraw = intdiff;
       //diffa = map(intdiff,0,(middle - lower), 0,512);
       diffa = intdiff;
-      expoint = expoarray[expowerta][4*diffa]/4;
+      expoint = expoarray8[expowerta][diffa];
+      //expoint = expoarray8[expowerta][diffa];
       levelint = expoint * (8-levelwerta);
       levelint /= 8;
       levelintcheck = 127 + levelint;
@@ -944,7 +909,8 @@ int Border_Mapvar255(int val, int lower, int middle, int upper, bool reverse)
       {
          diffb = 127;
       }
-      expoint = expoarray[expowertb][4*diffb]/4;
+      //expoint = expoarray[expowertb][4*diffb]/4;
+      expoint = expoarray8[expowertb][diffb];
       levelint = expoint * (8-levelwertb) ;     
       levelint /= 8;
       levelintcheck= 127 - levelint;
@@ -1278,7 +1244,7 @@ void loop()
                         tastaturstatus |= ~(1<<T5_WAIT); // Warten beendet
                         Serial.print("T5 setMenuScreen ");
                         //u8g2.clear();
-                        
+
                         setMenuScreen();
                         u8g2.sendBuffer();
                      }
