@@ -39,7 +39,7 @@ const char *ModelTable[]  = {model0, model1, model2, model3, model4, model5, mod
 
 
 // Settingscreen
-const char menutitel[]  = "Modell:";
+const char menutitel[]  = "MODELL";
 const char model[]  = "Fkt:";
 const char setting[]  = "Fkt";
 const char kanal[]  = "Kanal";

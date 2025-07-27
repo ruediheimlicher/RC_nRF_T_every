@@ -4,6 +4,8 @@
 #include "display.h"
 #include "text.h"
 
+#include "defines.h"
+
 //extern uint16_t currentexpoarray[5][513];
 
 extern uint8_t kanalsettingarray[5][4][4];
@@ -13,6 +15,7 @@ extern  uint8_t                 speichermodel;
 extern  uint8_t                 curr_funktion; // aktueller kanal
 extern  uint8_t                 curr_aktion;
 extern  uint8_t                 curr_wert;
+extern  uint8_t                 curr_modus;
 
 extern  uint8_t                 curr_setting; // aktuelles Setting fuer Modell
 extern  uint8_t                 curr_screen; // aktueller screen
@@ -251,6 +254,25 @@ void setHomeScreen()
 void updateHomeScreen()
 {
 
+   if(savestatus == CHANGED)
+   {
+      u8g2.setCursor(4,56);
+      u8g2.drawStr(4,62,"SAVE?");
+      //u8g2.setFontMode(0);
+      u8g2.setDrawColor(0);
+      u8g2.drawStr(48,60," Y " );
+      //u8g2.setFontMode(0);
+      u8g2.drawStr(64,62," N ");
+      u8g2.setDrawColor(1);
+      u8g2.sendBuffer();
+
+   
+   }
+   else
+   {
+      oled_delete(4,56,60);
+   }
+
    char buf0[4];
 
       // Yaw
@@ -290,53 +312,42 @@ void setMenuScreen()
    blink_cursorpos=0xFFFF;
    charh = u8g2.getMaxCharHeight()-1;
 
-   char_x = 30;
+   char_x = 24;
    char_y = 45;
-   u8g2.setFontDirection(3);
    u8g2.setDrawColor(1);
+   u8g2.setFontDirection(3);
+
+   // Modus
+   u8g2.setFont(u8g2_font_t0_12_mr); 
+   u8g2.drawStr(112,40,"Modus");
+
+   
+   u8g2.setFont(u8g2_font_t0_15_mr); 
    u8g2.drawStr(char_x,char_y +charh,SettingTable[0]);
+   
+
    u8g2.setFontDirection(0);
+
+   // Pfeil Modus
+
+   u8g2.setFont(u8g2_font_unifont_t_symbols);
+   u8g2.drawGlyph(100,55, 0x23F5);
+   u8g2.setFont(u8g2_font_t0_15_mr);  
+   
    updateMenuScreen();
-   return;
-   char_y = 2;
-   uint8_t i = 0;
-   while (char_y < 64)
-   {
-      if(i==curr_model)
-      {
-         //u8g2.drawButtonUTF8(char_x,char_y, U8G2_BTN_INV, 50, 1, 1, ModelTable[i]);
-         u8g2.setDrawColor(1);
-         u8g2.drawFrame(char_x,char_y,54,18);
-         u8g2.setDrawColor(1);
-         u8g2.drawStr(char_x,char_y + charh, ModelTable[i]);
-
-      }
-      else
-      {
-         //u8g2.drawButtonUTF8(char_x,char_y, U8G2_BTN_BW0, 50, 1, 1, ModelTable[i]);
-         u8g2.setDrawColor(0);
-         u8g2.drawFrame(char_x,char_y,54,18);
-         u8g2.setDrawColor(1);
-         u8g2.drawStr(char_x,char_y + charh, ModelTable[i]);
-
-      }
-      //u8g2.drawFrame(char_x,char_y,50,24);
-      //u8g2.drawStr(char_x+2,char_y,ModelTable[i]);
-      char_y += menuh;
-      i++;
-   }
+   
 
 }
 
 
-void updateMenuScreen()
+void updateMenuScreen() // Liste der Modelle
 {
    uint8_t z =  curr_cursorzeile;
    
    char_y = 2;
    uint8_t i = 0;
    charh = u8g2.getMaxCharHeight()-1;
-   char_x = 48;
+   char_x = 36;
    while (char_y < 64)
    {
       if(i==curr_model)
@@ -366,12 +377,12 @@ void updateMenuScreen()
    }
 }
 
-void setModellScreen() // Auswahl Funktion
+void setModellScreen() // Auswahl Funktion fuer ausgewaehltes Modell
 {
    u8g2.clear();
    resetRegister();
    blink_cursorpos=0xFFFF;
-   char_x = 30;
+   char_x = 36;
    char_y = 45;
    //u8g2.drawFrame(char_y,char_y,64,18);
    u8g2.setDrawColor(1);
@@ -671,14 +682,27 @@ void setModusScreen(void)
     u8g2.clear();
    resetRegister();
    blink_cursorpos=0xFFFF;
-   char_x = 14;
-   char_y = 5;
+   char_y = 45;
    u8g2.setFont(u8g2_font_t0_15_mr);
-   u8g2.drawStr(char_x,char_y + charh ,"MODUS");
-   char_y = 30;
-   u8g2.drawStr(char_x,char_y + charh ,"MODELL");
-   char_x = 70;
-   u8g2.drawStr(char_x,char_y + charh ,"SIM");
+   u8g2.setDrawColor(1);
+   u8g2.setFontDirection(3);
+   u8g2.drawStr(char_x,char_y + charh,"MODUS");
+   // Modus
+   u8g2.setFont(u8g2_font_t0_12_mr); 
+   u8g2.drawStr(12,40,"Menu");
+   u8g2.setFontDirection(0);
+   
+   // Pfeil Modus
+
+   u8g2.setFont(u8g2_font_unifont_t_symbols);
+   u8g2.drawGlyph(2,55, 0x23F4);
+   u8g2.setFont(u8g2_font_t0_15_mr);  
+   
+   char_x = 48;
+   char_y = 14;
+   u8g2.drawStr(char_x+2,char_y + charh ,"MODELL");
+   
+   u8g2.drawStr(char_x+2,char_y + charh+24 ,"SIM");
    updateModusScreen();
 
    
@@ -686,27 +710,29 @@ void setModusScreen(void)
 
 void updateModusScreen(void)
 {
-   char_x = 14;
-   char_y = 30;
+   char_x = 48;
+   char_y = 14;
+   u8g2.setFont(u8g2_font_t0_15_mr);  
    charh = u8g2.getMaxCharHeight()-1;
-   switch (curr_cursorspalte)
+   switch (curr_modus)
    {
       case 0: //MODELL
       {
-         char_x = 14;
+         //char_x = 14;
          u8g2.setDrawColor(0);
-         u8g2.drawFrame(char_x-2+60,char_y ,48,16);
+         u8g2.drawFrame(char_x-2,char_y +24,56,18);
+         
          u8g2.setDrawColor(1);
-         u8g2.drawFrame(char_x-2,char_y ,48,16);
+         u8g2.drawFrame(char_x-2,char_y  ,56,18);
       }break;
       case 1: // SIM
       {
-         char_x = 14;
+         //char_y = 55;
          u8g2.setDrawColor(0);
-         u8g2.drawFrame(char_x-2,char_y ,48,16);
+         u8g2.drawFrame(char_x-2,char_y ,56,18);
          u8g2.setDrawColor(1);
          
-         u8g2.drawFrame(char_x-2+60,char_y ,48,16);
+         u8g2.drawFrame(char_x-2,char_y+24 ,56,18);
       }break;
 
    }// switch curr_cursorspalte

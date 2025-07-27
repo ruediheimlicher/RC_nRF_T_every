@@ -15,7 +15,7 @@
 #include <Bounce2.h> // github.com/thomasfredericks/Bounce2
 
 #include <elapsedMillis.h>
-
+#include "defines.h"
 
 const uint64_t pipeOut = 0xABCDABCD71LL;         // NOTE: The address in the Transmitter and Receiver code must be the same "0xABCDABCD71LL" | Verici ve Alıcı kodundaki adres aynı olmalıdır
 
@@ -137,8 +137,13 @@ uint8_t                                  curr_pfeil = 0;
  uint8_t sendestunde=0;
 
 uint8_t steuerstatus = 0;
+
+
 #define  MODELL         0
 #define  SIM            1
+
+uint8_t savestatus = 0;
+
 
 float potlo = POTLO; // min pot
 float pothi = POTHI; // max pot
@@ -222,11 +227,11 @@ unsigned char char_y = 0;
  uint8_t                 curr_funktion=0; // aktuelle funktion
  uint8_t                 curr_aktion=0; // aktuelle aktion
 
-uint8_t                            curr_wert = 0;
+uint8_t                  curr_wert = 0;
 
  uint8_t                 curr_impuls=0; // aktueller impuls
 
-
+uint8_t                 curr_modus=0; // Modell oder Sim
 
 
  uint8_t                 curr_setting=0; // aktuelles Setting fuer Modell
@@ -1012,7 +1017,7 @@ void loop()
             }     // switch curr_screen  
          }break;
 
-         case 2:
+         case 2: // UP
          {
             //Serial.print("T 2");
             if (tastaturstatus & (1<<AKTION_OK))
@@ -1026,7 +1031,7 @@ void loop()
                   {
 
                   }break;
-                  case 1: // MENUSCREEN
+                  case 1: // T2 MENUSCREEN
                   {
                      if(curr_model)
                      {
@@ -1035,7 +1040,7 @@ void loop()
                         u8g2.sendBuffer();
                      }
                   }
-                  case 2: //MODELLSCREEN
+                  case 2: //T2 MODELLSCREEN
                   {
                       if(curr_funktion)
                      {
@@ -1097,6 +1102,7 @@ void loop()
                                        if(levelO < 4)
                                        {
                                           levelO++;
+                                          savestatus = CHANGED;;
                                        }
                                     }break;
                                     case 1: // DOWN
@@ -1104,6 +1110,7 @@ void loop()
                                        if (levelU < 4)
                                        {
                                           levelU++;
+                                          savestatus = CHANGED;;
                                        }
                                     }break;
                                  } // switch curr_wert
@@ -1120,6 +1127,7 @@ void loop()
                                        if(expoO < 4)
                                        {
                                           expoO++;
+                                          savestatus = CHANGED;;
                                        }
                                     }break;
                                     case 1: // DOWN
@@ -1127,6 +1135,7 @@ void loop()
                                        if (expoU < 4)
                                        {
                                           expoU++;
+                                          savestatus = CHANGED;;
                                        }
                                     }break;
                                  }
@@ -1141,6 +1150,17 @@ void loop()
                      }// switch curr_cursorspalte
                      updateAktionScreen();
                      u8g2.sendBuffer();
+                  }break;
+
+                  case 5: // MODUSSCREEN
+                  {
+                     if(curr_modus ==1)
+                     {
+                        curr_modus = 0;
+                        updateModusScreen();
+                        u8g2.sendBuffer();
+
+                     }
                   }break;
                }// switch (curr_screen)
             }           
@@ -1162,7 +1182,7 @@ void loop()
             
          }break;
 
-         case 4:
+         case 4: // LEFT
          {
             //Serial.print("T 4");            
             if (tastaturstatus & (1<<AKTION_OK))
@@ -1175,10 +1195,7 @@ void loop()
                   case 0: // HOMESCREEN // Umschalten Simulator/Modell, TO DO
                   {
                      u8g2.setFontMode(0);
-                     if(curr_cursorspalte)
-                     {
-                        curr_cursorspalte--;
-                     }
+                     
                   }break;
                   case 1: // MENUSCREEN
                   {
@@ -1214,19 +1231,26 @@ void loop()
                      u8g2.sendBuffer();
                   }break;
 
-                  case 5: //ModusScreen
+                  case 5: // T4 ModusScreen
                   {
-                     if(curr_cursorspalte)
+                     switch (curr_cursorzeile)
                      {
-                        curr_cursorspalte--;
-                        if(curr_cursorspalte == 0)
+                        case 0: // Navigation
+                        {
+                          
+                              curr_screen = 1; // MENUSCREEN
+                              setMenuScreen();
+                              updateMenuScreen();
+                              u8g2.sendBuffer();
+                           
+                        }break;
+                        case 1: // Auswahl
                         {
                            steuerstatus = MODELL;
                            setModus();
-                        }
-                        updateModusScreen();
-                        u8g2.sendBuffer();
-                     }
+                        }break;
+                     }// switch curr_cursorzeile
+                     
                   }break;
                }// swich curr_screen
                
@@ -1254,6 +1278,7 @@ void loop()
                         tastaturstatus |= ~(1<<T5_WAIT); // Warten beendet
                         Serial.print("T5 setMenuScreen ");
                         //u8g2.clear();
+                        
                         setMenuScreen();
                         u8g2.sendBuffer();
                      }
@@ -1262,7 +1287,7 @@ void loop()
                else //if (!(tastaturstatus & (1<<T5_WAIT))) // kein Warten
                {
                   taste5counter = 0;
-                  if(curr_screen < 5)
+                  if(curr_screen < 6)
                   {
                      Serial.print("T 5 klick ");
                      Serial.println(curr_screen);
@@ -1307,7 +1332,7 @@ void loop()
             }
          }break;
 
-         case 6:
+         case 6: // RIGHT
          {
             Serial.print("T 6");
             if (tastaturstatus & (1<<AKTION_OK))
@@ -1319,16 +1344,17 @@ void loop()
                {
                   case 0: // HOMESCREEN // Umschalten Simulator/Modell, TO DO
                   {
-                     if(curr_cursorspalte == 0) // nur eine Moeglichkeit
+                   
+                  }break;
+                  case 1: // MENUSCREEN
+                  {
                      {
-                        curr_cursorspalte++;
+                        setModusScreen();
+                        curr_screen = 5; // MODUSSCREEN
+                        u8g2.sendBuffer();
                      }
                   }break;
-                  case 1: // MODELLSCREEN
-                  {
-
-                  }break;
-                  case 2: // FUNKIONSCREEN
+                  case 2: // MODELLSCREEN
                   {
 
                   }break;
@@ -1388,19 +1414,26 @@ void loop()
                      u8g2.sendBuffer();
                   }break;
 
-                  case 5: //ModusScreen
+                  case 5: // T6 ModusScreen
                   {
-                     if(curr_cursorspalte<2)
+                     switch (curr_cursorzeile)
                      {
-                        curr_cursorspalte++;
-                        if(curr_cursorspalte == 1)
+                        case 0: // Navigation
+                        {
+                           if(curr_cursorspalte)
+                           {
+                              curr_cursorspalte++;
+                              
+                              updateMenuScreen();
+                              u8g2.sendBuffer();
+                           }
+                        }break;
+                        case 1: // Auswahl
                         {
                            steuerstatus = SIM;
                            setModus();
-                        }
-                        updateModusScreen();
-                        u8g2.sendBuffer();
-                     }
+                        }break;
+                     }// switch curr_cursorzeile
                   }break;
                  
                }// swich curr_screen  
@@ -1530,6 +1563,7 @@ void loop()
                                        if(levelO)
                                        {
                                           levelO--;
+                                          savestatus = CHANGED;;
                                        }
                                     }break;
                                     case 1: // DOWN
@@ -1537,6 +1571,7 @@ void loop()
                                        if (levelU)
                                        {
                                           levelU--;
+                                          savestatus = CHANGED;;
                                        }
                                     }break;
                                  } // switch curr_wert
@@ -1553,6 +1588,7 @@ void loop()
                                        if(expoO)
                                        {
                                           expoO--;
+                                          savestatus = CHANGED;;
                                        }
                                     }break;
                                     case 1: // DOWN
@@ -1560,6 +1596,7 @@ void loop()
                                        if (expoU)
                                        {
                                           expoU--;
+                                          savestatus = CHANGED;;
                                        }
                                     }break;
                                  } // switch curr_wert
@@ -1578,7 +1615,21 @@ void loop()
                      updateAktionScreen();
                      u8g2.sendBuffer();
                   }break;
+
+                  case 5: // MODUSSCREEN
+                  {
+                     if(curr_modus ==0)
+                     {
+                        curr_modus = 1;
+                        updateModusScreen();
+                        u8g2.sendBuffer();
+
+                     }
+                  }break;
                }// switch (curr_screen)
+
+
+               
             }          
          }break;
 
