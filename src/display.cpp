@@ -31,7 +31,7 @@ extern  uint8_t                 last_cursorspalte; // letzte colonne des cursors
 
 extern uint8_t                  curr_pfeil;
 
-extern uint8_t                   steuerstatus;
+extern uint8_t                   curr_steuersatus;
 
 extern uint16_t      blink_cursorpos;
 extern uint8_t       blinkstatus;
@@ -248,32 +248,61 @@ void setHomeScreen()
 
    oled_vertikalbalken(BATTX,BATTY,BATTB,BATTH);
    u8g2.sendBuffer();
+   curr_cursorspalte = 0;
+   curr_cursorzeile = 0;
 
 }
 
 void updateHomeScreen()
 {
 
+
+   
    if(savestatus == CHANGED)
    {
+      charh = u8g2.getMaxCharHeight()-1;
       u8g2.setCursor(4,56);
       u8g2.drawStr(4,62,"SAVE?");
       //u8g2.setFontMode(0);
-      u8g2.setDrawColor(0);
-      u8g2.drawStr(48,60," Y " );
+      //u8g2.setDrawColor(0);
+      u8g2.drawStr(48,48 + charh,"Y" );
+      
       //u8g2.setFontMode(0);
-      u8g2.drawStr(64,62," N ");
       u8g2.setDrawColor(1);
+      u8g2.drawStr(66,48 + charh,"N");
+      if(curr_cursorspalte ==0)
+      {
+         u8g2.drawFrame(45,48,16,16);
+         u8g2.setDrawColor(0);
+         u8g2.drawFrame(62,48,16,16);
+         u8g2.setDrawColor(1);
+      }
+      else
+      {
+         u8g2.setDrawColor(1);
+         u8g2.drawFrame(62,48,16,16);
+         
+         u8g2.setDrawColor(0);
+         u8g2.drawFrame(45,48,16,16);
+         u8g2.setDrawColor(1);
+      }
+
+      //savestatus = 0xFF;
+      
+      
       u8g2.sendBuffer();
 
    
    }
-   else
+   else if (savestatus == CANCEL)
    {
-      oled_delete(4,56,60);
+      u8g2.setDrawColor(0);
+      u8g2.drawBox(4,48,80,116);
+      u8g2.setDrawColor(1);
+      u8g2.sendBuffer();
    }
 
-   char buf0[4];
+      char buf0[4];
 
       // Yaw
       //u8g2.setCursor(4,30);
@@ -299,10 +328,21 @@ void updateHomeScreen()
       sprintf(buf0, "%3d", data.throttle);
       u8g2.drawStr(32,42,buf0);
      
-   uint8_t p = curr_model;
+      uint8_t p = curr_model;
    oled_batteriebalken_setwert(BATTX,BATTY,BATTB,BATTH,batterieanzeige);
-   oled_setBatterieWert(BATTX,BATTY+BATTH+16,BATTB,24,UBatt);
+   oled_setBatterieWert(BATTX,BATTY+BATTH+18,BATTB,24,UBatt);
    //u8g2.sendBuffer();
+   uint8_t la = kanalsettingarray[0][0][1] & 0x07;
+   uint8_t  lb = (kanalsettingarray[0][0][1] & 0x70)>>4;
+
+   u8g2.setCursor(4,56);
+   u8g2.print(la);
+   u8g2.setCursor(24,56);
+   u8g2.print(lb);
+
+
+   u8g2.setCursor(44,56);
+   u8g2.print(kanalsettingarray[0][0][2]);
 }
 
 void setMenuScreen()
@@ -469,16 +509,16 @@ void updateFunktionScreen()
    u8g2.drawGlyph(86,char_y + 22 + 36, 0x23F7);
       
    u8g2.setFont(u8g2_font_t0_15_mr);  
-   Serial.print(" curr_funktion: ");
-   Serial.println(curr_funktion);
+   //Serial.print(" curr_funktion: ");
+   //Serial.println(curr_funktion);
    
    uint8_t level = kanalsettingarray[curr_model][curr_funktion][1];
 
    uint8_t expo = kanalsettingarray[curr_model][curr_funktion][2];
-   Serial.print("updatefunktionscreen level: ");
-   Serial.print(level);
-   Serial.print(" expo: ");
-   Serial.println(expo);
+   //Serial.print("updatefunktionscreen level: ");
+   //Serial.print(level);
+   //Serial.print(" expo: ");
+   //Serial.println(expo);
    uint8_t levelO = (level & 0xF0) >> 4;
    uint8_t levelU = (level & 0x0F);
    uint8_t expoO = (expo & 0xF0) >> 4;
@@ -549,10 +589,10 @@ void setAktionScreen()
 
 void updateAktionScreen()
 {
-   Serial.print("updateAktionScreen: curr_screen: ");
-   Serial.println(curr_screen);
-    Serial.print("updateAktionScreen: curr_wert: ");
-   Serial.println(curr_wert);
+   //Serial.print("updateAktionScreen: curr_screen: ");
+   //Serial.println(curr_screen);
+    //Serial.print("updateAktionScreen: curr_wert: ");
+   //Serial.println(curr_wert);
 
    char_y = 4;
    uint8_t i = 0;
