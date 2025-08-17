@@ -50,6 +50,11 @@ extern uint8_t       blinkstatus;
 extern   uint8_t cursortab[10] = {cursortab0,cursortab1,cursortab2,cursortab3,cursortab4,cursortab5,cursortab6,cursortab7,cursortab0,cursortab0};
 extern  uint16_t  cursorpos[8][8]; // Aktueller screen: werte fuer page und daraufliegende col fuer cursor (hex). geladen aus progmem
 
+extern uint16_t   stopsekunde;
+extern uint16_t   stopminute;
+extern uint16_t   throttlecounter;
+extern uint16_t    throttlesekunden;
+
 #define itemtab0  10
 #define itemtab1  34
 #define itemtab2  50
@@ -242,10 +247,11 @@ void resetRegister(void)
 void setHomeScreen()
 {
    u8g2.clear();
-   u8g2.setFont(u8g2_font_t0_15_mr);  
+   u8g2.setFont(u8g2_font_t0_18_mr);  
    u8g2.setCursor(TAB0, 14);
-   u8g2.print(F("nRF24 T"));
-
+   //u8g2.print(F("nRF24 T"));
+   u8g2.print(ModelTable[curr_model]);
+   u8g2.setFont(u8g2_font_t0_18_mr);  
    oled_vertikalbalken(BATTX,BATTY,BATTB,BATTH);
    u8g2.sendBuffer();
    curr_cursorspalte = 0;
@@ -255,9 +261,7 @@ void setHomeScreen()
 
 void updateHomeScreen()
 {
-
-
-   
+ 
    if(savestatus == CHANGED)
    {
       charh = u8g2.getMaxCharHeight()-1;
@@ -296,10 +300,12 @@ void updateHomeScreen()
    }
    else if (savestatus == CANCEL)
    {
+      
       u8g2.setDrawColor(0);
-      u8g2.drawBox(4,48,80,116);
+      u8g2.drawBox(4,44,80,16);
       u8g2.setDrawColor(1);
       u8g2.sendBuffer();
+      savestatus = 1;
    }
 
       char buf0[4];
@@ -335,10 +341,10 @@ void updateHomeScreen()
    uint8_t la = kanalsettingarray[0][0][1] & 0x07;
    uint8_t  lb = (kanalsettingarray[0][0][1] & 0x70)>>4;
 
-   u8g2.setCursor(4,56);
-   u8g2.print(la);
-   u8g2.setCursor(24,56);
-   u8g2.print(lb);
+   //u8g2.setCursor(4,58);
+   //u8g2.print(la);
+   //u8g2.setCursor(24,58);
+   //u8g2.print(lb);
 
 
    u8g2.setCursor(44,56);
@@ -358,7 +364,7 @@ void setMenuScreen()
    u8g2.setFontDirection(3);
 
    // Modus
-   u8g2.setFont(u8g2_font_t0_12_mr); 
+   u8g2.setFont(u8g2_font_t0_15_mr); 
    u8g2.drawStr(112,40,"Modus");
 
    
@@ -739,10 +745,13 @@ void setModusScreen(void)
    u8g2.setFont(u8g2_font_t0_15_mr);  
    
    char_x = 48;
-   char_y = 14;
+   char_y = 2;
    u8g2.drawStr(char_x+2,char_y + charh ,"MODELL");
    
-   u8g2.drawStr(char_x+2,char_y + charh+24 ,"SIM");
+   u8g2.drawStr(char_x+2,char_y + charh+18 ,"SIM");
+
+   u8g2.drawStr(char_x+2,char_y + charh+36 ,"CALIB");
+
    updateModusScreen();
 
    
@@ -751,7 +760,7 @@ void setModusScreen(void)
 void updateModusScreen(void)
 {
    char_x = 48;
-   char_y = 14;
+   char_y = 4;
    u8g2.setFont(u8g2_font_t0_15_mr);  
    charh = u8g2.getMaxCharHeight()-1;
    switch (curr_modus)
@@ -760,7 +769,8 @@ void updateModusScreen(void)
       {
          //char_x = 14;
          u8g2.setDrawColor(0);
-         u8g2.drawFrame(char_x-2,char_y +24,56,18);
+         u8g2.drawFrame(char_x-2,char_y +18,56,18);
+         u8g2.drawFrame(char_x-2,char_y +36,56,18);
          
          u8g2.setDrawColor(1);
          u8g2.drawFrame(char_x-2,char_y  ,56,18);
@@ -770,9 +780,21 @@ void updateModusScreen(void)
          //char_y = 55;
          u8g2.setDrawColor(0);
          u8g2.drawFrame(char_x-2,char_y ,56,18);
+         u8g2.drawFrame(char_x-2,char_y +36,56,18);
          u8g2.setDrawColor(1);
          
-         u8g2.drawFrame(char_x-2,char_y+24 ,56,18);
+         u8g2.drawFrame(char_x-2,char_y+18 ,56,18);
+      }break;
+
+       case 2: // CALIB
+      {
+         //char_y = 55;
+         u8g2.setDrawColor(0);
+         u8g2.drawFrame(char_x-2,char_y ,56,18);
+         u8g2.drawFrame(char_x-2,char_y +18,56,18);
+         u8g2.setDrawColor(1);
+         
+         u8g2.drawFrame(char_x-2,char_y+36 ,56,18);
       }break;
 
    }// switch curr_cursorspalte
@@ -784,6 +806,26 @@ void refreshScreen(void)
 
    switch (curr_screen) 
    {
+      case 0:
+      {
+         char buf[6];
+         sprintf(buf, "%2d:%2d",stopminute,stopsekunde);
+         u8g2.drawStr(54,12,buf);
+
+         u8g2.setCursor(64,24);
+         u8g2.print(throttlecounter);
+
+         //sprintf(buf,"%1.0F", throttlesekunden);
+
+         u8g2.setCursor(64,48);
+         u8g2.print(throttlesekunden);
+         //u8g2.setFont(u8g2_font_inb24_mr);
+         //u8g2.drawStr(64,42,buf);
+         //u8g2.setFont(u8g2_font_t0_15_mr);
+
+         u8g2.sendBuffer();
+
+      }
       case 3: //FUNKTIONSCREEN
       {
 

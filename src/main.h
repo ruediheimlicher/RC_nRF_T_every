@@ -16,7 +16,7 @@ struct Signal
    byte aux2;
    
 };
-#define BATTX  98
+#define BATTX  102
 #define BATTY  2
 #define BATTH  44
 #define BATTB  24

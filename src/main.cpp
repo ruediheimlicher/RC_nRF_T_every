@@ -83,6 +83,8 @@ RF24 radio(CE_PIN, CSN_PIN);
 uint16_t loopcounter = 0;
 uint8_t blinkcounter = 0;
 uint8_t impulscounter = 0;
+uint16_t throttlecounter = 0;
+uint16_t throttlesekunden = 0;
 
 // RC_22
 //#define POT0LO 620  // Min wert vom ADC Pot 0
@@ -103,7 +105,7 @@ uint16_t schritt = 32;
 
 
 
-uint16_t          impulstimearray[NUM_SERVOS] = {};
+uint16_t                   impulstimearray[NUM_SERVOS] = {};
 const int                  adcpinarray[NUM_SERVOS] = {A3,A6,A1,A0};    // pins der Pots
 
 uint8_t                    kanalsettingarray[ANZAHLMODELLE][NUM_SERVOS][KANALSETTINGBREITE] = {};
@@ -292,9 +294,28 @@ void ResetData()
    
 }
 
-// initialize the library with the numbers of the interface pins
-//Adafruit_LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
-//Adafruit_LiquidCrystal lcd(0);
+// PPM decode
+const byte PPM_PIN = 2; // PPM-Eingang an Pin 2
+volatile unsigned long lastTime = 0;
+volatile unsigned long pulseLength = 0;
+volatile byte channel = 0;
+const byte maxChannels = 8;
+volatile unsigned int ppmValues[maxChannels];
+void ppmISR() 
+{
+  unsigned long now = micros();
+  pulseLength = now - lastTime;
+  lastTime = now;
+
+  if (pulseLength > 3000) {
+    // Sync-Pause erkannt: neues Frame beginnt
+    channel = 0;
+  } else if (channel < maxChannels) {
+    ppmValues[channel] = pulseLength;
+    channel++;
+  }
+}
+
 
 void updatemitte(void)
 {
@@ -381,10 +402,10 @@ void printeeprom(uint8_t zeilen)
 void eepromread()
 {
    Serial.print("eepromread \t");
-   Serial.print("kontrolle Adresse A: ");
-   Serial.print(EEPROM.read(0));
-   Serial.print(" Adresse B: ");
-   Serial.println(EEPROM.read(0));
+   //Serial.print("kontrolle Adresse A: ");
+   //Serial.print(EEPROM.read(0));
+   //Serial.print(" Adresse B: ");
+   //Serial.println(EEPROM.read(0));
    for (uint8_t i = 0;i<NUM_SERVOS;i++)
    {
       Serial.write(taskarray[i]);
@@ -688,6 +709,10 @@ void setup()
    delay(50);
    
    Serial.begin(9600);
+
+   // PPM decode
+   pinMode(PPM_PIN, INPUT);
+   attachInterrupt(digitalPinToInterrupt(PPM_PIN), ppmISR, RISING);
    
    curr_steuersatus = MODELL;
    //savestatus = 0xFF;
@@ -710,7 +735,7 @@ void setup()
    
    printeeprom(160);
    
-   eepromread();
+  // eepromread();
    
    
    pinMode(BUZZPIN,OUTPUT);
@@ -893,8 +918,36 @@ int Throttle_Map(int val, int fromlow, int fromhigh,int tolow, int tohigh, bool 
 {
    val = constrain(val, fromlow, fromhigh);
    val = map(val, fromlow,fromhigh, tolow, tohigh);
+
+
+
+
    return ( reverse ? 255 - val : val );
 }
+
+int Throttle_Map255(int val, int fromlow, int fromhigh,int tolow, int tohigh, bool reverse)
+{
+   val = constrain(val, fromlow, fromhigh);
+   val = map(val, fromlow,fromhigh, tolow, tohigh);
+
+   uint8_t levelwerta = levelwertarray[THROTTLE] & 0x07;
+   uint8_t levelwertb = (levelwertarray[THROTTLE] & 0x70)>>4;
+
+   uint8_t expowerta = expowertarray[THROTTLE] & 0x07;
+
+   uint16_t expoint = 3;
+   uint16_t levelint = 0;
+
+   expoint = expoarray8[expowerta][val];
+   levelint = expoint * (8-levelwerta);
+   levelint /= 4;
+
+
+
+   return ( reverse ? 255 - levelint : levelint );
+}
+
+
 
 // Joystick center and its borders 
 int Border_Map(int val, int lower, int middle, int upper, bool reverse)
@@ -928,6 +981,12 @@ int Border_Mapvar255(uint8_t servo, int val, int lower, int middle, int upper, b
 
    uint8_t expowerta = expowertarray[servo] & 0x07;
    uint8_t expowertb = (expowertarray[servo] & 0x70)>>4;
+  
+  //levelwerta = 0;
+  //levelwertb = 0;
+  //expowerta = 0;
+  //expowertb = 0;
+  
    if ( val < middle )
    {
       
@@ -992,10 +1051,22 @@ void loop()
    if (zeitintervall > 500) 
    { 
       zeitintervall = 0;
+      
       sekundencounter++;
       if (sekundencounter%2)
       {
+         throttlecounter += (data.throttle);
+         throttlesekunden = throttlecounter >> 8;
          blinkstatus = 1;
+
+         stopsekunde++;
+         if(stopsekunde == 60)
+         {
+            stopsekunde = 0;
+            stopminute++;
+         }
+         refreshScreen();
+
       }
       else
       {
@@ -1167,9 +1238,9 @@ void loop()
                      
                   case 5: // T2 UP  MODUSSCREEN
                   {
-                     if(curr_modus ==1)
+                     if(curr_modus )
                      {
-                        curr_modus = 0;
+                        curr_modus--;
                         
                         updateModusScreen();
                         u8g2.sendBuffer();
@@ -1639,9 +1710,10 @@ void loop()
                      
                   case 5: // T8 DOWN MODUSSCREEN
                   {
-                     if(curr_modus ==0)
+                     
+                     if(curr_modus < 2)
                      {
-                        curr_modus = 1;
+                        curr_modus++;
                         
                         updateModusScreen();
                         u8g2.sendBuffer();
@@ -1667,29 +1739,30 @@ void loop()
                   //Serial.print(savestatus);
                   //Serial.print(" curr_cursorspalte: ");  
                   Serial.print(curr_cursorspalte);
-                  if(savestatus == CHANGED) 
+                  switch (savestatus)
                   {
-                     if(curr_cursorspalte == 0) // SAVE
+                     case 0: // CHANGED
                      {
                         // write to eeprom
                         eepromwrite();
                         savestatus = CANCEL;
-                        
-                     }
-                     else
+                     }break;
+                     
+                     case 1: // CANCEL
                      {
                         // do nothing
                         
                         curr_cursorspalte = 0;
                         savestatus = CANCEL;
-                     }
-                     updateHomeScreen();
+                     }break;
+
+                     
                      //u8g2.sendBuffer();
                   }   
                }break;
                   
             }// switch curr_screen
-            
+            updateHomeScreen();
          }break;
       }//switch (Taste)
       if(Taste)
@@ -1993,17 +2066,30 @@ void loop()
          Serial.print(" *\n");
       } // if TEST 1
       
-      /*
+      
        Serial.print(" \t");
        Serial.print(" * ");
        Serial.print(" \t");
        Serial.print(" potwert: ");
        Serial.print(potwertarray[YAW]);
        
+       Serial.print(" grenze U: ");
+       Serial.print(potgrenzearray[YAW][1]);
+
+       Serial.print(" Mitte: ");
+       Serial.print(servomittearray[YAW]);
+
+       Serial.print(" grenze O: ");
+       Serial.print(potgrenzearray[YAW][0]);
+
+
+
        Serial.print(" yaw: ");
        Serial.print(data.yaw);
        
        Serial.print(" \t");
+
+       /*
        Serial.print(" PITCH: ");
        Serial.print(potwertarray[PITCH]);
        
@@ -2014,8 +2100,24 @@ void loop()
        
        Serial.print(" roll: ");
        Serial.print(data.roll);
+
+       Serial.print(" Throttle: ");
+       Serial.print(potwertarray[THROTTLE]);
        
-       */
+       
+       Serial.print(" data.throttle: ");
+       Serial.print(data.throttle);
+       
+       
+       
+       Serial.print(" throttlemitte: ");
+       Serial.print(servomittearray[THROTTLE]);
+       
+       
+      Serial.print(" throttlecounter: ");
+       Serial.print(throttlecounter);
+      */
+
       /*
        Serial.print(" A1: ");
        Serial.print(potwertarray[PITCH]);
@@ -2025,7 +2127,7 @@ void loop()
        Serial.print(potwertarray[THROTTLE]);
        */
       
-      //Serial.print(" *\n");
+      Serial.print(" *\n");
    }
    // EEPROM
    eepromtaste.update();
@@ -2118,16 +2220,22 @@ void loop()
     
    data.pitch = Border_Mapvar255(1, potwertarray[PITCH],potgrenzearray[PITCH][1],servomittearray[PITCH],potgrenzearray[PITCH][0],false);
    
+   if(curr_model == 0)
+   {
+      potgrenzearray[ROLL][0] = servomittearray[ROLL];
+      potgrenzearray[ROLL][1] = servomittearray[ROLL];
    
-   potgrenzearray[ROLL][0] = servomittearray[ROLL];
-   potgrenzearray[ROLL][1] = servomittearray[ROLL];
+
+   }
    
    data.roll = Border_Mapvar255(2,potwertarray[ROLL],potgrenzearray[ROLL][1],servomittearray[ROLL],potgrenzearray[ROLL][0],false);
    
     
-   uint16_t throttlemitte = servomittearray[THROTTLE];
-   data.throttle = Throttle_Map(potwertarray[THROTTLE],throttlemitte, POTHI,0,255, false );   
-   
+   //uint16_t throttlemitte = servomittearray[THROTTLE];
+   //data.throttle = Throttle_Map(potwertarray[THROTTLE],throttlemitte, POTHI,0,255, false );   
+   data.throttle = Throttle_Map255(potwertarray[THROTTLE],servomittearray[THROTTLE], potgrenzearray[THROTTLE][0],0,127, false ); // nur eine haelfte 
+
+
    //data.throttle = Border_Map(potwertarray[THROTTLE],0, 340,570, false );      // Potentiometer
    
    data.aux1 = digitalRead(5);                                          // CH5
