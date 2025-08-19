@@ -152,11 +152,9 @@ uint16_t sendesekunde=0;
 uint16_t sendeminute=0;
 uint8_t sendestunde=0;
 
-uint8_t curr_steuersatus = 0;
+uint8_t curr_steuerstatus = 0;
 
-
-#define  MODELL         0
-#define  SIM            1
+uint8_t calibstatus = 0;
 
 uint8_t savestatus = 0;
 
@@ -247,7 +245,7 @@ uint8_t                  curr_wert = 0;
 
 uint8_t                 curr_impuls=0; // aktueller impuls
 
-uint8_t                 curr_modus=0; // Modell oder Sim
+uint8_t                 curr_modus=0; // Modell oder Sim oder Calib
 
 
 uint8_t                 curr_setting=0; // aktuelles Setting fuer Modell
@@ -465,11 +463,22 @@ void eepromread()
 
 void clearsettings(void)
 {
-   Serial.print("eepromwrite\n");  
+   Serial.print("clearsettings\n");  
    for (uint8_t i = 0;i<NUM_SERVOS;i++)
    {
       kanalsettingarray[curr_model][i][1] = 0x00; // level
       kanalsettingarray[curr_model][i][2] = 0x00; // level
+      
+   } // for i
+}
+
+void cleargrenzen(void)
+{
+   Serial.print("cleargrenzen\n");  
+   for (uint8_t i = 0;i<NUM_SERVOS;i++)
+   {
+      potgrenzearray[i][0] = 127; // 
+      potgrenzearray[i][1] = 127; 
       
    } // for i
 }
@@ -691,7 +700,17 @@ void setModus(void)
             kanalsettingarray[0][i][2] = 0x00; // expo
          }
       }break;
-   }// switch curr_steuersatus
+
+      case CALIB:
+      {
+
+      }break;
+   }// switch curr_steuerstatus
+}
+
+void setCalib(void)
+{
+
 }
 
 void setup()
@@ -714,7 +733,7 @@ void setup()
    pinMode(PPM_PIN, INPUT);
    attachInterrupt(digitalPinToInterrupt(PPM_PIN), ppmISR, RISING);
    
-   curr_steuersatus = MODELL;
+   curr_steuerstatus = MODELL;
    //savestatus = 0xFF;
    
    delay(500);
@@ -735,7 +754,7 @@ void setup()
    
    printeeprom(160);
    
-  // eepromread();
+   eepromread();
    
    
    pinMode(BUZZPIN,OUTPUT);
@@ -1072,7 +1091,12 @@ void loop()
       {
          blinkstatus = 0;
       }
-      //refreshScreen();
+      if(curr_screen == 5)
+      {
+         updateModusScreen();
+         u8g2.sendBuffer();
+      }
+      
    }  
    
    if (tastaturstatus & (1<<TASTE_OK) && Taste) // Menu ansteuern
@@ -1240,10 +1264,26 @@ void loop()
                   {
                      if(curr_modus )
                      {
-                        curr_modus--;
                         
-                        updateModusScreen();
-                        u8g2.sendBuffer();
+                        switch (curr_modus)
+                        {
+                           case MODELL:
+                           {
+                              
+                           }break;
+
+                           case SIM:
+                           {
+
+                           }break;
+
+                           case CALIB:
+                           {
+                              calibstatus &= ~(1<<CALIB_START);
+                           }break;
+                        }// switch curr_modus
+                        curr_modus--;
+                     
                         
                      }
                   }break;
@@ -1378,7 +1418,7 @@ void loop()
                      {
                         case 1: // MODELLSCREEN
                         {
-                           Serial.print("> Modellscreen curr_model: ");
+                           Serial.print("T 5 > Modellscreen curr_model: ");
                            Serial.println(curr_model);
                            setModellScreen();
                            curr_screen = 2;
@@ -1386,7 +1426,7 @@ void loop()
                         }break;
                         case 2: // FUNKTIONSCREEN
                         {
-                           Serial.print("> FunktionScreen curr_funktion: " );
+                           Serial.print("T 5 > FunktionScreen curr_funktion: " );
                            Serial.println(curr_funktion);
                            setFunktionScreen();
                            curr_screen = 3;
@@ -1394,7 +1434,7 @@ void loop()
                         }break;
                         case 3: // AKTIONSCREEN
                         {
-                           Serial.print("> AktionScreen curr_aktion: " );
+                           Serial.print("T 5 > AktionScreen curr_aktion: " );
                            Serial.println(curr_aktion);
                            setAktionScreen();
                            curr_screen = 4;
@@ -1402,9 +1442,34 @@ void loop()
                         }break;
                         case 4: 
                         {
-                           Serial.print("screen 4 curr_wert: ");
+                           Serial.print("T 5 screen 4 curr_wert: ");
                            Serial.println(curr_wert);
                         }break;
+
+                        case 5: // 
+                        {
+                           Serial.print("T 5 screen 5 curr_modus: ");
+                           Serial.println(curr_modus);
+                           
+                           if(!(calibstatus & (1<<CALIB_START))) // calib noch nicht gesetzt
+                           {
+                              cleargrenzen();
+                              calibstatus |= (1<<CALIB_START);
+                           }
+                           else
+                           {
+                              calibstatus &= ~(1<<CALIB_START);// calib beenden
+                              eepromwrite();       // settings in eeprom
+                           }
+                           
+                           
+                           updateModusScreen();
+                           u8g2.sendBuffer();
+
+                           //setCalib();
+                        }break;
+
+
                      }// switch (curr_screen)
                   }
                }
@@ -1438,10 +1503,12 @@ void loop()
                      }
                      
                   }break;
-                  case 1: // MENUSCREEN
+                  case 1: // MENUSCREEN , nach Modussrreen
                   {
                      {
                         setModusScreen();
+                        curr_cursorzeile = 0;
+                        curr_cursorspalte = 0;
                         curr_screen = 5; // MODUSSCREEN
                         u8g2.sendBuffer();
                      }
@@ -1508,6 +1575,8 @@ void loop()
                      
                   case 5: // T6 ModusScreen
                   {
+                     Serial.print("T6 case 5 ModusScreen: curr_screen: ");
+                     Serial.println(curr_screen);
                      switch (curr_cursorzeile)
                      {
                         case 0: // Navigation
@@ -1522,7 +1591,7 @@ void loop()
                         }break;
                         case 1: // Auswahl
                         {
-                           curr_steuersatus = SIM;
+                           curr_steuerstatus = SIM;
                            setModus();
                         }break;
                      }// switch curr_cursorzeile
@@ -1565,6 +1634,18 @@ void loop()
                         curr_cursorspalte = 0;
                         setFunktionScreen();
                      }break;
+
+                     case 4: // check
+                     {
+                        curr_screen = 0;
+                        setHomeScreen();
+
+                     }break;
+                     case 5: // MODUSSCREEN
+                     {
+
+                        setHomeScreen();
+                     }break;
                         
                         
                   }// switch curr_screen
@@ -1573,7 +1654,8 @@ void loop()
                Serial.println(curr_screen);              
                u8g2.sendBuffer();
                tastaturstatus &=  ~(1<<AKTION_OK);
-               tastaturstatus |= (1<<UPDATE_OK);    
+               tastaturstatus |= (1<<UPDATE_OK); 
+               calibstatus &= ~(1<<CALIB_START);   
             }
          }break;
             
@@ -1710,13 +1792,30 @@ void loop()
                      
                   case 5: // T8 DOWN MODUSSCREEN
                   {
-                     
+
                      if(curr_modus < 2)
                      {
                         curr_modus++;
+                        switch (curr_modus)
+                        {
+                           case MODELL:
+                           {
+
+                           }break;
+
+                           case SIM:
+                           {
+
+                           }break;
+
+                           case CALIB:
+                           {
+                              updateModusScreen();
+                              u8g2.sendBuffer();
+                           }break;
+                        }// switch curr_modus
                         
-                        updateModusScreen();
-                        u8g2.sendBuffer();
+                        
                         
                      }
                   }break;
@@ -1756,6 +1855,7 @@ void loop()
                         savestatus = CANCEL;
                      }break;
 
+                    
                      
                      //u8g2.sendBuffer();
                   }   
@@ -2066,7 +2166,7 @@ void loop()
          Serial.print(" *\n");
       } // if TEST 1
       
-      
+      /*
        Serial.print(" \t");
        Serial.print(" * ");
        Serial.print(" \t");
@@ -2088,7 +2188,7 @@ void loop()
        Serial.print(data.yaw);
        
        Serial.print(" \t");
-
+      */
        /*
        Serial.print(" PITCH: ");
        Serial.print(potwertarray[PITCH]);
@@ -2127,7 +2227,7 @@ void loop()
        Serial.print(potwertarray[THROTTLE]);
        */
       
-      Serial.print(" *\n");
+      //Serial.print(" *\n");
    }
    // EEPROM
    eepromtaste.update();
@@ -2162,13 +2262,19 @@ void loop()
    for (uint8_t i=0;i<NUM_SERVOS;i++)
    {
       potwert=analogRead(adcpinarray[i]);
-      if(potwert > potgrenzearray[i][0])
+
+      if(calibstatus & (1<<CALIB_START))
       {
-         potgrenzearray[i][0] = potwert; // pothi
-      }
-      if(potwert < potgrenzearray[i][1])
-      {
-         potgrenzearray[i][1] = potwert; // potlo
+         
+      
+         if(potwert > potgrenzearray[i][0])
+         {
+            potgrenzearray[i][0] = potwert; // pothi
+         }
+         if(potwert < potgrenzearray[i][1])
+         {
+            potgrenzearray[i][1] = potwert; // potlo
+         }
       }
       //potgrenzearray[0][0] = 17;
       //potgrenzearray[0][1] = 33;

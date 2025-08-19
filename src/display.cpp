@@ -31,12 +31,18 @@ extern  uint8_t                 last_cursorspalte; // letzte colonne des cursors
 
 extern uint8_t                  curr_pfeil;
 
-extern uint8_t                   curr_steuersatus;
+extern uint8_t                   curr_steuerstatus;
 
-extern uint16_t      blink_cursorpos;
-extern uint8_t       blinkstatus;
+extern uint16_t                  blink_cursorpos;
+extern uint8_t                   blinkstatus;
+extern uint8_t                   calibstatus;
+
+
+
 #define BLINKPFEILUP    0
 #define BLINKPFEILDOWN    1
+
+extern uint8_t                      calibstatus;
 
 
 #define cursortab0 2
@@ -765,7 +771,7 @@ void updateModusScreen(void)
    charh = u8g2.getMaxCharHeight()-1;
    switch (curr_modus)
    {
-      case 0: //MODELL
+      case MODELL: //MODELL
       {
          //char_x = 14;
          u8g2.setDrawColor(0);
@@ -775,7 +781,7 @@ void updateModusScreen(void)
          u8g2.setDrawColor(1);
          u8g2.drawFrame(char_x-2,char_y  ,56,18);
       }break;
-      case 1: // SIM
+      case SIM: // SIM
       {
          //char_y = 55;
          u8g2.setDrawColor(0);
@@ -786,15 +792,31 @@ void updateModusScreen(void)
          u8g2.drawFrame(char_x-2,char_y+18 ,56,18);
       }break;
 
-       case 2: // CALIB
+       case CALIB: // CALIB
       {
-         //char_y = 55;
-         u8g2.setDrawColor(0);
-         u8g2.drawFrame(char_x-2,char_y ,56,18);
-         u8g2.drawFrame(char_x-2,char_y +18,56,18);
-         u8g2.setDrawColor(1);
-         
-         u8g2.drawFrame(char_x-2,char_y+36 ,56,18);
+         if(calibstatus & (1<<CALIB_START))
+         {
+            if(blinkstatus)
+            {
+               u8g2.setDrawColor(0);
+            }
+            else
+            {
+               u8g2.setDrawColor(1);
+            }
+            u8g2.drawFrame(char_x-2,char_y+36 ,56,18);
+            u8g2.setDrawColor(1);
+         }
+         else // keine aktion
+         {
+            u8g2.setDrawColor(0);
+            u8g2.drawFrame(char_x-2,char_y ,56,18);
+            u8g2.drawFrame(char_x-2,char_y +18,56,18);
+            u8g2.setDrawColor(1);
+            
+            u8g2.drawFrame(char_x-2,char_y+36 ,56,18);
+         }
+
       }break;
 
    }// switch curr_cursorspalte
@@ -841,10 +863,20 @@ void refreshScreen(void)
          u8g2.setFont(u8g2_font_unifont_t_symbols);
          uint8_t pos_y = (blink_cursorpos & 0xFF00)>>8;
          uint8_t pos_x = blink_cursorpos & 0x00FF;
-         u8g2.drawGlyph(pos_x,pos_y, 0x23F6);
-         u8g2.drawGlyph(pos_x,pos_x, 0x23F7);
+         //u8g2.drawGlyph(pos_x,pos_y, 0x23F6);
+         //u8g2.drawGlyph(pos_x,pos_x, 0x23F7);
+
+         //u8g2.drawXBM( 10, 50, 8, 16, pfeil_l);
+         //u8g2.drawXBM( 30, 50, 8, 16, pfeil_r);
 
          u8g2.setFont(u8g2_font_t0_15_mr);  
       }break;
    }
 }
+
+void setCalibScreen(void)
+{
+
+
+
+}  
