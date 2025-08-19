@@ -9,7 +9,6 @@
 //#include <U8x8lib.h>
 //#include <Wire.h>
 #include "display.h"
-//#include "expo.h"
 #include "expo8.h"
 #include <nRF24L01.h>
 #include <RF24.h>
@@ -192,7 +191,9 @@ uint16_t batterieanzeige = 0;
 float UBatt = 0;
 uint8_t eepromstatus = 0;
 uint16_t eepromprelltimer = 0;
+
 Bounce2::Button eepromtaste = Bounce2::Button();
+
 uint16_t intdiff = 0;
 uint16_t intdiffpitch = 0;
 
@@ -212,9 +213,9 @@ uint8_t taskarray[4] = {'Y', 'P', 'R', 'T'};
 
 uint16_t potgrenzearray[NUM_SERVOS][2]; // obere und untere Grenze von adc
 
-float quot = (ppmhi - ppmlo)/(pothi - potlo);
+//float quot = (ppmhi - ppmlo)/(pothi - potlo);
 
-float expoquot = (ppmhi - ppmlo)/2/0x200; // umrechnen der max expo (512) auf PPM  
+//float expoquot = (ppmhi - ppmlo)/2/0x200; // umrechnen der max expo (512) auf PPM  
 
 // float quotarray[NUM_SERVOS] = {}; // Umrechnungsfaktor pro Pot
 
@@ -230,7 +231,7 @@ uint16_t radiocounter = 0;
 
 // uint16_t                posregister[8][8]={}; // Aktueller screen: werte fuer page und daraufliegende col fuer Menueintraege (hex). geladen aus progmem
 
-uint16_t                cursorpos[8][8]={}; // Aktueller screen: werte fuer page und darauf liegende col fuer den cursor
+uint8_t                cursorpos[8][8]={}; // Aktueller screen: werte fuer page und darauf liegende col fuer den cursor
 
 unsigned char char_x = 0;
 unsigned char char_y = 0;
@@ -756,6 +757,8 @@ void setup()
    
    eepromread();
    
+   printgrenzen();
+
    
    pinMode(BUZZPIN,OUTPUT);
    
@@ -852,7 +855,7 @@ void setup()
     adcpinarray[3] = THROTTLE_PIN;
     */
    
-   Serial.print("servomitte\n");
+   //Serial.print("servomitte\n");
    for (uint8_t i=0;i<NUM_SERVOS;i++)
    {
       uint16_t wert = 500 + i * 50;
@@ -863,6 +866,8 @@ void setup()
       //potgrenzearray[i][1] = pothi;
       
       servomittearray[i] = analogRead(adcpinarray[i]);
+      if(TEST == 2)
+      {
       Serial.print("i:\t");
       Serial.print(i);
       Serial.print("\t");
@@ -872,7 +877,7 @@ void setup()
       Serial.print("\t hi: ");
       Serial.print((servomittearray[i]& 0xFF00) >> 8);
       Serial.print("\n");
-      
+      }
       
       //uint8_t n = i*i+1;
       //EEPROM.write(i,0 );
@@ -880,6 +885,7 @@ void setup()
    }
    
    Serial.print("\n"); 
+   
    for (uint8_t i=0;i<NUM_SERVOS;i++)
    {
       Serial.print(adcpinarray[i]);
@@ -954,8 +960,8 @@ int Throttle_Map255(int val, int fromlow, int fromhigh,int tolow, int tohigh, bo
 
    uint8_t expowerta = expowertarray[THROTTLE] & 0x07;
 
-   uint16_t expoint = 3;
-   uint16_t levelint = 0;
+   uint8_t expoint = 3;
+   uint8_t levelint = 0;
 
    expoint = expoarray8[expowerta][val];
    levelint = expoint * (8-levelwerta);
@@ -967,7 +973,7 @@ int Throttle_Map255(int val, int fromlow, int fromhigh,int tolow, int tohigh, bo
 }
 
 
-
+/*
 // Joystick center and its borders 
 int Border_Map(int val, int lower, int middle, int upper, bool reverse)
 {
@@ -990,7 +996,7 @@ int Border_Map10(int val, int lower, int middle, int upper, bool reverse)
       val = map(val, middle, upper, 255, 512); // normieren auf 255 - 512
    return ( reverse ? 512 - val : val );
 }
-
+*/
 
 int Border_Mapvar255(uint8_t servo, int val, int lower, int middle, int upper, bool reverse)
 {
@@ -1045,7 +1051,7 @@ int Border_Mapvar255(uint8_t servo, int val, int lower, int middle, int upper, b
 }
 
 
-
+/*
 uint16_t map_uint16(uint16_t x, uint16_t in_min, uint16_t in_max, uint16_t out_min, uint16_t out_max) 
 {
    if (in_max == in_min) return out_min; // prevent division by zero
@@ -1057,7 +1063,7 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
    if (in_max == in_min) return out_min;
    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
-
+*/
 
 void loop()
 {                
@@ -1820,9 +1826,7 @@ void loop()
                      }
                   }break;
                }// switch (curr_screen)
-               
-               
-               
+
             }          
          }break;
             
@@ -2051,12 +2055,12 @@ void loop()
          //uint8_t yawmap = map(potwertarray[YAW],0,680,0,254);
          //Serial.print(yawmap);
          //Serial.print(" *255*\t ");
-         uint16_t yawmap2 = Border_Map(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],true);
+         //uint16_t yawmap2 = Border_Map(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],true);
          //Serial.print("\t ");
          //Serial.print(yawmap2);
          
          //Serial.print(" *512*\t ");
-         uint16_t yawmap3 = Border_Map10(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],true);
+        // uint16_t yawmap3 = Border_Map10(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],true);
          //Serial.print("\t ");
          //Serial.print(yawmap3);
          
