@@ -230,7 +230,7 @@ uint16_t radiocounter = 0;
 
 // uint16_t                posregister[8][8]={}; // Aktueller screen: werte fuer page und daraufliegende col fuer Menueintraege (hex). geladen aus progmem
 
-uint16_t                cursorpos[8][8]={}; // Aktueller screen: werte fuer page und darauf liegende col fuer den cursor
+uint8_t                cursorpos[8][8]={}; // Aktueller screen: werte fuer page und darauf liegende col fuer den cursor
 
 unsigned char char_x = 0;
 unsigned char char_y = 0;
