@@ -954,8 +954,8 @@ int Throttle_Map255(int val, int fromlow, int fromhigh,int tolow, int tohigh, bo
 
    uint8_t expowerta = expowertarray[THROTTLE] & 0x07;
 
-   uint16_t expoint = 3;
-   uint16_t levelint = 0;
+   //uint16_t expoint = 3;
+   //uint16_t levelint = 0;
 
    expoint = expoarray8[expowerta][val];
    levelint = expoint * (8-levelwerta);
