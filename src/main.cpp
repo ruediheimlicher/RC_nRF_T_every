@@ -1968,6 +1968,7 @@ void loop()
       //u8g2.drawGlyph(32,44,'A'+(charindex));
       char buf0[4];
       /*
+      
        // Yaw
        //u8g2.setCursor(4,30);
        //u8g2.print(data.yaw);
@@ -2068,7 +2069,7 @@ void loop()
          
          //  int var = Border_Mapvar255(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],true);
          
-         
+         /*
          Serial.print("\t ");
          Serial.print("intdiff: ");
          Serial.print("\t ");
@@ -2090,7 +2091,7 @@ void loop()
          Serial.print("\t ");
          
          Serial.print(UBatt,2);
-         
+         */
          
          
          //Serial.print("\t ");
@@ -2189,34 +2190,45 @@ void loop()
        
        Serial.print(" \t");
       */
-       /*
-       Serial.print(" PITCH: ");
-       Serial.print(potwertarray[PITCH]);
-       
-       Serial.print(" pitch: ");
-       Serial.print(data.pitch);     
-       Serial.print(" ROLL: ");
-       Serial.print(potwertarray[ROLL]);
-       
-       Serial.print(" roll: ");
-       Serial.print(data.roll);
+       if(calibstatus & (1<CALIB_START))
+       {
 
-       Serial.print(" Throttle: ");
-       Serial.print(potwertarray[THROTTLE]);
+         Serial.print(" YAW: ");
+         Serial.print(potwertarray[YAW]);
+         
+         Serial.print(" yaw: ");
+         Serial.print(data.yaw);   
+            
+         Serial.print(" PITCH: ");
+         Serial.print(potwertarray[PITCH]);
+         
+         Serial.print(" pitch: ");
+         Serial.print(data.pitch);   
+
+         Serial.print(" ROLL: ");
+         Serial.print(potwertarray[ROLL]);
+         
+         Serial.print(" roll: ");
+         Serial.print(data.roll);
+
+         Serial.print(" Throttle: ");
+         Serial.print(potwertarray[THROTTLE]);
+         
+         
+         Serial.print(" data.throttle: ");
+         Serial.print(data.throttle);
+
+         Serial.print("\n");
+         
+       }
+       
+       //Serial.print(" throttlemitte: ");
+       //Serial.print(servomittearray[THROTTLE]);
        
        
-       Serial.print(" data.throttle: ");
-       Serial.print(data.throttle);
-       
-       
-       
-       Serial.print(" throttlemitte: ");
-       Serial.print(servomittearray[THROTTLE]);
-       
-       
-      Serial.print(" throttlecounter: ");
-       Serial.print(throttlecounter);
-      */
+      //Serial.print(" throttlecounter: ");
+       //Serial.print(throttlecounter);
+      
 
       /*
        Serial.print(" A1: ");
