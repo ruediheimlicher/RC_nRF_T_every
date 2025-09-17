@@ -4,9 +4,7 @@
 #include "main.h"
 #include <SPI.h>
 #include <EEPROM.h>
-//#include <Adafruit_LiquidCrystal.h>
 #include <U8g2lib.h>
-//#include <U8x8lib.h>
 //#include <Wire.h>
 #include "display.h"
 //#include "expo.h"
@@ -40,12 +38,13 @@ uint16_t loopcounter1 = 0;
 #define TEST 0
 #define CE_PIN 9
 #define CSN_PIN 10
+
 // instantiate an object for the nRF24L01 transceiver
 RF24 radio(CE_PIN, CSN_PIN);
 
 #define LOOPLED 4
 
-#define BUZZPIN 6
+#define BUZZPIN 6    // PWM
 
 #define EEPROMTASTE  5
 
@@ -64,8 +63,8 @@ RF24 radio(CE_PIN, CSN_PIN);
 
 // defines for PINS
 // links
-#define PITCH_PIN     A6
-#define YAW_PIN       A3
+#define PITCH_PIN     A3 // PSB2: A6
+#define YAW_PIN       A2 // PCB2: A3
 
 // rechts
 #define ROLL_PIN      A1
@@ -137,7 +136,7 @@ uint16_t          potwertarray[NUM_SERVOS] = {}; // Werte fuer Mitte
 
 //uint16_t currentexpoarray[5][513] = {};
 
-uint8_t                                  curr_pfeil = 0;
+uint8_t                        curr_pfeil = 0;
 
 uint16_t      blink_cursorpos=0xFFFF;
 uint8_t blinkstatus = 0;
@@ -564,6 +563,8 @@ void eepromwrite(void)
    
    Serial.print("eepromwrite end\n");
 }
+
+
 uint8_t Joystick_Tastenwahl(uint16_t Tastaturwert)
 {
    //return 0;
@@ -815,7 +816,6 @@ void setup()
    //                Configure the NRF24 module  | NRF24 modül konfigürasyonu
    radio.begin();
    radio.openWritingPipe(pipeOut);
-   //radio.setChannel(100);
    radio.setChannel(124);
    radio.setAutoAck(false);
    //radio.setDataRate(RF24_250KBPS);    // The lowest data rate value for more stable communication  | Daha kararlı iletişim için en düşük veri hızı.
@@ -877,7 +877,7 @@ void setup()
       //uint8_t n = i*i+1;
       //EEPROM.write(i,0 );
       
-   }
+   } // for NUM_SERVOS
    
    Serial.print("\n"); 
    for (uint8_t i=0;i<NUM_SERVOS;i++)
@@ -937,10 +937,6 @@ int Throttle_Map(int val, int fromlow, int fromhigh,int tolow, int tohigh, bool 
 {
    val = constrain(val, fromlow, fromhigh);
    val = map(val, fromlow,fromhigh, tolow, tohigh);
-
-
-
-
    return ( reverse ? 255 - val : val );
 }
 
@@ -2240,7 +2236,7 @@ void loop()
        */
       
       //Serial.print(" *\n");
-   }
+   }// BLINKRATE
    // EEPROM
    eepromtaste.update();
    
@@ -2329,6 +2325,7 @@ void loop()
       if(i==0)
       {
          potwertyaw = potwert;
+
          levelwertayaw = levelwertarray[YAW];
          levelwertbyaw = levelwertarray[YAW];
       }
@@ -2338,12 +2335,11 @@ void loop()
     
    data.pitch = Border_Mapvar255(1, potwertarray[PITCH],potgrenzearray[PITCH][1],servomittearray[PITCH],potgrenzearray[PITCH][0],false);
    
-   if(curr_model == 0)
+  // if(curr_model == 0)
+  if(!(calibstatus &(1<<CALIB_START) )  )
    {
       potgrenzearray[ROLL][0] = servomittearray[ROLL];
       potgrenzearray[ROLL][1] = servomittearray[ROLL];
-   
-
    }
    
    data.roll = Border_Mapvar255(2,potwertarray[ROLL],potgrenzearray[ROLL][1],servomittearray[ROLL],potgrenzearray[ROLL][0],false);
@@ -2351,7 +2347,7 @@ void loop()
     
    //uint16_t throttlemitte = servomittearray[THROTTLE];
    //data.throttle = Throttle_Map(potwertarray[THROTTLE],throttlemitte, POTHI,0,255, false );   
-   data.throttle = Throttle_Map255(potwertarray[THROTTLE],servomittearray[THROTTLE], potgrenzearray[THROTTLE][0],0,127, false ); // nur eine haelfte 
+   data.throttle = Throttle_Map255(potwertarray[THROTTLE],servomittearray[THROTTLE], potgrenzearray[THROTTLE][0],10,127, false ); // nur eine haelfte 
 
 
    //data.throttle = Border_Map(potwertarray[THROTTLE],0, 340,570, false );      // Potentiometer

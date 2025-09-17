@@ -375,7 +375,7 @@ void setMenuScreen()
 
    
    u8g2.setFont(u8g2_font_t0_15_mr); 
-   u8g2.drawStr(char_x,char_y +charh,SettingTable[0]);
+   u8g2.drawStr(char_x,char_y +charh,"MODELL");
    
 
    u8g2.setFontDirection(0);
