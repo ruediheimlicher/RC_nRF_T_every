@@ -139,7 +139,7 @@ uint16_t          potwertarray[NUM_SERVOS] = {}; // Werte fuer Mitte
 
 uint8_t                        curr_pfeil = 0;
 
-uint16_t      blink_cursorpos=0xFFFF;
+//uint16_t      blink_cursorpos=0xFFFF;
 uint8_t blinkstatus = 0;
 
 uint16_t stopsekunde=0;
@@ -230,10 +230,10 @@ uint16_t radiocounter = 0;
 
 // uint16_t                posregister[8][8]={}; // Aktueller screen: werte fuer page und daraufliegende col fuer Menueintraege (hex). geladen aus progmem
 
-uint16_t                cursorpos[8][8]={}; // Aktueller screen: werte fuer page und darauf liegende col fuer den cursor
+//uint16_t                cursorpos[8][8]={}; // Aktueller screen: werte fuer page und darauf liegende col fuer den cursor
 
-unsigned char char_x = 0;
-unsigned char char_y = 0;
+unsigned char           char_x = 0;
+unsigned char           char_y = 0;
 
 // Menu
 uint8_t                 curr_model=0; // aktuelles modell
@@ -323,116 +323,116 @@ void updatemitte(void)
 
 void printgrenzen()
 {
-   Serial.print("\nprintgrenzen\n");  
+   //Serial.print("\nprintgrenzen\n");  
    for (uint8_t i = 0;i<NUM_SERVOS;i++)
    {
-      Serial.print("grenzen i:\t");
-      Serial.print(i);
-      Serial.print("\t");
-      Serial.write(taskarray[i]);
-      Serial.print("\t");
-      Serial.print("potgrenze HI:\t");
-      Serial.print(potgrenzearray[i][0]);
-      Serial.print("\t");
-      Serial.print("potgrenze LO:\t");
-      Serial.print(potgrenzearray[i][1]);
-      Serial.print("\t");
-      Serial.print("servomitte:\t");
-      Serial.print(servomittearray[i]);
-      Serial.print("\n");
+      //Serial.print("grenzen i:\t");
+      //Serial.print(i);
+      //Serial.print("\t");
+      //Serial.write(taskarray[i]);
+      //Serial.print("\t");
+      //Serial.print("potgrenze HI:\t");
+      //Serial.print(potgrenzearray[i][0]);
+      //Serial.print("\t");
+      //Serial.print("potgrenze LO:\t");
+      //Serial.print(potgrenzearray[i][1]);
+      //Serial.print("\t");
+      //Serial.print("servomitte:\t");
+      //Serial.print(servomittearray[i]);
+      //Serial.print("\n");
    }
-   Serial.print("end printgrenzen\n");  
+   //Serial.print("end printgrenzen\n");  
 }
 
 void printeeprom(uint8_t zeilen)
 {
-   Serial.print("printeeprom\n");
+   //Serial.print("printeeprom\n");
    for (uint8_t i=0;i<zeilen;i++)
    {
-      //Serial.write(taskarray[i]);
-      //Serial.print("\t");
+      ////Serial.write(taskarray[i]);
+      ////Serial.print("\t");
       uint8_t f = EEPROM.read(i);
       
       if ((i+1)%8==0 )
       {
-         //Serial.print(i);
-         //Serial.print(": ");
+         ////Serial.print(i);
+         ////Serial.print(": ");
          
-         Serial.print(f);
-         Serial.print("\n");
+         //Serial.print(f);
+         //Serial.print("\n");
       }
       else
       {
-         //Serial.print(i);
-         //Serial.print(": ");
+         ////Serial.print(i);
+         ////Serial.print(": ");
          
-         Serial.print(f);
-         Serial.print("\t");
+         //Serial.print(f);
+         //Serial.print("\t");
       }
       
    }
-   Serial.print("\n");
+   //Serial.print("\n");
    uint8_t eepromyawlo = EEPROM.read(2*(0 + EEPROMINDEX_U));
    uint8_t eepromyawhi = EEPROM.read(2*(0 + EEPROMINDEX_U)+1);
    uint16_t eepromyaw = (eepromyawhi << 8) | eepromyawlo;
    
-   Serial.print("eeprompitch U: \t");
-   Serial.print(eepromyawlo);
-   Serial.print("\t");
-   Serial.print(eepromyawhi);
-   Serial.print("\t");
-   Serial.print(eepromyaw);
-   Serial.print("\n");
+   //Serial.print("eeprompitch U: \t");
+   //Serial.print(eepromyawlo);
+   //Serial.print("\t");
+   //Serial.print(eepromyawhi);
+   //Serial.print("\t");
+   //Serial.print(eepromyaw);
+   //Serial.print("\n");
    
    eepromyawlo = EEPROM.read(2*(0 + EEPROMINDEX_O));
    eepromyawhi = EEPROM.read(2*(0 + EEPROMINDEX_O)+1);
    eepromyaw = (eepromyawhi << 8) | eepromyawlo;
    
-   Serial.print("eepromyaw O: \t");
-   Serial.print(eepromyawlo);
-   Serial.print("\t");
-   Serial.print(eepromyawhi);
-   Serial.print("\t");
-   Serial.print(eepromyaw);
-   Serial.print("\n");
+   //Serial.print("eepromyaw O: \t");
+   //Serial.print(eepromyawlo);
+   //Serial.print("\t");
+   //Serial.print(eepromyawhi);
+   //Serial.print("\t");
+   //Serial.print(eepromyaw);
+   //Serial.print("\n");
 }
 
 void eepromread()
 {
-   Serial.print("eepromread \t");
-   //Serial.print("kontrolle Adresse A: ");
-   //Serial.print(EEPROM.read(0));
-   //Serial.print(" Adresse B: ");
-   //Serial.println(EEPROM.read(0));
+   //Serial.print("eepromread \t");
+   ////Serial.print("kontrolle Adresse A: ");
+   ////Serial.print(EEPROM.read(0));
+   ////Serial.print(" Adresse B: ");
+   ////Serial.println(EEPROM.read(0));
    for (uint8_t i = 0;i<NUM_SERVOS;i++)
    {
-      Serial.write(taskarray[i]);
-      Serial.print("\t");
+      //Serial.write(taskarray[i]);
+      //Serial.print("\t");
       uint8_t l = (potgrenzearray[i][0] & 0x00FF); // lo byte
       uint8_t h = (potgrenzearray[i][0] & 0xFF00)>>8; // hi byte
-      Serial.print("potgrenzearray 0\t");
-      Serial.print(potgrenzearray[i][0]);
-      Serial.print("\t");
+      //Serial.print("potgrenzearray 0\t");
+      //Serial.print(potgrenzearray[i][0]);
+      //Serial.print("\t");
       uint16_t grenzeU = (h << 8) | l;
-      Serial.print("grenzeU\t");
+      //Serial.print("grenzeU\t");
       
       uint8_t el = 0;
       uint8_t  eh = 0;
       el = EEPROM.read(2*(i + EEPROMINDEX_U)); // lo byte
       eh = EEPROM.read(2*(i + EEPROMINDEX_U)+1); // hi byte
-      Serial.print(el);
-      Serial.print("\t");
-      Serial.print(eh);
-      Serial.print("\t");
+      //Serial.print(el);
+      //Serial.print("\t");
+      //Serial.print(eh);
+      //Serial.print("\t");
       
       potgrenzearray[i][1] = (eh << 8) | el;
       
       el = EEPROM.read(2*(i + EEPROMINDEX_O)); // lo byte
       eh = EEPROM.read(2*(i + EEPROMINDEX_O)+1); // hi byte
-      Serial.print(el);
-      Serial.print("\t");
-      Serial.print(eh);
-      Serial.print("\t");
+      //Serial.print(el);
+      //Serial.print("\t");
+      //Serial.print(eh);
+      //Serial.print("\t");
       
       potgrenzearray[i][0] = (eh << 8) | el;
       
@@ -444,12 +444,12 @@ void eepromread()
       
       if(i==0)
       {
-         Serial.print("\n");
-         Serial.print("level\t");
-         Serial.print(el);
-         Serial.print("\t");
-         Serial.print("expo\t");
-         Serial.println(eh);
+         //Serial.print("\n");
+         //Serial.print("level\t");
+         //Serial.print(el);
+         //Serial.print("\t");
+         //Serial.print("expo\t");
+         //Serial.println(eh);
 
  
       }
@@ -458,12 +458,12 @@ void eepromread()
       
       
    } // for i
-   Serial.print("\n");  
+   //Serial.print("\n");  
 }
 
 void clearsettings(void)
 {
-   Serial.print("clearsettings\n");  
+   //Serial.print("clearsettings\n");  
    for (uint8_t i = 0;i<NUM_SERVOS;i++)
    {
       kanalsettingarray[curr_model][i][1] = 0x00; // level
@@ -474,7 +474,7 @@ void clearsettings(void)
 
 void cleargrenzen(void)
 {
-   Serial.print("cleargrenzen\n");  
+   //Serial.print("cleargrenzen\n");  
    for (uint8_t i = 0;i<NUM_SERVOS;i++)
    {
       potgrenzearray[i][0] = 127; // 
@@ -486,33 +486,33 @@ void cleargrenzen(void)
 void eepromwrite(void)
 
 {
-   Serial.print("eepromwrite\n");  
+   //Serial.print("eepromwrite\n");  
    for (uint8_t i = 0;i<NUM_SERVOS;i++)
    {
-      Serial.print("potgrenzearray raw i:\t");
-      Serial.print(i);
-      Serial.print("\t");
-      Serial.write(taskarray[i]);
-      Serial.print("\t");
-      Serial.print("potgrenze HI:\t");
-      Serial.print(potgrenzearray[i][0]);
-      Serial.print("\t");
-      Serial.print("potgrenze LO:\t");
-      Serial.print(potgrenzearray[i][1]);
-      Serial.print("\t");
-      Serial.print("servomitte:\t");
-      Serial.print(servomittearray[i]);
-      Serial.print("\t");
-      Serial.print("adresse U:\t");
+      //Serial.print("potgrenzearray raw i:\t");
+      //Serial.print(i);
+      //Serial.print("\t");
+      //Serial.write(taskarray[i]);
+      //Serial.print("\t");
+      //Serial.print("potgrenze HI:\t");
+      //Serial.print(potgrenzearray[i][0]);
+      //Serial.print("\t");
+      //Serial.print("potgrenze LO:\t");
+      //Serial.print(potgrenzearray[i][1]);
+      //Serial.print("\t");
+      //Serial.print("servomitte:\t");
+      //Serial.print(servomittearray[i]);
+      //Serial.print("\t");
+      //Serial.print("adresse U:\t");
       uint8_t addresseU_LO = 2*(i + EEPROMINDEX_U);
-      Serial.print(addresseU_LO);
-      Serial.print("\t");
-      Serial.print("adresse H:\t");
+      //Serial.print(addresseU_LO);
+      //Serial.print("\t");
+      //Serial.print("adresse H:\t");
       uint8_t addresseU_HI = 2*(i + EEPROMINDEX_U)+1;
-      Serial.print(addresseU_HI);
+      //Serial.print(addresseU_HI);
       
       
-      Serial.print("\n");
+      //Serial.print("\n");
       
       
       
@@ -546,23 +546,23 @@ void eepromwrite(void)
       
       delay(20);
       /*
-       Serial.print("kontrolle i: \t*");
-       Serial.print(i);
-       Serial.print("\t");
+       //Serial.print("kontrolle i: \t*");
+       //Serial.print(i);
+       //Serial.print("\t");
        uint8_t el = EEPROM.read(2*(i + EEPROMINDEX_U)); // lo byte
        uint8_t eh = EEPROM.read(2*(i + EEPROMINDEX_U)+1); // hi byte
-       Serial.print(el);
-       Serial.print("\t");
-       Serial.print(eh);
-       Serial.print("\t");
+       //Serial.print(el);
+       //Serial.print("\t");
+       //Serial.print(eh);
+       //Serial.print("\t");
        uint16_t grenzeU = (eh << 8) | el;
-       Serial.print("grenzeU eeprom:\t");
-       Serial.print(grenzeU);
-       Serial.print(" *\n");
+       //Serial.print("grenzeU eeprom:\t");
+       //Serial.print(grenzeU);
+       //Serial.print(" *\n");
        */
    }
    
-   Serial.print("eepromwrite end\n");
+   //Serial.print("eepromwrite end\n");
 }
 
 
@@ -604,32 +604,32 @@ void tastenfunktion(uint16_t Tastenwert)
    tastaturcounter++;   
    if (Tastenwert>10) // ca Minimalwert der Matrix
    {      
-      Serial.print(Tastenwert);
-      Serial.print("\t");
-      Serial.print(tastaturcounter);
+      //Serial.print(Tastenwert);
+      //Serial.print("\t");
+      //Serial.print(tastaturcounter);
       
-      Serial.print("\n");
+      //Serial.print("\n");
       
       if (tastaturcounter>=400)   //   Prellen
       {        
          
          tastaturcounter=0x00;
-         //Serial.println("Taste down");
+         ////Serial.println("Taste down");
          if (!(tastaturstatus & (1<<TASTE_OK))) // Taste noch nicht gedrueckt
          {
             
-            //Serial.println(Tastenwert);
+            ////Serial.println(Tastenwert);
             //Taste = 0;
             
             //tastaturstatus |= (1<<TASTE_ON); // nur einmal   
             tastaturstatus |= (1<<TASTE_OK); // nur einmal   
             Taste= Joystick_Tastenwahl(Tastenwert);
 
-            Serial.print("\n");
-            Serial.print(Tastenwert);
-            Serial.print("\t");
-            Serial.print(Taste);
-            Serial.print("\n");
+            //Serial.print("\n");
+            //Serial.print(Tastenwert);
+            //Serial.print("\t");
+            //Serial.print(Taste);
+            //Serial.print("\n");
             tastaturstatus |= (1<<AKTION_OK);
             if(OLED && Taste) // Taste und Tastenwert anzeigen
             {
@@ -700,10 +700,10 @@ void setModus(void)
          // Joystick-Settings auf neutral stellen
          for (uint8_t i=0;i<NUM_SERVOS;i++)
          {
-            //Serial.print(adcpinarray[i]);
-            //Serial.print("\t");
-            //Serial.print(servomittearray[i]);
-            //Serial.print("\t");
+            ////Serial.print(adcpinarray[i]);
+            ////Serial.print("\t");
+            ////Serial.print(servomittearray[i]);
+            ////Serial.print("\t");
             
             kanalsettingarray[0][i][1] = 0x00; // level
             kanalsettingarray[0][i][2] = 0x00; // expo
@@ -736,7 +736,7 @@ void setup()
    
    delay(50);
 
-   Serial.begin(9600);
+   //Serial.begin(9600);
 
    // PPM decode
    pinMode(PPM_PIN, INPUT);
@@ -750,16 +750,16 @@ void setup()
     for (uint8_t i=0;i<16;i++)
     {
     ee[i] = EEPROM.read(i);
-    Serial.print(" i: ");
-    Serial.print(i);
-    Serial.print(" ee: *");
-    Serial.print(ee[i]);
+    //Serial.print(" i: ");
+    //Serial.print(i);
+    //Serial.print(" ee: *");
+    //Serial.print(ee[i]);
     
     }
-    Serial.print("\n");
+    //Serial.print("\n");
     */
-   Serial.println(__DATE__);
-   Serial.println(__TIME__);
+   //Serial.println(__DATE__);
+   //Serial.println(__TIME__);
    
    printeeprom(160);
    
@@ -839,11 +839,11 @@ void setup()
    {
       radio.failureDetected = false;
       delay(250);
-      Serial.println("Radio failure detected, restarting radio");
+      //Serial.println("Radio failure detected, restarting radio");
    }
    else
    {
-      Serial.println("Radio OK");
+      //Serial.println("Radio OK");
    }
    ResetData();
    
@@ -859,7 +859,7 @@ void setup()
     adcpinarray[3] = THROTTLE_PIN;
     */
    
-   Serial.print("servomitte\n");
+   //Serial.print("servomitte\n");
    for (uint8_t i=0;i<NUM_SERVOS;i++)
    {
       uint16_t wert = 500 + i * 50;
@@ -870,15 +870,15 @@ void setup()
       //potgrenzearray[i][1] = pothi;
       
       servomittearray[i] = analogRead(adcpinarray[i]);
-      Serial.print("i:\t");
-      Serial.print(i);
-      Serial.print("\t");
-      Serial.print(servomittearray[i]);
-      Serial.print("\t lo: ");
-      Serial.print(servomittearray[i] & 0x00FF);
-      Serial.print("\t hi: ");
-      Serial.print((servomittearray[i]& 0xFF00) >> 8);
-      Serial.print("\n");
+      //Serial.print("i:\t");
+      //Serial.print(i);
+      //Serial.print("\t");
+      //Serial.print(servomittearray[i]);
+      //Serial.print("\t lo: ");
+      //Serial.print(servomittearray[i] & 0x00FF);
+      //Serial.print("\t hi: ");
+      //Serial.print((servomittearray[i]& 0xFF00) >> 8);
+      //Serial.print("\n");
       
       
       //uint8_t n = i*i+1;
@@ -886,19 +886,19 @@ void setup()
       
    } // for NUM_SERVOS
    
-   Serial.print("\n"); 
+   //Serial.print("\n"); 
    for (uint8_t i=0;i<NUM_SERVOS;i++)
    {
-      Serial.print(adcpinarray[i]);
-      Serial.print("\t");
-      Serial.print(servomittearray[i]);
-      Serial.print("\t");
+      //Serial.print(adcpinarray[i]);
+      //Serial.print("\t");
+      //Serial.print(servomittearray[i]);
+      //Serial.print("\t");
       
       //kanalsettingarray[0][i][1] = 0x11; // level
       //kanalsettingarray[0][i][2] = 0x33; // expo
    }
    
-   Serial.print("\n");
+   //Serial.print("\n");
    /*
     kanalsettingarray[0][YAW][1] = 0x12; // level
     kanalsettingarray[0][YAW][2] = 0x23; // expo
@@ -916,7 +916,7 @@ void setup()
     
     potwert = servomittearray[0];  
     
-    Serial.print("setup EEPROM\n");
+    //Serial.print("setup EEPROM\n");
     printeeprom(160);
     */
    
@@ -1113,7 +1113,7 @@ void loop()
          }break;
          case 1:
          {
-            Serial.print("T 1");   
+            //Serial.print("T 1");   
             switch (curr_screen)
             {
                case 1: //MENUSCREEN
@@ -1129,10 +1129,10 @@ void loop()
             
          case 2: // UP
          {
-            //Serial.print("T 2");
+            ////Serial.print("T 2");
             if (tastaturstatus & (1<<AKTION_OK))
             {
-               Serial.print("T 2 up*");
+               //Serial.print("T 2 up*");
                tastaturstatus &=  ~(1<<AKTION_OK);
                tastaturstatus |= (1<<UPDATE_OK);
                switch (curr_screen)
@@ -1174,8 +1174,8 @@ void loop()
                         }break;
                         case 1: // Level, expo up, down
                         {
-                           Serial.print("curr_aktion: ");
-                           Serial.print(curr_aktion) ;
+                           //Serial.print("curr_aktion: ");
+                           //Serial.print(curr_aktion) ;
                         }break;
                      }// switch curr_cursorspalte                     
                   }break;
@@ -1296,7 +1296,7 @@ void loop()
             
          case 3:
          {
-            Serial.print("T 3");   
+            //Serial.print("T 3");   
             switch (curr_screen)
             {
                case 0: // HOMESCREEN
@@ -1312,10 +1312,10 @@ void loop()
             
          case 4: // LEFT
          {
-            //Serial.print("T 4");            
+            ////Serial.print("T 4");            
             if (tastaturstatus & (1<<AKTION_OK))
             {
-               Serial.print("T 4 left");
+               //Serial.print("T 4 left");
                tastaturstatus &=  ~(1<<AKTION_OK);
                tastaturstatus |= (1<<UPDATE_OK);
                switch (curr_screen)
@@ -1360,8 +1360,8 @@ void loop()
                      
                   case 4: // AKTIONSCREEN
                   {
-                     Serial.print("T4 case 4: curr_screen: ");
-                     Serial.println(curr_screen);
+                     //Serial.print("T4 case 4: curr_screen: ");
+                     //Serial.println(curr_screen);
                      curr_cursorspalte = 0;
                      curr_wert = 0;
                      updateAktionScreen();
@@ -1387,22 +1387,22 @@ void loop()
          {
             if (tastaturstatus & (1<<AKTION_OK))
             {
-               Serial.print("T 5 in ");
+               //Serial.print("T 5 in ");
                
                if ((curr_screen == 0) ) //&& (taste5counter < 3))
                {
                   tastaturstatus |= (1<<T5_WAIT); // Warten auf 3 Impulse
                   {               
                      taste5counter++;
-                     Serial.print("taste5counter: ");
-                     Serial.println(taste5counter);
+                     //Serial.print("taste5counter: ");
+                     //Serial.println(taste5counter);
                      tastaturcounter = 300; // Mehrfachklick ermoeglichen
                      if (taste5counter == 3)
                      {
                         curr_screen = 1;
                         taste5counter = 0;
                         tastaturstatus |= ~(1<<T5_WAIT); // Warten beendet
-                        Serial.print("T5 setMenuScreen ");
+                        //Serial.print("T5 setMenuScreen ");
                         //u8g2.clear();
                         
                         setMenuScreen();
@@ -1415,44 +1415,44 @@ void loop()
                   taste5counter = 0;
                   if(curr_screen < 6)
                   {
-                     Serial.print("T 5 klick ");
-                     Serial.println(curr_screen);
+                     //Serial.print("T 5 klick ");
+                     //Serial.println(curr_screen);
                      switch (curr_screen)
                      {
                         case 1: // MODELLSCREEN
                         {
-                           Serial.print("T 5 > Modellscreen curr_model: ");
-                           Serial.println(curr_model);
+                           //Serial.print("T 5 > Modellscreen curr_model: ");
+                           //Serial.println(curr_model);
                            setModellScreen();
                            curr_screen = 2;
                            u8g2.sendBuffer();
                         }break;
                         case 2: // FUNKTIONSCREEN
                         {
-                           Serial.print("T 5 > FunktionScreen curr_funktion: " );
-                           Serial.println(curr_funktion);
+                           //Serial.print("T 5 > FunktionScreen curr_funktion: " );
+                           //Serial.println(curr_funktion);
                            setFunktionScreen();
                            curr_screen = 3;
                            u8g2.sendBuffer();
                         }break;
                         case 3: // AKTIONSCREEN
                         {
-                           Serial.print("T 5 > AktionScreen curr_aktion: " );
-                           Serial.println(curr_aktion);
+                           //Serial.print("T 5 > AktionScreen curr_aktion: " );
+                           //Serial.println(curr_aktion);
                            setAktionScreen();
                            curr_screen = 4;
                            u8g2.sendBuffer();
                         }break;
                         case 4: 
                         {
-                           Serial.print("T 5 screen 4 curr_wert: ");
-                           Serial.println(curr_wert);
+                           //Serial.print("T 5 screen 4 curr_wert: ");
+                           //Serial.println(curr_wert);
                         }break;
 
                         case 5: // 
                         {
-                           Serial.print("T 5 screen 5 curr_modus: ");
-                           Serial.println(curr_modus);
+                           //Serial.print("T 5 screen 5 curr_modus: ");
+                           //Serial.println(curr_modus);
                            
                            if(!(calibstatus & (1<<CALIB_START))) // calib noch nicht gesetzt
                            {
@@ -1476,8 +1476,8 @@ void loop()
                      }// switch (curr_screen)
                   }
                }
-               Serial.print("T5 end: curr_screen: ");
-               Serial.println(curr_screen);              
+               //Serial.print("T5 end: curr_screen: ");
+               //Serial.println(curr_screen);              
                tastaturstatus &=  ~(1<<AKTION_OK);
                tastaturstatus |= (1<<UPDATE_OK);  
             }
@@ -1485,10 +1485,10 @@ void loop()
             
          case 6: // RIGHT
          {
-            Serial.print("T 6");
+            //Serial.print("T 6");
             if (tastaturstatus & (1<<AKTION_OK))
             {
-               Serial.println("T 6 right");
+               //Serial.println("T 6 right");
                tastaturstatus &=  ~(1<<AKTION_OK);
                tastaturstatus |= (1<<UPDATE_OK);
                switch (curr_screen)
@@ -1522,8 +1522,8 @@ void loop()
                   }break;
                   case 3: // FUNKTIONSCREEN
                   {
-                     Serial.print("T6 case 3: curr_screen: ");
-                     Serial.println(curr_screen);
+                     //Serial.print("T6 case 3: curr_screen: ");
+                     //Serial.println(curr_screen);
                      switch (curr_cursorspalte)
                      {
                         case 0: 
@@ -1563,8 +1563,8 @@ void loop()
                   }break;
                   case 4: // AKTIONSCREEN
                   {
-                     Serial.print("T6 case 4: curr_screen: ");
-                     Serial.println(curr_screen);
+                     //Serial.print("T6 case 4: curr_screen: ");
+                     //Serial.println(curr_screen);
                      switch (curr_cursorspalte)
                      {
                         case 0:
@@ -1578,8 +1578,8 @@ void loop()
                      
                   case 5: // T6 ModusScreen
                   {
-                     Serial.print("T6 case 5 ModusScreen: curr_screen: ");
-                     Serial.println(curr_screen);
+                     //Serial.print("T6 case 5 ModusScreen: curr_screen: ");
+                     //Serial.println(curr_screen);
                      switch (curr_cursorzeile)
                      {
                         case 0: // Navigation
@@ -1608,7 +1608,7 @@ void loop()
          {
             if (tastaturstatus & (1<<AKTION_OK))
             {
-               Serial.print("T 7 back ");
+               //Serial.print("T 7 back ");
                if(curr_screen )
                {
                   curr_screen--;
@@ -1653,8 +1653,8 @@ void loop()
                         
                   }// switch curr_screen
                }
-               Serial.print("T7 curr_screen: ");
-               Serial.println(curr_screen);              
+               //Serial.print("T7 curr_screen: ");
+               //Serial.println(curr_screen);              
                u8g2.sendBuffer();
                tastaturstatus &=  ~(1<<AKTION_OK);
                tastaturstatus |= (1<<UPDATE_OK); 
@@ -1664,10 +1664,10 @@ void loop()
             
          case 8:
          {
-            Serial.print("T 8");
+            //Serial.print("T 8");
             if (tastaturstatus & (1<<AKTION_OK))
             {
-               Serial.print("T 8 down");
+               //Serial.print("T 8 down");
                tastaturstatus &=  ~(1<<AKTION_OK);
                tastaturstatus |= (1<<UPDATE_OK);
                switch (curr_screen)
@@ -1831,16 +1831,16 @@ void loop()
             
          case 9:
          {
-            Serial.print("T 9 SAVE");  
+            //Serial.print("T 9 SAVE");  
             
             switch (curr_screen)
             {
                case 0:
                {
-                  //Serial.print(" savestatus: ");  
-                  //Serial.print(savestatus);
-                  //Serial.print(" curr_cursorspalte: ");  
-                  Serial.print(curr_cursorspalte);
+                  ////Serial.print(" savestatus: ");  
+                  ////Serial.print(savestatus);
+                  ////Serial.print(" curr_cursorspalte: ");  
+                  //Serial.print(curr_cursorspalte);
                   switch (savestatus)
                   {
                      case 0: // CHANGED
@@ -1870,7 +1870,7 @@ void loop()
       }//switch (Taste)
       if(Taste)
       {
-         //Serial.print("\n");
+         ////Serial.print("\n");
          Taste = 0;
          tastaturstatus &= ~(1<<TASTE_OK);
       }
@@ -1883,10 +1883,10 @@ void loop()
    {
       if(Taste)
       {
-         //Serial.print(tastaturwert);
-         //Serial.print(" Taste: ");
-         Serial.print(Taste);
-         Serial.print("\n");
+         ////Serial.print(tastaturwert);
+         ////Serial.print(" Taste: ");
+         //Serial.print(Taste);
+         //Serial.print("\n");
          
          
       }
@@ -1907,28 +1907,28 @@ void loop()
          batteriemittel += batteriearray[i];
       }
       batteriemittel /= 8;
-      //Serial.println(batteriemittel);
+      ////Serial.println(batteriemittel);
       
       
       UBatt = float(batteriespannung) / 107;
       /*
-      Serial.print("potwertarray[YAW]: ");
-      Serial.print("\t ");
-      Serial.print(potwertarray[0]);
-      Serial.print("\t ");
-      Serial.print(potwertyaw);
-      Serial.print("\t ");
+      //Serial.print("potwertarray[YAW]: ");
+      //Serial.print("\t ");
+      //Serial.print(potwertarray[0]);
+      //Serial.print("\t ");
+      //Serial.print(potwertyaw);
+      //Serial.print("\t ");
 
-      Serial.print("levelwertayaw: ");
-      Serial.print("\t ");
-      Serial.print(levelwertayaw);
-      Serial.print("\t ");
-      Serial.print("levelwertbyaw: ");
-      Serial.print("\t ");
-      Serial.print("data.yaw: ");
-      Serial.print("\t ");
-      Serial.print(data.yaw );
-      Serial.print("\n");
+      //Serial.print("levelwertayaw: ");
+      //Serial.print("\t ");
+      //Serial.print(levelwertayaw);
+      //Serial.print("\t ");
+      //Serial.print("levelwertbyaw: ");
+      //Serial.print("\t ");
+      //Serial.print("data.yaw: ");
+      //Serial.print("\t ");
+      //Serial.print(data.yaw );
+      //Serial.print("\n");
        */  
       
       //eepromread();
@@ -1940,15 +1940,15 @@ void loop()
       //u8g2.sendBuffer(); // Transfer buffer to screen.
       //*/
       /*
-       Serial.print("blinkcounter: ");
-       Serial.print(blinkcounter);
+       //Serial.print("blinkcounter: ");
+       //Serial.print(blinkcounter);
        
-       Serial.print(" radiocounter: ");
-       Serial.print(radiocounter);
-       Serial.print(" errcounter: ");
-       Serial.print(errcounter);
-       //Serial.print(" impulscounter: ");
-       //Serial.print(impulscounter);
+       //Serial.print(" radiocounter: ");
+       //Serial.print(radiocounter);
+       //Serial.print(" errcounter: ");
+       //Serial.print(errcounter);
+       ////Serial.print(" impulscounter: ");
+       ////Serial.print(impulscounter);
        */
       /*
        potwert += schritt;
@@ -1957,7 +1957,7 @@ void loop()
        potwert = POTLO;
        }
        */
-      //Serial.print(" M: ");
+      ////Serial.print(" M: ");
       //if(abs(servomittearray[ROLL] - potwertarray[ROLL]) > 2)
       
       
@@ -2006,11 +2006,11 @@ void loop()
       
       batterieanzeige = (0x50*batteriespannung)/0x6B/8; // resp. /107
       /*
-       Serial.print(batteriespannung);
-       Serial.print("\t");
-       Serial.print(batterieanzeige);
-       Serial.print("\t");
-       Serial.println(UBatt);
+       //Serial.print(batteriespannung);
+       //Serial.print("\t");
+       //Serial.print(batterieanzeige);
+       //Serial.print("\t");
+       //Serial.println(UBatt);
        */
       //oled_batteriebalken_setwert(BATTX,BATTY,BATTB,BATTH,batterieanzeige);
       //oled_setBatterieWert(BATTX,BATTY+BATTH+16,BATTB,24,UBatt);
@@ -2040,209 +2040,209 @@ void loop()
       
       if (TEST == 1)
       {
-         //Serial.print("YAW\t "); 
-         //Serial.print(potgrenzearray[YAW][0]);
-         //Serial.print("\t ");   
-         //Serial.print(potgrenzearray[YAW][1]);
-         //Serial.print("\t* ");  
-         //Serial.print("pw2: ");
-         //Serial.print("\t ");
-         //Serial.print(potwertarray[YAW]);
-         //Serial.print("\t ");
+         ////Serial.print("YAW\t "); 
+         ////Serial.print(potgrenzearray[YAW][0]);
+         ////Serial.print("\t ");   
+         ////Serial.print(potgrenzearray[YAW][1]);
+         ////Serial.print("\t* ");  
+         ////Serial.print("pw2: ");
+         ////Serial.print("\t ");
+         ////Serial.print(potwertarray[YAW]);
+         ////Serial.print("\t ");
          
-         // Serial.print("map: ");
-         //Serial.print("\t ");
+         // //Serial.print("map: ");
+         ////Serial.print("\t ");
          //uint8_t yawmap = map(potwertarray[YAW],0,680,0,254);
-         //Serial.print(yawmap);
-         //Serial.print(" *255*\t ");
+         ////Serial.print(yawmap);
+         ////Serial.print(" *255*\t ");
          uint16_t yawmap2 = Border_Map(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],true);
-         //Serial.print("\t ");
-         //Serial.print(yawmap2);
+         ////Serial.print("\t ");
+         ////Serial.print(yawmap2);
          
-         //Serial.print(" *512*\t ");
+         ////Serial.print(" *512*\t ");
          uint16_t yawmap3 = Border_Map10(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],true);
-         //Serial.print("\t ");
-         //Serial.print(yawmap3);
+         ////Serial.print("\t ");
+         ////Serial.print(yawmap3);
          
-         //Serial.print("\t ");
-         //Serial.print("pwarray: ");
-         //Serial.print("\t ");
-         //Serial.print(potwertarray[YAW]);
+         ////Serial.print("\t ");
+         ////Serial.print("pwarray: ");
+         ////Serial.print("\t ");
+         ////Serial.print(potwertarray[YAW]);
          
          
          //  int var = Border_Mapvar255(potwertarray[YAW],potgrenzearray[YAW][1],servomittearray[YAW],potgrenzearray[YAW][0],true);
          
          /*
-         Serial.print("\t ");
-         Serial.print("intdiff: ");
-         Serial.print("\t ");
-         Serial.print(intdiff);
+         //Serial.print("\t ");
+         //Serial.print("intdiff: ");
+         //Serial.print("\t ");
+         //Serial.print(intdiff);
          
-         Serial.print("\t ");
-         Serial.print("levelintcheck: ");
-         Serial.print("\t ");
-         Serial.print(levelintcheck);
-         
-         
-         Serial.print("\t ");
-         Serial.print("data.yaw: ");
-         Serial.print("\t ");
-         Serial.print(data.yaw);
-         Serial.print("\t ");
-         Serial.print(batteriespannung);
-         
-         Serial.print("\t ");
-         
-         Serial.print(UBatt,2);
-         */
+         //Serial.print("\t ");
+         //Serial.print("levelintcheck: ");
+         //Serial.print("\t ");
+         //Serial.print(levelintcheck);
          
          
          //Serial.print("\t ");
-         //Serial.print("levelintpitcha: ");
-         //Serial.print(levelintpitcha);
+         //Serial.print("data.yaw: ");
+         //Serial.print("\t ");
+         //Serial.print(data.yaw);
+         //Serial.print("\t ");
+         //Serial.print(batteriespannung);
+         
+         //Serial.print("\t ");
+         
+         //Serial.print(UBatt,2);
+         */
+         
+         
+         ////Serial.print("\t ");
+         ////Serial.print("levelintpitcha: ");
+         ////Serial.print(levelintpitcha);
          
          
          
          /*
-          Serial.print("PITCH\t "); 
-          Serial.print(potgrenzearray[PITCH][0]);
-          Serial.print("\t ");   
-          Serial.print(potgrenzearray[PITCH][1]);
-          Serial.print("\t* ");   
+          //Serial.print("PITCH\t "); 
+          //Serial.print(potgrenzearray[PITCH][0]);
+          //Serial.print("\t ");   
+          //Serial.print(potgrenzearray[PITCH][1]);
+          //Serial.print("\t* ");   
           
           
-          Serial.print(servomittearray[PITCH]);
-          Serial.print("\t ");    
-          Serial.print(" potwertpitch: ");
+          //Serial.print(servomittearray[PITCH]);
+          //Serial.print("\t ");    
+          //Serial.print(" potwertpitch: ");
           
-          Serial.print(potwertpitch);
+          //Serial.print(potwertpitch);
           
-          Serial.print("\t potwertarray: ");
-          Serial.print(potwertarray[PITCH]);
-          Serial.print("\t");
+          //Serial.print("\t potwertarray: ");
+          //Serial.print(potwertarray[PITCH]);
+          //Serial.print("\t");
           
           
-          Serial.print("\t");    
-          //Serial.print(" levelwerta: ");
-          // Serial.print(levelwerta);
-          //Serial.print("\t");    //Serial.print(" expoint: ");
+          //Serial.print("\t");    
+          ////Serial.print(" levelwerta: ");
+          // //Serial.print(levelwerta);
+          ////Serial.print("\t");    ////Serial.print(" expoint: ");
           //uint8_t ea = kanalsettingarray[curr_model][PITCH][2];
-          //Serial.print(ea);
+          ////Serial.print(ea);
           
           
-          Serial.print("\t levelintraw: ");
+          //Serial.print("\t levelintraw: ");
           
-          Serial.print(levelintraw);
+          //Serial.print(levelintraw);
           
-          Serial.print("\t intdiffpitch: ");
+          //Serial.print("\t intdiffpitch: ");
           
-          Serial.print(intdiffpitch);
-          Serial.print("\t intdiff: ");
+          //Serial.print(intdiffpitch);
+          //Serial.print("\t intdiff: ");
           
-          Serial.print(intdiff);
+          //Serial.print(intdiff);
           
-          Serial.print("\tdiffa ");    
-          Serial.print(diffa);
-          Serial.print("\tlevelintpitcha ");    //Serial.print(" expoint: ");
-          Serial.print(levelintpitcha);
-          Serial.print("\texpoint ");    //Serial.print(" expoint: ");
-          Serial.print(expoint);
+          //Serial.print("\tdiffa ");    
+          //Serial.print(diffa);
+          //Serial.print("\tlevelintpitcha ");    ////Serial.print(" expoint: ");
+          //Serial.print(levelintpitcha);
+          //Serial.print("\texpoint ");    ////Serial.print(" expoint: ");
+          //Serial.print(expoint);
           
           
-          Serial.print("\t");    //Serial.print(" diffb: ");
-          Serial.print("\tdiffb ");
-          Serial.print(diffb);
-          Serial.print("\t levelintpitchb ");    //Serial.print(" expoint: ");
-          Serial.print(levelintpitchb);
+          //Serial.print("\t");    ////Serial.print(" diffb: ");
+          //Serial.print("\tdiffb ");
+          //Serial.print(diffb);
+          //Serial.print("\t levelintpitchb ");    ////Serial.print(" expoint: ");
+          //Serial.print(levelintpitchb);
           
-          Serial.print("\t  data.pitch ");   
-          Serial.print(data.pitch);
+          //Serial.print("\t  data.pitch ");   
+          //Serial.print(data.pitch);
           */
          
          
          /*
-          Serial.print("\tadc "); 
-          Serial.print(potwertarray[THROTTLE]);
-          Serial.print("\tthrottle ");    //Serial.print(" expoint: ");
-          Serial.print(data.throttle);
+          //Serial.print("\tadc "); 
+          //Serial.print(potwertarray[THROTTLE]);
+          //Serial.print("\tthrottle ");    ////Serial.print(" expoint: ");
+          //Serial.print(data.throttle);
           */
          
-         Serial.print(" *\n");
+         //Serial.print(" *\n");
       } // if TEST 1
       
       /*
-       Serial.print(" \t");
-       Serial.print(" * ");
-       Serial.print(" \t");
-       Serial.print(" potwert: ");
-       Serial.print(potwertarray[YAW]);
+       //Serial.print(" \t");
+       //Serial.print(" * ");
+       //Serial.print(" \t");
+       //Serial.print(" potwert: ");
+       //Serial.print(potwertarray[YAW]);
        
-       Serial.print(" grenze U: ");
-       Serial.print(potgrenzearray[YAW][1]);
+       //Serial.print(" grenze U: ");
+       //Serial.print(potgrenzearray[YAW][1]);
 
-       Serial.print(" Mitte: ");
-       Serial.print(servomittearray[YAW]);
+       //Serial.print(" Mitte: ");
+       //Serial.print(servomittearray[YAW]);
 
-       Serial.print(" grenze O: ");
-       Serial.print(potgrenzearray[YAW][0]);
+       //Serial.print(" grenze O: ");
+       //Serial.print(potgrenzearray[YAW][0]);
 
 
 
-       Serial.print(" yaw: ");
-       Serial.print(data.yaw);
+       //Serial.print(" yaw: ");
+       //Serial.print(data.yaw);
        
-       Serial.print(" \t");
+       //Serial.print(" \t");
       */
        if(calibstatus & (1<CALIB_START))
        {
 
-         Serial.print(" YAW: ");
-         Serial.print(potwertarray[YAW]);
+         //Serial.print(" YAW: ");
+         //Serial.print(potwertarray[YAW]);
          
-         Serial.print(" yaw: ");
-         Serial.print(data.yaw);   
+         //Serial.print(" yaw: ");
+         //Serial.print(data.yaw);   
             
-         Serial.print(" PITCH: ");
-         Serial.print(potwertarray[PITCH]);
+         //Serial.print(" PITCH: ");
+         //Serial.print(potwertarray[PITCH]);
          
-         Serial.print(" pitch: ");
-         Serial.print(data.pitch);   
+         //Serial.print(" pitch: ");
+         //Serial.print(data.pitch);   
 
-         Serial.print(" ROLL: ");
-         Serial.print(potwertarray[ROLL]);
+         //Serial.print(" ROLL: ");
+         //Serial.print(potwertarray[ROLL]);
          
-         Serial.print(" roll: ");
-         Serial.print(data.roll);
+         //Serial.print(" roll: ");
+         //Serial.print(data.roll);
 
-         Serial.print(" Throttle: ");
-         Serial.print(potwertarray[THROTTLE]);
+         //Serial.print(" Throttle: ");
+         //Serial.print(potwertarray[THROTTLE]);
          
          
-         Serial.print(" data.throttle: ");
-         Serial.print(data.throttle);
+         //Serial.print(" data.throttle: ");
+         //Serial.print(data.throttle);
 
-         Serial.print("\n");
+         //Serial.print("\n");
          
        }
        
-       //Serial.print(" throttlemitte: ");
-       //Serial.print(servomittearray[THROTTLE]);
+       ////Serial.print(" throttlemitte: ");
+       ////Serial.print(servomittearray[THROTTLE]);
        
        
-      //Serial.print(" throttlecounter: ");
-       //Serial.print(throttlecounter);
+      ////Serial.print(" throttlecounter: ");
+       ////Serial.print(throttlecounter);
       
 
       /*
-       Serial.print(" A1: ");
-       Serial.print(potwertarray[PITCH]);
-       Serial.print(" A3: ");
-       Serial.print(potwertarray[ROLL]);
-       Serial.print(" A6: ");
-       Serial.print(potwertarray[THROTTLE]);
+       //Serial.print(" A1: ");
+       //Serial.print(potwertarray[PITCH]);
+       //Serial.print(" A3: ");
+       //Serial.print(potwertarray[ROLL]);
+       //Serial.print(" A6: ");
+       //Serial.print(potwertarray[THROTTLE]);
        */
       
-      //Serial.print(" *\n");
+      ////Serial.print(" *\n");
    }// BLINKRATE
    // EEPROM
    eepromtaste.update();
@@ -2250,14 +2250,14 @@ void loop()
    if(eepromtaste.pressed())
    {
       {
-         Serial.print("\nEEPROM update\n");
+         //Serial.print("\nEEPROM update\n");
          //printgrenzen();
          setHomeScreen();
          u8g2.sendBuffer();
          //analogWrite(6,0x0F);
          eepromwrite();
          //tone(6,440,250);
-         Serial.println("EEPROM update end\n");
+         //Serial.println("EEPROM update end\n");
          eepromstatus &= ~(1<<EEPROM_WRITE) ;
       }
       
@@ -2369,7 +2369,7 @@ void loop()
    }
    else
    {
-      Serial.print("radio error\n");
+      //Serial.print("radio error\n");
       digitalWrite(BUZZPIN,!(digitalRead(BUZZPIN)));
       errcounter++;
    }
