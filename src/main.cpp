@@ -12,6 +12,7 @@
 #include <nRF24L01.h>
 #include <RF24.h>
 #include <Bounce2.h> // github.com/thomasfredericks/Bounce2
+#include <avr/io.h>
 
 #include <elapsedMillis.h>
 #include "defines.h"
@@ -603,11 +604,11 @@ void tastenfunktion(uint16_t Tastenwert)
    tastaturcounter++;   
    if (Tastenwert>10) // ca Minimalwert der Matrix
    {      
-      //Serial.print(Tastenwert);
-      //Serial.print("\t");
-      //Serial.print(tastaturcounter);
+      Serial.print(Tastenwert);
+      Serial.print("\t");
+      Serial.print(tastaturcounter);
       
-      //Serial.print("\n");
+      Serial.print("\n");
       
       if (tastaturcounter>=400)   //   Prellen
       {        
@@ -623,17 +624,24 @@ void tastenfunktion(uint16_t Tastenwert)
             //tastaturstatus |= (1<<TASTE_ON); // nur einmal   
             tastaturstatus |= (1<<TASTE_OK); // nur einmal   
             Taste= Joystick_Tastenwahl(Tastenwert);
+
+            Serial.print("\n");
+            Serial.print(Tastenwert);
+            Serial.print("\t");
+            Serial.print(Taste);
+            Serial.print("\n");
             tastaturstatus |= (1<<AKTION_OK);
             if(OLED && Taste) // Taste und Tastenwert anzeigen
             {
-               //oled_delete(0,62,20);
-               //u8g2.setCursor(0,42);
-               //u8g2.print(tastaturwert);
-               //u8g2.print("T ");
-               //u8g2.setCursor(0,62);
-               //u8g2.print(Taste);
                
-               //u8g2.sendBuffer(); 
+               oled_delete(0,62,20);
+               u8g2.setCursor(0,62);
+               u8g2.print(tastaturwert);
+               u8g2.print(" T ");
+               u8g2.setCursor(40,62);
+               u8g2.print(Taste);
+               
+               u8g2.sendBuffer(); 
                
             }
             
@@ -727,7 +735,7 @@ void setup()
    }
    
    delay(50);
-   
+
    Serial.begin(9600);
 
    // PPM decode
@@ -808,8 +816,7 @@ void setup()
    
    setHomeScreen();
    
-   
-   
+  
    u8g2.sendBuffer(); 
    
    

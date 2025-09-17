@@ -78,6 +78,7 @@ struct Signal
 #define JOYSTICKTASTE8 510
 #define JOYSTICKTASTE9 580
 
+
 #define TAB0    2
 #define TAB1    4
 #define TAB3    8
