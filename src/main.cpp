@@ -196,14 +196,18 @@ Bounce2::Button eepromtaste = Bounce2::Button();
 uint16_t intdiff = 0;
 uint16_t intdiffpitch = 0;
 
+#define ANZ_REP 8
 uint16_t tastaturwert = 0;
+uint16_t tastaturwertarray[ANZ_REP] = {};
+uint8_t mittelposition = 0;
+
 uint8_t tastencounter = 0;
 uint8_t tastaturstatus = 0;
 uint8_t Taste = 0;
 uint8_t taste5counter = 0;
 
 // balken
-#define VBX   64
+#define VBX    64
 #define VBY    12
 #define HBX    6
 #define HBY    54
@@ -599,6 +603,21 @@ uint8_t Joystick_Tastenwahl(uint16_t Tastaturwert)
 }
 // tastenwahl
 
+void readTastatur(uint8_t kanal)
+{
+   uint16_t tastenwertsumme = 0;
+   tastaturwertarray[mittelposition++] = analogRead(kanal);
+   for (uint8_t i = 0;i<ANZ_REP;i++)
+   {
+      tastenwertsumme+= tastaturwertarray[i];
+   }
+   if(mittelposition > ANZ_REP)
+   {
+      mittelposition = 0;
+   }
+   tastaturwert = tastenwertsumme / ANZ_REP;
+}
+
 void tastenfunktion(uint16_t Tastenwert)
 {  
    tastaturcounter++;   
@@ -625,11 +644,11 @@ void tastenfunktion(uint16_t Tastenwert)
             tastaturstatus |= (1<<TASTE_OK); // nur einmal   
             Taste= Joystick_Tastenwahl(Tastenwert);
 
-            //Serial.print("\n");
-            //Serial.print(Tastenwert);
-            //Serial.print("\t");
-            //Serial.print(Taste);
-            //Serial.print("\n");
+            Serial.print("Tastenwert: ");
+            Serial.print(Tastenwert);
+            Serial.print("\t Taste: m");
+            Serial.print(Taste);
+            Serial.print("\n");
             tastaturstatus |= (1<<AKTION_OK);
             if(OLED && Taste) // Taste und Tastenwert anzeigen
             {
@@ -733,9 +752,19 @@ void setup()
       //EEPROM.write(i,0);
       
    }
-   
+   // https://wolles-elektronikkiste.de/arduino-nano-every-ein-deep-dive#adc_module
+   /*
+    PORTD.PIN2CTRL = PORT_ISC_INPUT_DISABLE_gc; // Disable digital buffer
+    ADC0.CTRLA = ADC_ENABLE_bm; // Enable ADC
+    ADC0.CTRLC = ADC_REFSEL_INTREF_gc | ADC_PRESC_DIV16_gc; // use internal reference / prescaler: 16
+    VREF.CTRLA = VREF_ADC0REFSEL_4V34_gc; // use internal 4.34 V reference 
+    ADC0.MUXPOS = ADC_MUXPOS_AIN1_gc; // use A2 (PD1) as input
+    ADC0.SAMPCTRL = 0;
+    */
    delay(50);
 
+   //analogReference(EXTERNAL);
+   
    //Serial.begin(9600);
 
    // PPM decode
@@ -745,7 +774,7 @@ void setup()
    curr_steuerstatus = MODELL;
    //savestatus = 0xFF;
    
-   delay(500);
+   delay(100);
    /*
     for (uint8_t i=0;i<16;i++)
     {
