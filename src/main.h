@@ -68,6 +68,7 @@ struct Signal
 #define T5_WAIT              4 // Warten auf 3 Impulse
 #define MENU_ON            5
 
+/*
 #define JOYSTICKTASTE1 70
 #define JOYSTICKTASTE2 121
 #define JOYSTICKTASTE3 192
@@ -77,7 +78,18 @@ struct Signal
 #define JOYSTICKTASTE7 426
 #define JOYSTICKTASTE8 510
 #define JOYSTICKTASTE9 580
+*/
 
+// External Ref 3v3
+#define JOYSTICKTASTE1  51
+#define JOYSTICKTASTE2  88
+#define JOYSTICKTASTE3  140
+#define JOYSTICKTASTE4  180
+#define JOYSTICKTASTE5  225
+#define JOYSTICKTASTE6  269
+#define JOYSTICKTASTE7  312
+#define JOYSTICKTASTE8  375
+#define JOYSTICKTASTE9  478
 
 #define TAB0    2
 #define TAB1    4

@@ -646,7 +646,7 @@ void tastenfunktion(uint16_t Tastenwert)
 
             Serial.print("Tastenwert: ");
             Serial.print(Tastenwert);
-            Serial.print("\t Taste: m");
+            Serial.print("\t Taste: ");
             Serial.print(Taste);
             Serial.print("\n");
             tastaturstatus |= (1<<AKTION_OK);
@@ -763,9 +763,9 @@ void setup()
     */
    delay(50);
 
-   //analogReference(EXTERNAL);
+   analogReference(EXTERNAL);
    
-   //Serial.begin(9600);
+   Serial.begin(9600);
 
    // PPM decode
    pinMode(PPM_PIN, INPUT);
@@ -1096,7 +1096,7 @@ void loop()
    //            
    loopcounter++;
    //digitalWrite(BUZZPIN,!(digitalRead(BUZZPIN)));
-   tastaturwert = analogRead(TASTATUR_PIN);
+   tastaturwert = analogRead(TASTATUR_PIN)/2;
    tastenfunktion(tastaturwert);
    
    if (zeitintervall > 500) 
