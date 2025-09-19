@@ -37,6 +37,7 @@ extern uint16_t                  blink_cursorpos;
 extern uint8_t                   blinkstatus;
 extern uint8_t                   calibstatus;
 
+extern uint16_t                   batteriespannung;
 
 
 #define BLINKPFEILUP    0
@@ -341,9 +342,12 @@ void updateHomeScreen()
       u8g2.drawStr(30,48,buf0);
      
       uint8_t p = curr_model;
+
    oled_batteriebalken_setwert(BATTX,BATTY,BATTB,BATTH,batterieanzeige);
    u8g2.setFont(u8g2_font_t0_14_mr);  
-   oled_setBatterieWert(BATTX,BATTY+BATTH+18,BATTB,26,UBatt);
+   
+   oled_setBatterieWert(BATTX,BATTY+BATTH+16,BATTB,26,UBatt);
+
    u8g2.setFont(u8g2_font_t0_15_mr);  
    //
    uint8_t la = kanalsettingarray[0][0][1] & 0x07;

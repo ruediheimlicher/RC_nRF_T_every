@@ -92,7 +92,7 @@ static unsigned char pfeil_r[] =
 
 
 
-   #define arrow_left_width 8
+#define arrow_left_width 8
 #define arrow_left_height 8
 
 #endif

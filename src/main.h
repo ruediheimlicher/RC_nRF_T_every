@@ -16,7 +16,7 @@ struct Signal
    byte aux2;
    
 };
-#define BATTX  106
+#define BATTX  104
 #define BATTY  2
 #define BATTH  44
 #define BATTB  20
@@ -31,6 +31,9 @@ struct Signal
 #define PFEIL_DOWN   1
 #define PFEIL_LEFT   2
 #define PFEIL_RIGHT  3
+
+#define BUZZPIN 6    // BUZZER PCB nano 5: 5
+#define  BUZZINTERVALL 0xF0
 
 
 #define NUM_SERVOS  4

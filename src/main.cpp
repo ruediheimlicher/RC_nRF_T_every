@@ -45,7 +45,7 @@ RF24 radio(CE_PIN, CSN_PIN);
 
 #define LOOPLED 4
 
-#define BUZZPIN 6    // PWM
+
 
 #define EEPROMTASTE  5
 
@@ -279,9 +279,12 @@ int16_t                 Tastenwertdiff=0;
 uint16_t                tastaturcounter=0;
 uint16_t                tastaturdelaycounter=0;
 
-elapsedMillis   zeitintervall;
-uint8_t           sekundencounter = 0;
-elapsedMillis   sinceLastBlink = 0;
+elapsedMillis           zeitintervall;
+uint8_t                 sekundencounter = 0;
+elapsedMillis           sinceLastBlink = 0;
+
+
+elapsedMillis  buzzintervall = 0;
 
 
 Signal data;
@@ -603,7 +606,7 @@ uint8_t Joystick_Tastenwahl(uint16_t Tastaturwert)
 }
 // tastenwahl
 
-void readTastatur(uint8_t kanal)
+uint16_t readTastatur(uint8_t kanal)
 {
    uint16_t tastenwertsumme = 0;
    tastaturwertarray[mittelposition++] = analogRead(kanal);
@@ -611,11 +614,11 @@ void readTastatur(uint8_t kanal)
    {
       tastenwertsumme+= tastaturwertarray[i];
    }
-   if(mittelposition > ANZ_REP)
+   if(mittelposition >= ANZ_REP)
    {
       mittelposition = 0;
    }
-   tastaturwert = tastenwertsumme / ANZ_REP;
+   return  tastenwertsumme / ANZ_REP;
 }
 
 void tastenfunktion(uint16_t Tastenwert)
@@ -644,15 +647,15 @@ void tastenfunktion(uint16_t Tastenwert)
             tastaturstatus |= (1<<TASTE_OK); // nur einmal   
             Taste= Joystick_Tastenwahl(Tastenwert);
 
-            Serial.print("Tastenwert: ");
-            Serial.print(Tastenwert);
-            Serial.print("\t Taste: ");
-            Serial.print(Taste);
-            Serial.print("\n");
+            //Serial.print("Tastenwert: ");
+            //Serial.print(Tastenwert);
+            //Serial.print("\t Taste: ");
+            //Serial.print(Taste);
+            //Serial.print("\n");
             tastaturstatus |= (1<<AKTION_OK);
             if(OLED && Taste) // Taste und Tastenwert anzeigen
             {
-               
+               /*
                oled_delete(0,62,20);
                u8g2.setCursor(0,62);
                u8g2.print(tastaturwert);
@@ -661,7 +664,7 @@ void tastenfunktion(uint16_t Tastenwert)
                u8g2.print(Taste);
                
                u8g2.sendBuffer(); 
-               
+               */
             }
             
             
@@ -771,6 +774,7 @@ void setup()
    pinMode(PPM_PIN, INPUT);
    attachInterrupt(digitalPinToInterrupt(PPM_PIN), ppmISR, RISING);
    
+   pinMode(BUZZPIN,OUTPUT);
    curr_steuerstatus = MODELL;
    //savestatus = 0xFF;
    
@@ -1090,14 +1094,18 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-
+uint16_t testwert=0;
 void loop()
 {                
    //            
    loopcounter++;
    //digitalWrite(BUZZPIN,!(digitalRead(BUZZPIN)));
    tastaturwert = analogRead(TASTATUR_PIN)/2;
+   //tastaturwert = readTastatur(TASTATUR_PIN);
+   //tastaturwert = readTastatur(TASTATUR_PIN)/2;
    tastenfunktion(tastaturwert);
+   
+   
    
    if (zeitintervall > 500) 
    { 
@@ -1109,8 +1117,17 @@ void loop()
          throttlecounter += (data.throttle);
          throttlesekunden = throttlecounter >> 8;
          blinkstatus = 1;
+         if(throttlesekunden > 250)
+         {
+            tone(BUZZPIN,1000);
 
+         }
+         
          stopsekunde++;
+         if(stopsekunde%2 == 0)
+         {
+            //tone(BUZZPIN,1000);
+         }
          if(stopsekunde == 60)
          {
             stopsekunde = 0;
@@ -1122,6 +1139,7 @@ void loop()
       else
       {
          blinkstatus = 0;
+         noTone(BUZZPIN);
       }
       if(curr_screen == 5)
       {
@@ -1908,8 +1926,12 @@ void loop()
       
    }// if TASTE_OK
    
-   if(loopcounter >= 2*BLINKRATE)
+   if(loopcounter >= BLINKRATE/2)
    {
+      
+      //Serial.println(testwert);
+
+
       if(Taste)
       {
          ////Serial.print(tastaturwert);
@@ -1923,11 +1945,14 @@ void loop()
       blinkcounter++;
       impulscounter+=16;
       digitalWrite(LOOPLED, ! digitalRead(LOOPLED));
-      
+
+      //analogWrite(BUZZPIN,127);
       
       
       batteriespannung = analogRead(BATT_PIN);
       batteriearray[batteriemittelwertcounter] = batteriespannung;
+      
+      
       batteriemittelwertcounter++;
       batteriemittelwertcounter &= 0x07;
       batteriemittel = 0;
@@ -1936,10 +1961,10 @@ void loop()
          batteriemittel += batteriearray[i];
       }
       batteriemittel /= 8;
-      ////Serial.println(batteriemittel);
+      //Serial.println(batteriemittel);
       
       
-      UBatt = float(batteriespannung) / 107;
+      UBatt = float(batteriespannung) / 154;
       /*
       //Serial.print("potwertarray[YAW]: ");
       //Serial.print("\t ");
@@ -2033,27 +2058,17 @@ void loop()
       
       //oled_horizontalbalken_setwert(HBX,HBY,balkenhb,balkenhh,werth);
       
-      batterieanzeige = (0x50*batteriespannung)/0x6B/8; // resp. /107
+      //batterieanzeige = (0x50*batteriespannung)/0x6B/8; // resp. /107
+      batterieanzeige = (0x50*batteriespannung)/0x9A/8; // integer-operation, resp. /154 als float
+       
       /*
-       //Serial.print(batteriespannung);
-       //Serial.print("\t");
-       //Serial.print(batterieanzeige);
-       //Serial.print("\t");
-       //Serial.println(UBatt);
+       Serial.print(batteriespannung);
+       Serial.print("\t");
+       Serial.print(batterieanzeige);
+       Serial.print("\t");
+       Serial.println(UBatt);
        */
-      //oled_batteriebalken_setwert(BATTX,BATTY,BATTB,BATTH,batterieanzeige);
-      //oled_setBatterieWert(BATTX,BATTY+BATTH+16,BATTB,24,UBatt);
       
-      
-      /*
-       //char buf1[4];
-       // Batt
-       //sprintf(buf1, "%1.2f", UBatt);
-       u8g2.setCursor(90,62);
-       u8g2.setDrawColor(0);
-       u8g2.print(UBatt,2);
-       u8g2.setDrawColor(1);
-       */
       if(curr_screen == 0)
       {
          updateHomeScreen();
