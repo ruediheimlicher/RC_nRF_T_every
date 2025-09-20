@@ -223,6 +223,38 @@ float expoquot = (ppmhi - ppmlo)/2/0x200; // umrechnen der max expo (512) auf PP
 // float quotarray[NUM_SERVOS] = {}; // Umrechnungsfaktor pro Pot
 
 
+// MasterSlave
+uint8_t masterslavestatus = 0;
+#define MASTER                   0
+#define SLAVE                    1
+
+volatile uint8_t currentChannel = 0;
+volatile bool pulseState = false;
+volatile uint32_t elapsedFrame = 0;
+
+volatile uint16_t channels[NUM_SERVOS] = 
+{
+  1500,1500,1500,1500
+};
+
+// V2
+volatile uint16_t ppm[NUM_SERVOS] = {1500,2000,1500,1000};
+
+#define PPM_PIN 6
+#define FRAME_LENGTH 22500  // µs
+#define PULSE_LENGTH 300    // µs
+#define CHANNEL_MIN 1000
+#define CHANNEL_MAX 2000
+
+//volatile uint8_t currentChannel = 0;
+volatile int16_t restTime = FRAME_LENGTH;
+
+
+
+
+
+
+
 
 // OLED > in display.cpp
 uint16_t pot0 = 0;
@@ -260,7 +292,7 @@ uint8_t                 curr_trimmung=0; // aktuelle  Trimmung fuer Trimmkanal
 
 
 uint8_t                 curr_screen = 0; // aktueller screen
-uint8_t                 last_screen=0; // letzter screen
+uint8_t                 last_screen=0; // letzter MASTERscreen
 
 uint8_t                 curr_page=7; // aktuelle page
 uint8_t                 curr_col=0; // aktuelle colonne
@@ -286,6 +318,8 @@ elapsedMillis           sinceLastBlink = 0;
 
 elapsedMillis  buzzintervall = 0;
 
+int Border_Mapvar255(uint8_t servo, int val, int lower, int middle, int upper, bool reverse);
+
 
 Signal data;
 void ResetData() 
@@ -299,24 +333,134 @@ void ResetData()
    
 }
 
+// ppm encode
+// Timer-ISR
+/*
+ISR(TCB0_INT_vect) 
+{
+  if (!pulseState) 
+  {
+    // Sync-Puls Low
+    digitalWrite(PPM_DATA_PIN, LOW);
+    TCB0.CCMP = 2 * SYNC_PULSE;  // TCB0 läuft mit 2 MHz = 0.5 µs Ticks
+    pulseState = true;
+  } 
+  else 
+  {
+    // High-Phase
+    digitalWrite(PPM_DATA_PIN, HIGH);
+
+    if (currentChannel < NUM_SERVOS) 
+    {
+      uint16_t duration = channels[currentChannel] - SYNC_PULSE;
+      TCB0.CCMP = duration * 2;
+      elapsedFrame += channels[currentChannel];
+      currentChannel++;
+      pulseState = false;
+    } 
+    else 
+    {
+      // Rest auffüllen
+      uint16_t rest = FRAME_LENGTH - elapsedFrame;
+      TCB0.CCMP = rest * 2;
+      elapsedFrame = 0;
+      currentChannel = 0;
+      pulseState = false;
+      digitalWrite(PPM_DIR_PIN, !(digitalRead(PPM_DIR_PIN)));
+
+    }
+  }
+  TCB0.INTFLAGS = TCB_CAPT_bm; // Interrupt-Flag löschen
+}
+*/
+
+// V2
+// ISR für TCB0
+ISR(TCB0_INT_vect) 
+{
+  // Impuls erzeugen
+  static bool pulseState = true;
+
+  if (pulseState) {
+    digitalWrite(PPM_DATA_PIN, HIGH); // kurzer Impuls
+    TCB0.CCMP = PULSE_LENGTH * 3; // µs -> TCB läuft mit 1/3 µs (Prescaler 2 bei 3,33 MHz)
+    pulseState = false;
+  } 
+  else 
+  {
+    digitalWrite(PPM_DATA_PIN, LOW); // Pause = Kanalwert
+    if (currentChannel < NUM_SERVOS) 
+    {
+
+      //uint16_t delay = constrain(ppm[currentChannel], CHANNEL_MIN, CHANNEL_MAX);
+      uint16_t delay = map(( potwertarray[currentChannel]),0,1024,2000,1000);
+      //uint16_t delay = Border_Mapvar255(currentChannel, potwertarray[currentChannel],2000,1500,1000,false);
+      
+      TCB0.CCMP = delay * 3;   // µs → Tickskalierung
+      restTime -= delay;
+      currentChannel++;
+    } 
+    else 
+    {
+      // Synclücke
+      TCB0.CCMP = (restTime > 0 ? restTime : 5000) * 3;
+      currentChannel = 0;
+      restTime = FRAME_LENGTH;
+    }
+    pulseState = true;
+  }
+
+  // Interrupt-Flag löschen
+  TCB0.INTFLAGS = TCB_CAPT_bm;
+}
+
+
+
+/*
+void setupTimer() 
+{
+  // TCB0 auf 2 MHz (0.5 µs Auflösung)
+  TCB0.CCMP = 40000;               // Dummy-Startwert
+  TCB0.CTRLA = TCB_ENABLE_bm;      // Timer aktivieren
+  TCB0.INTCTRL = TCB_CAPT_bm;      // Interrupt erlauben
+}
+*/
+void setupPPM() {
+
+  // TCB0 konfigurieren
+  TCB0.CTRLA = 0;  // stoppen
+  TCB0.CTRLB = TCB_CNTMODE_INT_gc;  // Periodic Interrupt Mode
+  TCB0.CCMP = 1000;  // erster Vergleichswert
+  TCB0.INTCTRL = TCB_CAPT_bm; // Interrupt aktivieren
+  TCB0.CTRLA = TCB_ENABLE_bm | TCB_CLKSEL_CLKDIV2_gc; 
+  // CLK_PER/2 = 8 MHz/2 = 4 MHz → 1 Tick = 0,25 µs → Faktor 4, 
+  // je nach Arduino-Core kann es 3,33 MHz sein, also Kalibrierung nötig
+}
+
+
 // PPM decode
-const byte PPM_PIN = 2; // PPM-Eingang an Pin 2
+
 volatile unsigned long lastTime = 0;
 volatile unsigned long pulseLength = 0;
 volatile byte channel = 0;
 const byte maxChannels = 8;
-volatile unsigned int ppmValues[maxChannels];
+//volatile unsigned int ppmValues[maxChannels];
+
 void ppmISR() 
 {
   unsigned long now = micros();
   pulseLength = now - lastTime;
   lastTime = now;
 
-  if (pulseLength > 3000) {
+  if (pulseLength > 3000) 
+  {
     // Sync-Pause erkannt: neues Frame beginnt
     channel = 0;
-  } else if (channel < maxChannels) {
-    ppmValues[channel] = pulseLength;
+    digitalWrite(PPM_DIR_PIN, !(digitalRead(PPM_DIR_PIN)));
+  } 
+  else if (channel < maxChannels) 
+  {
+    potwertarray[channel] = pulseLength;
     channel++;
   }
 }
@@ -744,6 +888,8 @@ void setCalib(void)
 
 }
 
+
+
 void setup()
 {
    
@@ -771,10 +917,15 @@ void setup()
    Serial.begin(9600);
 
    // PPM decode
-   pinMode(PPM_PIN, INPUT);
-   attachInterrupt(digitalPinToInterrupt(PPM_PIN), ppmISR, RISING);
+   pinMode(PPM_DIR_PIN, OUTPUT);
+   pinMode(PPM_DATA_PIN, OUTPUT);
+   digitalWrite(PPM_DATA_PIN,LOW);
+
+   //attachInterrupt(digitalPinToInterrupt(PPM_PIN), ppmISR, RISING);
    
    pinMode(BUZZPIN,OUTPUT);
+   digitalWrite(BUZZPIN,LOW);
+   
    curr_steuerstatus = MODELL;
    //savestatus = 0xFF;
    
@@ -881,7 +1032,7 @@ void setup()
    ResetData();
    
    // RC_22
-   for (uint16_t i=0;i<NUM_SERVOS;i++)
+   //for (uint16_t i=0;i<NUM_SERVOS;i++)
    {
       //adcpinarray[i] = 0xFF;
    }
@@ -918,9 +1069,15 @@ void setup()
       //EEPROM.write(i,0 );
       
    } // for NUM_SERVOS
-   
+
+   // Timer starten
+  //setupTimer();
+    setupPPM();
+
+
+
    //Serial.print("\n"); 
-   for (uint8_t i=0;i<NUM_SERVOS;i++)
+  // for (uint8_t i=0;i<NUM_SERVOS;i++)
    {
       //Serial.print(adcpinarray[i]);
       //Serial.print("\t");
@@ -1928,8 +2085,17 @@ void loop()
    
    if(loopcounter >= BLINKRATE/2)
    {
-      
-      //Serial.println(testwert);
+      for (int i=0;i<NUM_SERVOS;i++)
+      {
+         Serial.print(ppm[i]);
+         Serial.print("\t");
+         Serial.print(potwertarray[i]);
+         Serial.print("\t");
+         //Serial.print(Border_Mapvar255(i, potwertarray[i],2000,1500,1000,false));
+         Serial.print(map( potwertarray[i],0,1024,2000,1000));
+         Serial.print("\t");
+      }
+      Serial.print("\n");
 
 
       if(Taste)

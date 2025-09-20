@@ -28,6 +28,12 @@
 #define CALIB_START     3
 #define CALIB_END       4
 
+#define PPM_DIR_PIN     2
+#define PPM_DATA_PIN    6  // PPM-Eingang an Pin 3
+#define  NUM_CHANNELS   8;
+#define  FRAME_LENGTH   50000; // 20 ms
+#define  SYNC_PULSE     30;     // 300 µs
+
 #define arrow_width 16
 #define arrow_height 16
 /*
