@@ -241,13 +241,13 @@ volatile uint16_t channels[NUM_SERVOS] =
 volatile uint16_t ppm[NUM_SERVOS] = {1500,2000,1500,1000};
 
 #define PPM_PIN 6
-#define FRAME_LENGTH 22500  // µs
+#define FRAME_LENGTH 22000  // µs
 #define PULSE_LENGTH 300    // µs
 #define CHANNEL_MIN 1000
 #define CHANNEL_MAX 2000
 
 //volatile uint8_t currentChannel = 0;
-volatile int16_t restTime = FRAME_LENGTH;
+volatile uint16_t restTime = FRAME_LENGTH;
 
 
 
@@ -381,7 +381,8 @@ ISR(TCB0_INT_vect)
   // Impuls erzeugen
   static bool pulseState = true;
 
-  if (pulseState) {
+  if (pulseState) 
+  {
     digitalWrite(PPM_DATA_PIN, HIGH); // kurzer Impuls
     TCB0.CCMP = PULSE_LENGTH * 3; // µs -> TCB läuft mit 1/3 µs (Prescaler 2 bei 3,33 MHz)
     pulseState = false;
@@ -394,16 +395,15 @@ ISR(TCB0_INT_vect)
 
       //uint16_t delay = constrain(ppm[currentChannel], CHANNEL_MIN, CHANNEL_MAX);
       uint16_t delay = map(( potwertarray[currentChannel]),0,1024,2000,1000);
-      //uint16_t delay = Border_Mapvar255(currentChannel, potwertarray[currentChannel],2000,1500,1000,false);
-      
-      TCB0.CCMP = delay * 3;   // µs → Tickskalierung
-      restTime -= delay;
+      TCB0.CCMP = delay * 8;   // µs → Tickskalierung
+      restTime = restTime - (delay );
       currentChannel++;
     } 
     else 
     {
       // Synclücke
-      TCB0.CCMP = (restTime > 0 ? restTime : 5000) * 3;
+      TCB0.CCMP = (restTime > 0 ? restTime : 5000) * 8;
+      //TCB0.CCMP = 8 * restTime ;
       currentChannel = 0;
       restTime = FRAME_LENGTH;
     }
@@ -1072,6 +1072,7 @@ void setup()
 
    // Timer starten
   //setupTimer();
+
     setupPPM();
 
 
@@ -2085,6 +2086,7 @@ void loop()
    
    if(loopcounter >= BLINKRATE/2)
    {
+      /*
       for (int i=0;i<NUM_SERVOS;i++)
       {
          Serial.print(ppm[i]);
@@ -2096,7 +2098,7 @@ void loop()
          Serial.print("\t");
       }
       Serial.print("\n");
-
+      */
 
       if(Taste)
       {
