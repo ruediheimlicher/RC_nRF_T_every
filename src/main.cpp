@@ -497,32 +497,35 @@ void printgrenzen()
 
 void printeeprom(uint8_t zeilen)
 {
-   //Serial.print("printeeprom\n");
+   Serial.print("printeeprom\n");
    for (uint8_t i=0;i<zeilen;i++)
    {
-      ////Serial.write(taskarray[i]);
+      //Serial.write(taskarray[i]);
       ////Serial.print("\t");
       uint8_t f = EEPROM.read(i);
       
-      if ((i+1)%8==0 )
+      if ((i)%8==0 )
       {
-         ////Serial.print(i);
-         ////Serial.print(": ");
-         
+         Serial.print("\n");
+         Serial.print(i);
+         Serial.print(": ");
+         Serial.print("\t");
          //Serial.print(f);
          //Serial.print("\n");
+
+         
       }
-      else
+      //else
       {
          ////Serial.print(i);
          ////Serial.print(": ");
          
-         //Serial.print(f);
-         //Serial.print("\t");
+         Serial.print(f);
+         Serial.print("\t");
       }
       
    }
-   //Serial.print("\n");
+   Serial.print("\n");
    uint8_t eepromyawlo = EEPROM.read(2*(0 + EEPROMINDEX_U));
    uint8_t eepromyawhi = EEPROM.read(2*(0 + EEPROMINDEX_U)+1);
    uint16_t eepromyaw = (eepromyawhi << 8) | eepromyawlo;
