@@ -637,45 +637,56 @@ void cleargrenzen(void)
 void eepromwrite(void)
 
 {
-   //Serial.print("eepromwrite\n");  
+   Serial.print("eepromwrite\n");  
    for (uint8_t i = 0;i<NUM_SERVOS;i++)
    {
-      //Serial.print("potgrenzearray raw i:\t");
-      //Serial.print(i);
-      //Serial.print("\t");
-      //Serial.write(taskarray[i]);
-      //Serial.print("\t");
-      //Serial.print("potgrenze HI:\t");
-      //Serial.print(potgrenzearray[i][0]);
-      //Serial.print("\t");
-      //Serial.print("potgrenze LO:\t");
-      //Serial.print(potgrenzearray[i][1]);
-      //Serial.print("\t");
-      //Serial.print("servomitte:\t");
-      //Serial.print(servomittearray[i]);
-      //Serial.print("\t");
-      //Serial.print("adresse U:\t");
+      Serial.print("potgrenzearray raw i:\t");
+      Serial.print(i);
+      Serial.print("\t");
+      Serial.write(taskarray[i]);
+      Serial.print("\t");
+      Serial.print("potgrenze HI:\t");
+      Serial.print(potgrenzearray[i][0]);
+      Serial.print("\t");
+      Serial.print("potgrenze LO:\t");
+      Serial.print(potgrenzearray[i][1]);
+      Serial.print("\t");
+      Serial.print("servomitte:\t");
+      Serial.print(servomittearray[i]);
+      Serial.print("\t");
+      Serial.print("adresse U:\t");
       uint8_t addresseU_LO = 2*(i + EEPROMINDEX_U);
-      //Serial.print(addresseU_LO);
-      //Serial.print("\t");
-      //Serial.print("adresse H:\t");
+      Serial.print(addresseU_LO);
+      Serial.print("\t");
+      Serial.print("adresse H:\t");
       uint8_t addresseU_HI = 2*(i + EEPROMINDEX_U)+1;
-      //Serial.print(addresseU_HI);
+      Serial.print(addresseU_HI);
       
+      Serial.print(" *\t");
+      Serial.print("level:\t");
+      Serial.print(kanalsettingarray[curr_model][i][1]);
+      Serial.print(" \t");
+      Serial.print("expo:\t");
+      Serial.print(kanalsettingarray[curr_model][i][2]);
       
-      //Serial.print("\n");
+      Serial.print("\n");
       
       
       
       EEPROM.update(2*(i + EEPROMINDEX_U),(potgrenzearray[i][1] & 0x00FF)); // lo byte
+      _delay_ms(1);
       EEPROM.update(2*(i + EEPROMINDEX_U)+1,((potgrenzearray[i][1] & 0xFF00) >> 8)); // hi byte
-      
+        _delay_ms(1);
       EEPROM.update(2*(i + EEPROMINDEX_O),(potgrenzearray[i][0] & 0x00FF)); // lo byte
+        _delay_ms(1);
       EEPROM.update(2*(i + EEPROMINDEX_O)+1,((potgrenzearray[i][0] & 0xFF00) >> 8)); // hi byte
+        _delay_ms(1);
       
       
       EEPROM.update(2*(i + EEPROMINDEX_M),(servomittearray[i] & 0x00FF)); // lo byte
+        _delay_ms(1);
       EEPROM.update(2*(i + EEPROMINDEX_M)+1,((servomittearray[i] & 0xFF00) >> 8)); // hi byte
+        _delay_ms(1);
       
       
       for (uint8_t i=0;i<8;i++)
@@ -686,13 +697,16 @@ void eepromwrite(void)
       }
       
       EEPROM.update(2*(i + EEPROMLEVELSETTINGS),(kanalsettingarray[curr_model][i][1] )); // level
+        _delay_ms(1);
       EEPROM.update(2*(i + EEPROMEXPOSETTINGS),(kanalsettingarray[curr_model][i][2] )); // expo
+        _delay_ms(1);
       
       //EEPROM.update(2*(i + EEPROMLEVELSETTINGS),(47+i)); // level
       //EEPROM.update(2*(i + EEPROMEXPOSETTINGS),(63+i )); // expo
       
       EEPROM.update(0,17);
-      EEPROM.update(1,33);
+        _delay_ms(1);
+      EEPROM.update(1,37);
       
       
       delay(20);
@@ -1654,11 +1668,13 @@ void loop()
                            //Serial.println(curr_wert);
                         }break;
 
-                        case 5: // 
+                        case 5: // MODUS-Screen
                         {
-                           //Serial.print("T 5 screen 5 curr_modus: ");
-                           //Serial.println(curr_modus);
-                           
+                           Serial.print("T 5 screen 5 curr_modus: ");
+                           Serial.print(curr_modus);
+                           Serial.print(" T 5 screen 5 calibstatus: ");
+                           Serial.println(calibstatus);
+                          
                            if(!(calibstatus & (1<<CALIB_START))) // calib noch nicht gesetzt
                            {
                               cleargrenzen();
@@ -1667,7 +1683,12 @@ void loop()
                            else
                            {
                               calibstatus &= ~(1<<CALIB_START);// calib beenden
-                              eepromwrite();       // settings in eeprom
+
+                              Serial.println(" vor write: ");  
+                              printeeprom(160);
+                              eepromwrite();
+                              Serial.println(" nach write: "); 
+                              printeeprom(160);                           
                            }
                            
                            
@@ -2036,29 +2057,33 @@ void loop()
             
          case 9:
          {
-            //Serial.print("T 9 SAVE");  
+            Serial.print("T 9 SAVE ");  
             
             switch (curr_screen)
             {
                case 0:
                {
-                  ////Serial.print(" savestatus: ");  
-                  ////Serial.print(savestatus);
+                  Serial.print("T9 savestatus: ");  
+                  Serial.print(savestatus);
                   ////Serial.print(" curr_cursorspalte: ");  
                   //Serial.print(curr_cursorspalte);
                   switch (savestatus)
                   {
-                     case 0: // CHANGED
+                     case 2: // CHANGED
                      {
                         // write to eeprom
+                        Serial.println(" vor write: ");  
+                        printeeprom(160);
                         eepromwrite();
+                        Serial.println(" nach write: "); 
+                        printeeprom(160);
                         savestatus = CANCEL;
                      }break;
                      
                      case 1: // CANCEL
                      {
                         // do nothing
-                        
+                        Serial.println(" CANCEL ");  
                         curr_cursorspalte = 0;
                         savestatus = CANCEL;
                      }break;
@@ -2086,7 +2111,7 @@ void loop()
    
    if(loopcounter >= BLINKRATE/2)
    {
-      
+      /*
       for (int i=0;i<NUM_SERVOS;i++)
       {
          Serial.print(ppm[i]);
@@ -2098,7 +2123,7 @@ void loop()
          Serial.print("\t");
       }
       Serial.print("\n");
-      
+      */
 
       if(Taste)
       {

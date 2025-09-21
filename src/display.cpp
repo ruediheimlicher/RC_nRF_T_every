@@ -281,6 +281,7 @@ void updateHomeScreen()
       //u8g2.setFontMode(0);
       u8g2.setDrawColor(1);
       u8g2.drawStr(66,48 + charh,"N");
+
       if(curr_cursorspalte ==0)
       {
          u8g2.drawFrame(45,48,16,16);
