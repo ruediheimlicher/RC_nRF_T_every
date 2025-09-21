@@ -2086,7 +2086,7 @@ void loop()
    
    if(loopcounter >= BLINKRATE/2)
    {
-      /*
+      
       for (int i=0;i<NUM_SERVOS;i++)
       {
          Serial.print(ppm[i]);
@@ -2098,7 +2098,7 @@ void loop()
          Serial.print("\t");
       }
       Serial.print("\n");
-      */
+      
 
       if(Taste)
       {
