@@ -9,6 +9,15 @@
 #ifndef DEFINES_h
 #define DEFINES_h
 
+
+#define BOARD_2 0
+#define BOARD_6 1
+#define BOARD BOARD_6
+
+#define ANZEIGE_POT 0
+#define ANZEIGE_TAST 0
+
+
 #define HOMESCREEN      0
 #define MODELLSCREEN    1 // SYMPEL, TROTTLE ...
 #define FUNKTIONSCREEN  2 // YAW,PITCH ...

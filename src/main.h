@@ -16,10 +16,10 @@ struct Signal
    byte aux2;
    
 };
-#define BATTX  104
-#define BATTY  2
-#define BATTH  44
-#define BATTB  20
+#define BATTX        104
+#define BATTY        2
+#define BATTH        44
+#define BATTB        20
 
 // defines for array pos
 #define YAW         0
@@ -84,6 +84,8 @@ struct Signal
 */
 
 // External Ref 3v3
+// Joystick-Tastatur
+/*
 #define JOYSTICKTASTE1  51
 #define JOYSTICKTASTE2  88
 #define JOYSTICKTASTE3  140
@@ -93,6 +95,18 @@ struct Signal
 #define JOYSTICKTASTE7  312
 #define JOYSTICKTASTE8  375
 #define JOYSTICKTASTE9  478
+*/
+// 3*3-Tastatur
+#define JOYSTICKTASTE1  109
+#define JOYSTICKTASTE2  155
+#define JOYSTICKTASTE3  200
+#define JOYSTICKTASTE4  246
+#define JOYSTICKTASTE5  287
+#define JOYSTICKTASTE6  342
+#define JOYSTICKTASTE7  398
+#define JOYSTICKTASTE8  433
+#define JOYSTICKTASTE9  502
+
 
 #define TAB0    2
 #define TAB1    4

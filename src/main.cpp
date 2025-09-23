@@ -17,6 +17,8 @@
 #include <elapsedMillis.h>
 #include "defines.h"
 
+
+
 const uint64_t pipeOut = 0xABCDABCD71LL;         // NOTE: The address in the Transmitter and Receiver code must be the same "0xABCDABCD71LL" | Verici ve Alıcı kodundaki adres aynı olmalıdır
 
 extern "C" 
@@ -106,7 +108,11 @@ uint16_t schritt = 32;
 
 
 uint16_t                   impulstimearray[NUM_SERVOS] = {};
-const int                  adcpinarray[NUM_SERVOS] = {A3,A6,A1,A0};    // pins der Pots
+
+
+const int                  adcpinarrayA[NUM_SERVOS] = {A3,A6,A1,A0};    // pins der Pots
+
+const int                  adcpinarrayB[NUM_SERVOS] = {A2,A3,A1,A0};    // pins der Pots
 
 uint8_t                    kanalsettingarray[ANZAHLMODELLE][NUM_SERVOS][KANALSETTINGBREITE] = {};
 
@@ -765,6 +771,37 @@ uint8_t Joystick_Tastenwahl(uint16_t Tastaturwert)
     */
    return 0;
 }
+uint8_t Joystick_Tastenwahl_33(uint16_t Tastaturwert)
+{
+   //return 0;
+   if (Tastaturwert < JOYSTICKTASTE1) 
+      return 1;
+   if (Tastaturwert < JOYSTICKTASTE2)
+      return 2;
+   if (Tastaturwert < JOYSTICKTASTE3)
+      return 3;
+   if (Tastaturwert < JOYSTICKTASTE4)
+      return 4;
+   if (Tastaturwert < JOYSTICKTASTE5)
+      return 5;
+   if (Tastaturwert < JOYSTICKTASTE6)
+      return 6;
+   if (Tastaturwert < JOYSTICKTASTE7)
+      return 7;
+   if (Tastaturwert < JOYSTICKTASTE8)
+      return 8;
+   if (Tastaturwert < JOYSTICKTASTE9)
+      return 9;
+   /*
+    if (Tastaturwert < JOYSTICKTASTEL)
+    return 10;
+    if (Tastaturwert < JOYSTICKTASTE0)
+    return 0;
+    if (Tastaturwert < JOYSTICKTASTER)
+    return 12;
+    */
+   return 0;
+}
 // tastenwahl
 
 uint16_t readTastatur(uint8_t kanal)
@@ -787,15 +824,19 @@ void tastenfunktion(uint16_t Tastenwert)
    tastaturcounter++;   
    if (Tastenwert>10) // ca Minimalwert der Matrix
    {      
-      //Serial.print(Tastenwert);
-      //Serial.print("\t");
-      //Serial.print(tastaturcounter);
       
-      //Serial.print("\n");
       
       if (tastaturcounter>=400)   //   Prellen
       {        
-         
+         if(ANZEIGE_TAST)
+      {
+         Serial.print(Tastenwert);
+         Serial.print("\t");
+         Serial.print(tastaturcounter);
+         tastaturcounter = 0;
+         Serial.print("\n");
+         return;
+      }
          tastaturcounter=0x00;
          ////Serial.println("Taste down");
          if (!(tastaturstatus & (1<<TASTE_OK))) // Taste noch nicht gedrueckt
@@ -806,13 +847,13 @@ void tastenfunktion(uint16_t Tastenwert)
             
             //tastaturstatus |= (1<<TASTE_ON); // nur einmal   
             tastaturstatus |= (1<<TASTE_OK); // nur einmal   
-            Taste= Joystick_Tastenwahl(Tastenwert);
+            Taste= Joystick_Tastenwahl_33(Tastenwert);
 
-            //Serial.print("Tastenwert: ");
-            //Serial.print(Tastenwert);
-            //Serial.print("\t Taste: ");
-            //Serial.print(Taste);
-            //Serial.print("\n");
+            Serial.print("Tastenwert: ");
+            Serial.print(Tastenwert);
+            Serial.print("\t Taste: ");
+            Serial.print(Taste);
+            Serial.print("\n");
             tastaturstatus |= (1<<AKTION_OK);
             if(OLED && Taste) // Taste und Tastenwert anzeigen
             {
@@ -1070,7 +1111,7 @@ void setup()
       //potgrenzearray[i][0] = potlo;
       //potgrenzearray[i][1] = pothi;
       
-      servomittearray[i] = analogRead(adcpinarray[i]);
+      servomittearray[i] = analogRead(adcpinarrayA[i]);
       //Serial.print("i:\t");
       //Serial.print(i);
       //Serial.print("\t");
@@ -2114,19 +2155,21 @@ void loop()
    
    if(loopcounter >= BLINKRATE/2)
    {
-      /*
-      for (int i=0;i<NUM_SERVOS;i++)
+      if(ANZEIGE_POT)
       {
-         Serial.print(ppm[i]);
-         Serial.print("\t");
-         Serial.print(potwertarray[i]);
-         Serial.print("\t");
-         //Serial.print(Border_Mapvar255(i, potwertarray[i],2000,1500,1000,false));
-         Serial.print(map( potwertarray[i],0,1024,2000,1000));
-         Serial.print("\t");
-      }
-      Serial.print("\n");
-      */
+
+         for (int i=0;i<NUM_SERVOS;i++)
+         {
+            Serial.print(ppm[i]);
+            Serial.print("\t");
+            Serial.print(potwertarray[i]);
+            Serial.print("\t");
+            //Serial.print(Border_Mapvar255(i, potwertarray[i],2000,1500,1000,false));
+            Serial.print(map( potwertarray[i],0,1024,2000,1000));
+            Serial.print("\t");
+         }
+         Serial.print("\n");
+         }
 
       if(Taste)
       {
@@ -2516,7 +2559,15 @@ void loop()
    // pot lesen
    for (uint8_t i=0;i<NUM_SERVOS;i++)
    {
-      potwert=analogRead(adcpinarray[i]);
+      if(BOARD == BOARD_2)
+      {
+      potwert=analogRead(adcpinarrayA[i]);
+
+      }
+      else if (BOARD == BOARD_6)
+      {
+         potwert=analogRead(adcpinarrayB[i]);
+      }
 
       if(calibstatus & (1<<CALIB_START))
       {
