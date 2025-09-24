@@ -832,7 +832,7 @@ void tastenfunktion(uint16_t Tastenwert)
       {
          Serial.print(Tastenwert);
          Serial.print("\t");
-         Serial.print(tastaturcounter);
+         //Serial.print(tastaturcounter);
          tastaturcounter = 0;
          Serial.print("\n");
          return;
