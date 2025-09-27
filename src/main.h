@@ -82,10 +82,10 @@ struct Signal
 #define JOYSTICKTASTE8 510
 #define JOYSTICKTASTE9 580
 */
-
-// External Ref 3v3
-// Joystick-Tastatur
 /*
+// External Ref 3v3
+// Joystick-Tastatur Board2
+
 #define JOYSTICKTASTE1  51
 #define JOYSTICKTASTE2  88
 #define JOYSTICKTASTE3  140
@@ -96,6 +96,21 @@ struct Signal
 #define JOYSTICKTASTE8  375
 #define JOYSTICKTASTE9  478
 */
+
+// External Ref 3v3
+// Joystick-Tastatur Board6
+#define JOYSTICKTASTE1  51
+#define JOYSTICKTASTE2  88
+#define JOYSTICKTASTE3  140
+#define JOYSTICKTASTE4  179
+#define JOYSTICKTASTE5  225
+#define JOYSTICKTASTE6  269
+#define JOYSTICKTASTE7  312
+#define JOYSTICKTASTE8  374
+#define JOYSTICKTASTE9  478
+
+
+/*
 // 3*3-Tastatur
 #define JOYSTICKTASTE1  109
 #define JOYSTICKTASTE2  155
@@ -106,6 +121,8 @@ struct Signal
 #define JOYSTICKTASTE7  398
 #define JOYSTICKTASTE8  433
 #define JOYSTICKTASTE9  502
+*/
+
 
 
 #define TAB0    2

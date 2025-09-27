@@ -10,12 +10,13 @@
 #define DEFINES_h
 
 
-#define BOARD_2 0
-#define BOARD_6 1
-#define BOARD BOARD_6
+#define BOARD_2 2
+#define BOARD_6 6
+//#define BOARD BOARD_6
 
-#define ANZEIGE_POT 0
-#define ANZEIGE_TAST 0
+#define ANZEIGE_POT     1
+#define ANZEIGE_TAST    0
+#define ANZEIGE_CALIB   2
 
 
 #define HOMESCREEN      0
@@ -40,7 +41,7 @@
 #define PPM_DIR_PIN     2
 #define PPM_DATA_PIN    3  // PPM-Eingang an Pin 3
 #define  NUM_CHANNELS   8;
-#define  FRAME_LENGTH   50000; // 20 ms
+#define  FRAME_LENGTH   40000; // 20 ms
 #define  SYNC_PULSE     30;     // 300 µs
 
 #define arrow_width 16

@@ -106,6 +106,8 @@ uint16_t throttlesekunden = 0;
 uint16_t schritt = 32;
 
 
+uint8_t PCB_BOARD = 0;
+
 
 uint16_t                   impulstimearray[NUM_SERVOS] = {};
 
@@ -163,6 +165,9 @@ uint8_t curr_steuerstatus = 0;
 uint8_t calibstatus = 0;
 
 uint8_t savestatus = 0;
+
+uint8_t anzeigestatus = 0;
+
 
 
 float potlo = POTLO; // min pot
@@ -235,8 +240,11 @@ uint8_t masterslavestatus = 0;
 #define SLAVE                    1
 
 volatile uint8_t currentChannel = 0;
-volatile bool pulseState = false;
+volatile uint8_t pausecounter = 0;
+volatile bool pulseState = true;
 volatile uint32_t elapsedFrame = 0;
+volatile uint8_t ISRcounter = 0;
+
 
 volatile uint16_t channels[NUM_SERVOS] = 
 {
@@ -247,8 +255,8 @@ volatile uint16_t channels[NUM_SERVOS] =
 volatile uint16_t ppm[NUM_SERVOS] = {1500,2000,1500,1000};
 
 #define PPM_PIN 6
-#define FRAME_LENGTH 22000  // µs
-#define PULSE_LENGTH 300    // µs
+#define FRAME_LENGTH 32000  // µs
+#define PULSE_LENGTH 200    // µs
 #define CHANNEL_MIN 1000
 #define CHANNEL_MAX 2000
 
@@ -321,7 +329,11 @@ elapsedMillis           zeitintervall;
 uint8_t                 sekundencounter = 0;
 elapsedMillis           sinceLastBlink = 0;
 
-
+uint16_t                impulsdelayarray[4] = {};
+uint16_t                restzeitarray[4] = {};
+uint16_t                impulsCCMParray[4] = {};
+uint16_t                restCCMParray[4] = {};
+uint16_t                restCCM = 0;
 elapsedMillis  buzzintervall = 0;
 
 int Border_Mapvar255(uint8_t servo, int val, int lower, int middle, int upper, bool reverse);
@@ -341,96 +353,73 @@ void ResetData()
 
 // ppm encode
 // Timer-ISR
-/*
-ISR(TCB0_INT_vect) 
-{
-  if (!pulseState) 
-  {
-    // Sync-Puls Low
-    digitalWrite(PPM_DATA_PIN, LOW);
-    TCB0.CCMP = 2 * SYNC_PULSE;  // TCB0 läuft mit 2 MHz = 0.5 µs Ticks
-    pulseState = true;
-  } 
-  else 
-  {
-    // High-Phase
-    digitalWrite(PPM_DATA_PIN, HIGH);
 
-    if (currentChannel < NUM_SERVOS) 
-    {
-      uint16_t duration = channels[currentChannel] - SYNC_PULSE;
-      TCB0.CCMP = duration * 2;
-      elapsedFrame += channels[currentChannel];
-      currentChannel++;
-      pulseState = false;
-    } 
-    else 
-    {
-      // Rest auffüllen
-      uint16_t rest = FRAME_LENGTH - elapsedFrame;
-      TCB0.CCMP = rest * 2;
-      elapsedFrame = 0;
-      currentChannel = 0;
-      pulseState = false;
-      digitalWrite(PPM_DIR_PIN, !(digitalRead(PPM_DIR_PIN)));
-
-    }
-  }
-  TCB0.INTFLAGS = TCB_CAPT_bm; // Interrupt-Flag löschen
-}
-*/
 
 // V2
 // ISR für TCB0
 ISR(TCB0_INT_vect) 
 {
-  // Impuls erzeugen
-  static bool pulseState = true;
+   ISRcounter++;
+   {
+      ISRcounter = 0;
+      // Impuls erzeugen
+      
+      
 
-  if (pulseState) 
-  {
-    digitalWrite(PPM_DATA_PIN, HIGH); // kurzer Impuls
-    TCB0.CCMP = PULSE_LENGTH * 3; // µs -> TCB läuft mit 1/3 µs (Prescaler 2 bei 3,33 MHz)
-    pulseState = false;
-  } 
-  else 
-  {
-    digitalWrite(PPM_DATA_PIN, LOW); // Pause = Kanalwert
-    if (currentChannel < NUM_SERVOS) 
-    {
+      if (pulseState ) 
+      {
+         digitalWrite(PPM_DATA_PIN, HIGH); // kurzer Impuls
+         TCB0.CCMP = PULSE_LENGTH ; // µs -> TCB läuft mit 1/3 µs (Prescaler 2 bei 3,33 MHz)
+         pulseState = false;
+      } 
+      else 
+      {
+         digitalWrite(PPM_DATA_PIN, LOW); // Pause = Kanalwert
+         if (currentChannel < NUM_SERVOS) 
+         {
 
-      //uint16_t delay = constrain(ppm[currentChannel], CHANNEL_MIN, CHANNEL_MAX);
-      uint16_t delay = map(( potwertarray[currentChannel]),0,1024,2000,1000);
-      TCB0.CCMP = delay * 8;   // µs → Tickskalierung
-      restTime = restTime - (delay );
-      currentChannel++;
-    } 
-    else 
-    {
-      // Synclücke
-      TCB0.CCMP = (restTime > 0 ? restTime : 5000) * 8;
-      //TCB0.CCMP = 8 * restTime ;
-      currentChannel = 0;
-      restTime = FRAME_LENGTH;
-    }
-    pulseState = true;
-  }
-
-  // Interrupt-Flag löschen
-  TCB0.INTFLAGS = TCB_CAPT_bm;
+            //uint16_t delay = constrain(ppm[currentChannel], CHANNEL_MIN, CHANNEL_MAX);
+            uint16_t delay = map(( potwertarray[currentChannel]),0,1000,2000,1000);
+            //impulsdelayarray[currentChannel] = delay;
+            
+            TCB0.CCMP = 8 * delay;   // µs → Tickskalierung
+            //impulsCCMParray[currentChannel] = TCB0.CCMP;
+            //restTime = restTime - (delay );
+            //restzeitarray[currentChannel] = restTime;
+            currentChannel++;
+            pulseState = true;
+         } 
+         else 
+         {
+            
+            pausecounter ++;
+            TCB0.CCMP  = 20000;
+            if(pausecounter == 5)
+            {
+            // Synclücke
+               pausecounter = 0;
+               digitalWrite(PPM_DIR_PIN,HIGH);
+            //TCB0.CCMP = (restTime > 0 ? restTime : 5000) * 2;
+            //TCB0.CCMP = 8 * restTime ;
+            //TCB0.CCMP  = 60000;
+            //restCCM = TCB0.CCMP;
+            currentChannel = 0;
+            //restTime = FRAME_LENGTH;
+            digitalWrite(PPM_DIR_PIN,LOW);
+            pulseState = true;
+            }
+            
+         }
+      }
+   }
+   // Interrupt-Flag löschen
+   TCB0.INTFLAGS = TCB_CAPT_bm;
+   
 }
 
 
 
-/*
-void setupTimer() 
-{
-  // TCB0 auf 2 MHz (0.5 µs Auflösung)
-  TCB0.CCMP = 40000;               // Dummy-Startwert
-  TCB0.CTRLA = TCB_ENABLE_bm;      // Timer aktivieren
-  TCB0.INTCTRL = TCB_CAPT_bm;      // Interrupt erlauben
-}
-*/
+
 void setupPPM() {
 
   // TCB0 konfigurieren
@@ -460,14 +449,18 @@ void ppmISR()
 
   if (pulseLength > 3000) 
   {
+   digitalWrite(PPM_DIR_PIN,HIGH);
     // Sync-Pause erkannt: neues Frame beginnt
     channel = 0;
-    digitalWrite(PPM_DIR_PIN, !(digitalRead(PPM_DIR_PIN)));
+    //digitalWrite(PPM_DIR_PIN, !(digitalRead(PPM_DIR_PIN)));
+    digitalWrite(PPM_DIR_PIN,LOW);
   } 
   else if (channel < maxChannels) 
   {
+   
     potwertarray[channel] = pulseLength;
     channel++;
+    
   }
 }
 
@@ -740,7 +733,7 @@ void eepromwrite(void)
 }
 
 
-uint8_t Joystick_Tastenwahl(uint16_t Tastaturwert)
+uint8_t Joystick_Tastenwahl_33_2(uint16_t Tastaturwert)
 {
    //return 0;
    if (Tastaturwert < JOYSTICKTASTE1) 
@@ -771,7 +764,7 @@ uint8_t Joystick_Tastenwahl(uint16_t Tastaturwert)
     */
    return 0;
 }
-uint8_t Joystick_Tastenwahl_33(uint16_t Tastaturwert)
+uint8_t Joystick_Tastenwahl_33_tastatur(uint16_t Tastaturwert)
 {
    //return 0;
    if (Tastaturwert < JOYSTICKTASTE1) 
@@ -792,6 +785,38 @@ uint8_t Joystick_Tastenwahl_33(uint16_t Tastaturwert)
       return 8;
    if (Tastaturwert < JOYSTICKTASTE9)
       return 9;
+   /*
+    if (Tastaturwert < JOYSTICKTASTEL)
+    return 10;
+    if (Tastaturwert < JOYSTICKTASTE0)
+    return 0;
+    if (Tastaturwert < JOYSTICKTASTER)
+    return 12;
+    */
+   return 0;
+}
+
+uint8_t Joystick_Tastenwahl_33_6(uint16_t Tastaturwert)
+{
+   //return 0;
+   if (Tastaturwert < JOYSTICKTASTE1) 
+      return 2;
+   if (Tastaturwert < JOYSTICKTASTE2)
+      return 1;
+   if (Tastaturwert < JOYSTICKTASTE3)
+      return 4;
+   if (Tastaturwert < JOYSTICKTASTE4)
+      return 7;
+   if (Tastaturwert < JOYSTICKTASTE5)
+      return 8;
+   if (Tastaturwert < JOYSTICKTASTE6)
+      return 3;
+   if (Tastaturwert < JOYSTICKTASTE7)
+      return 6;
+   if (Tastaturwert < JOYSTICKTASTE8)
+      return 9;
+   if (Tastaturwert < JOYSTICKTASTE9)
+      return 5;
    /*
     if (Tastaturwert < JOYSTICKTASTEL)
     return 10;
@@ -847,7 +872,19 @@ void tastenfunktion(uint16_t Tastenwert)
             
             //tastaturstatus |= (1<<TASTE_ON); // nur einmal   
             tastaturstatus |= (1<<TASTE_OK); // nur einmal   
-            Taste= Joystick_Tastenwahl_33(Tastenwert);
+
+            switch (PCB_BOARD)
+            {
+               case BOARD_2:
+               {
+                  Taste= Joystick_Tastenwahl_33_2(Tastenwert);
+               }break;
+               case BOARD_6:
+               {
+                  Taste= Joystick_Tastenwahl_33_6(Tastenwert);
+               }
+            }
+            
 
             Serial.print("Tastenwert: ");
             Serial.print(Tastenwert);
@@ -950,7 +987,9 @@ void setCalib(void)
 
 void setup()
 {
-   
+   anzeigestatus = 0;//ANZEIGE_POT;
+
+   PCB_BOARD = BOARD_6;
    uint8_t ee[16];
    delay(50);
    for (uint8_t i=0;i<64;i++)
@@ -1110,8 +1149,21 @@ void setup()
       
       //potgrenzearray[i][0] = potlo;
       //potgrenzearray[i][1] = pothi;
-      
-      servomittearray[i] = analogRead(adcpinarrayA[i]);
+      switch (PCB_BOARD)
+      {
+         case BOARD_2:
+         {
+            servomittearray[i] = analogRead(adcpinarrayA[i]);
+         }break;
+
+         case BOARD_6:
+         {
+            servomittearray[i] = analogRead(adcpinarrayB[i]);
+         }
+         
+      }
+
+      //servomittearray[i] = analogRead(adcpinarrayA[i]);
       //Serial.print("i:\t");
       //Serial.print(i);
       //Serial.print("\t");
@@ -2153,24 +2205,86 @@ void loop()
       
    }// if TASTE_OK
    
-   if(loopcounter >= BLINKRATE/2)
+   if(loopcounter >= BLINKRATE)
    {
-      if(ANZEIGE_POT)
+      switch(anzeigestatus)
       {
-
-         for (int i=0;i<NUM_SERVOS;i++)
+         case ANZEIGE_POT:
          {
-            Serial.print(ppm[i]);
+            //Serial.print(i);
+               //Serial.print(ppm[i]);
             Serial.print("\t");
-            Serial.print(potwertarray[i]);
-            Serial.print("\t");
-            //Serial.print(Border_Mapvar255(i, potwertarray[i],2000,1500,1000,false));
-            Serial.print(map( potwertarray[i],0,1024,2000,1000));
-            Serial.print("\t");
-         }
+            for (int i=0;i<NUM_SERVOS;i++)
+            {
+               if (i==0)
+               {
+                  Serial.print(i);
+                  Serial.print("\t");
+               }
+               //Serial.print(i);
+               //Serial.print(ppm[i]);
+               //Serial.print("\t");
+               Serial.print(potwertarray[i]);
+               //Serial.print("\t");
+               //Serial.print(Border_Mapvar255(i, potwertarray[i],2000,1500,1000,false));
+               //Serial.print(map( potwertarray[i],0,1024,2000,1000));
+               Serial.print("\t");
+            }
          Serial.print("\n");
-         }
+         }break;
 
+         case ANZEIGE_TAST:
+         {
+
+         }break;
+
+         case ANZEIGE_CALIB:
+         {
+            //if(calibstatus & (1<<CALIB_START))
+            {
+               for (int i=0;i<NUM_SERVOS;i++)
+               {
+                  
+                  Serial.print("L: "); 
+                  
+                  Serial.print(potgrenzearray[i][0]);
+                  Serial.print("\t R: ");   
+                  Serial.print(potgrenzearray[i][1]);
+                  Serial.print("\t Mitte: "); 
+                  Serial.print(servomittearray[i]);  
+                  Serial.print("\t potwert: ");
+                  Serial.print(potwertarray[i]);
+                  Serial.print("\t\t"); 
+            
+               }
+               Serial.print("\n");  
+            }
+          //
+
+
+            
+
+         }break;
+
+
+      }
+      /*
+      for (int i=0;i<NUM_SERVOS;i++)
+      {
+      Serial.print("delay: \t");
+      Serial.print(impulsdelayarray[i]);
+      Serial.print(" \tCCPM: \t");
+      Serial.print(impulsCCMParray[i]);
+
+      Serial.print("\t rest: \t"); 
+      Serial.print(restzeitarray[i]);
+      Serial.print("\trestCCPM: \t");
+      Serial.print(restCCM);
+      Serial.print("\t"); 
+      
+      }
+      Serial.print("\n");  
+      */
       if(Taste)
       {
          ////Serial.print(tastaturwert);
@@ -2559,12 +2673,12 @@ void loop()
    // pot lesen
    for (uint8_t i=0;i<NUM_SERVOS;i++)
    {
-      if(BOARD == BOARD_2)
+      if(PCB_BOARD == BOARD_2)
       {
       potwert=analogRead(adcpinarrayA[i]);
 
       }
-      else if (BOARD == BOARD_6)
+      else if (PCB_BOARD == BOARD_6)
       {
          potwert=analogRead(adcpinarrayB[i]);
       }
