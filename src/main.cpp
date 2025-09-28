@@ -143,7 +143,8 @@ uint8_t expowertarray[NUM_SERVOS] = {}; // expowert pro Servo
 uint16_t          potwertarray[NUM_SERVOS] = {}; // Werte fuer Mitte
 //uint16_t          externpotwertarray[NUM_SERVOS] = {}; // Werte von extern  pro servo
 
-//uint16_t currentexpoarray[5][513] = {};
+int ackData[2] = {-1, -1}; // to hold the two values coming from the slave
+bool newData = false;
 
 uint8_t                        curr_pfeil = 0;
 
@@ -983,7 +984,17 @@ void setCalib(void)
 
 }
 
-
+void showData() 
+{
+    if (newData == true) {
+        Serial.print("  Acknowledge data ");
+        Serial.print(ackData[0]);
+        Serial.print(", ");
+        Serial.println(ackData[1]);
+        Serial.println();
+        newData = false;
+    }
+}
 
 void setup()
 {
@@ -1105,7 +1116,9 @@ void setup()
    radio.begin();
    radio.openWritingPipe(pipeOut);
    radio.setChannel(124);
-   radio.setAutoAck(false);
+   radio.enableAckPayload();
+   radio.setRetries(5,5); // delay, count
+
    //radio.setDataRate(RF24_250KBPS);    // The lowest data rate value for more stable communication  | Daha kararlı iletişim için en düşük veri hızı.
    radio.setDataRate(RF24_2MBPS); // Set the speed of the transmission to the quickest available
    
@@ -2771,6 +2784,15 @@ void loop()
    if (radio.write(&data, sizeof(Signal)))
    {
       radiocounter++; 
+      if ( radio.isAckPayloadAvailable() ) 
+      {
+         radio.read(&ackData, sizeof(ackData));
+         newData = true;
+      }
+      else 
+      {
+         Serial.println("  Acknowledge but no data ");
+      }
    }
    else
    {
