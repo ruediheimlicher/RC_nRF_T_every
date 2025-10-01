@@ -1,6 +1,8 @@
 // 6 Channel Transmitter | 6 Kanal Verici
 // KendinYap Channel
 
+// Payload
+
 #include "main.h"
 #include <SPI.h>
 #include <EEPROM.h>
@@ -44,6 +46,9 @@ uint16_t loopcounter1 = 0;
 
 // instantiate an object for the nRF24L01 transceiver
 RF24 radio(CE_PIN, CSN_PIN);
+
+bool newData = false;
+int ackData[4] = {11,12,13,14};
 
 #define LOOPLED 4
 
@@ -983,7 +988,16 @@ void setCalib(void)
 
 }
 
-
+void showData() {
+    if (newData == true) {
+        Serial.print("  Acknowledge data ");
+        Serial.print(ackData[0]);
+        Serial.print(", ");
+        Serial.println(ackData[1]);
+        Serial.println();
+        newData = false;
+    }
+}
 
 void setup()
 {
@@ -1104,16 +1118,23 @@ void setup()
    //                Configure the NRF24 module  | NRF24 modül konfigürasyonu
    radio.begin();
    radio.openWritingPipe(pipeOut);
+   radio.openReadingPipe(1, pipeOut);
    radio.setChannel(124);
    radio.setAutoAck(false);
    //radio.setDataRate(RF24_250KBPS);    // The lowest data rate value for more stable communication  | Daha kararlı iletişim için en düşük veri hızı.
    radio.setDataRate(RF24_2MBPS); // Set the speed of the transmission to the quickest available
    
+   radio.enableAckPayload();
+
+   radio.setRetries(5,5); // delay, count
    
    radio.setPALevel(RF24_PA_MAX);      // Output power is set for maximum range  |  Çıkış gücü maksimum menzil için ayarlanıyor.
    
    radio.setPALevel(RF24_PA_MIN); 
    radio.setPALevel(RF24_PA_MAX); 
+
+   // ack
+
    
    radio.stopListening();              // Start the radio comunication for Transmitter | Verici için sinyal iletişimini başlatır.
    if (radio.failureDetected) 
@@ -2771,10 +2792,21 @@ void loop()
    if (radio.write(&data, sizeof(Signal)))
    {
       radiocounter++; 
+      if ( radio.isAckPayloadAvailable() ) 
+      {
+            radio.read(&ackData, sizeof(ackData));
+            Serial.print("ack: ");
+            Serial.print(ackData[0]);
+            newData = true;
+        }
+        else 
+        {
+          //  Serial.println("  Acknowledge but no data ");
+        }
    }
    else
    {
-      //Serial.print("radio error\n");
+      Serial.print("radio error\n");
       digitalWrite(BUZZPIN,!(digitalRead(BUZZPIN)));
       errcounter++;
    }
