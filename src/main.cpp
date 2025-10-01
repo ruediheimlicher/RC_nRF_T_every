@@ -1117,16 +1117,16 @@ void setup()
    
    //                Configure the NRF24 module  | NRF24 modül konfigürasyonu
    radio.begin();
+   radio.enableAckPayload();
    radio.openWritingPipe(pipeOut);
-   radio.openReadingPipe(1, pipeOut);
+   //radio.openReadingPipe(1, pipeOut);
    radio.setChannel(124);
    radio.setAutoAck(false);
    //radio.setDataRate(RF24_250KBPS);    // The lowest data rate value for more stable communication  | Daha kararlı iletişim için en düşük veri hızı.
    radio.setDataRate(RF24_2MBPS); // Set the speed of the transmission to the quickest available
    
-   radio.enableAckPayload();
 
-   radio.setRetries(5,5); // delay, count
+   radio.setRetries(3,5); // delay, count
    
    radio.setPALevel(RF24_PA_MAX);      // Output power is set for maximum range  |  Çıkış gücü maksimum menzil için ayarlanıyor.
    
@@ -2795,8 +2795,8 @@ void loop()
       if ( radio.isAckPayloadAvailable() ) 
       {
             radio.read(&ackData, sizeof(ackData));
-            Serial.print("ack: ");
-            Serial.print(ackData[0]);
+            Serial.println("ack: ");
+            //Serial.print(ackData[0]);
             newData = true;
         }
         else 
