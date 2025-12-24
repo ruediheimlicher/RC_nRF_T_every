@@ -45,7 +45,10 @@ RF24 radio(CE_PIN, CSN_PIN);
 
 #define LOOPLED 4
 
+#define PPM_DIR_PIN     2
+//#define PPM_DATA_PIN    3  // PPM-Eingang an Pin 3
 
+#define PPM_DATA_PIN    7 // PPM OUT
 
 #define EEPROMTASTE  5
 
@@ -78,7 +81,7 @@ RF24 radio(CE_PIN, CSN_PIN);
 
 #define BATT_PIN         A2
 
-
+uint8_t debouncecheck = 0;
 
 uint16_t loopcounter = 0;
 uint8_t blinkcounter = 0;
@@ -185,11 +188,27 @@ uint16_t levelintpitcha = 0;
 uint16_t levelintpitchb = 0;
 
 uint16_t batteriespannung = 0;
-uint16_t batteriearray[8] = {};
 uint16_t batteriemittel = 0;
 uint8_t batteriemittelwertcounter = 0;
 uint16_t batterieanzeige = 0;
 float UBatt = 0;
+float flyerbatteriespannung = 0;
+float flyerbatteriespannungraw = 0;
+uint16_t flyerbatterieanzeige = 0;
+float UFlyerBatt = 0;
+
+
+uint16_t pressureint = 0;
+float pressurefloat = 0;
+const float seaLevelPressure = 1013.25;
+
+float altitude = 0;
+uint16_t altitudeint = 0;
+
+uint8_t temperaturint = 0;
+float temperaturfloat = 0;
+
+
 uint8_t eepromstatus = 0;
 uint16_t eepromprelltimer = 0;
 Bounce2::Button eepromtaste = Bounce2::Button();
@@ -249,13 +268,6 @@ volatile uint16_t ppm[NUM_SERVOS] = {1500,2000,1500,1000};
 //volatile uint8_t currentChannel = 0;
 volatile uint16_t restTime = FRAME_LENGTH;
 
-
-
-
-
-
-
-
 // OLED > in display.cpp
 uint16_t pot0 = 0;
 
@@ -263,6 +275,14 @@ uint16_t potwert = 0;
 
 uint16_t errcounter = 0;
 uint16_t radiocounter = 0;
+
+// ********************
+// ACK data ***********
+uint8_t ackData[4] = {0};
+// ********************
+// ********************
+
+
 
 // uint16_t                posregister[8][8]={}; // Aktueller screen: werte fuer page und daraufliegende col fuer Menueintraege (hex). geladen aus progmem
 
@@ -285,7 +305,7 @@ uint8_t                 curr_modus=0; // Modell oder Sim oder Calib
 
 
 uint8_t                 curr_setting=0; // aktuelles Setting fuer Modell
-uint8_t                          speichersetting=0;
+uint8_t                 speichersetting=0;
 
 uint8_t                 curr_trimmkanal=0; // aktueller  Kanal fuerTrimmung
 uint8_t                 curr_trimmung=0; // aktuelle  Trimmung fuer Trimmkanal
@@ -446,24 +466,6 @@ volatile byte channel = 0;
 const byte maxChannels = 8;
 //volatile unsigned int ppmValues[maxChannels];
 
-void ppmISR() 
-{
-  unsigned long now = micros();
-  pulseLength = now - lastTime;
-  lastTime = now;
-
-  if (pulseLength > 3000) 
-  {
-    // Sync-Pause erkannt: neues Frame beginnt
-    channel = 0;
-    digitalWrite(PPM_DIR_PIN, !(digitalRead(PPM_DIR_PIN)));
-  } 
-  else if (channel < maxChannels) 
-  {
-    potwertarray[channel] = pulseLength;
-    channel++;
-  }
-}
 
 
 void updatemitte(void)
@@ -643,6 +645,7 @@ void eepromwrite(void)
    Serial.print("eepromwrite\n");  
    for (uint8_t i = 0;i<NUM_SERVOS;i++)
    {
+      /*
       Serial.print("potgrenzearray raw i:\t");
       Serial.print(i);
       Serial.print("\t");
@@ -673,7 +676,7 @@ void eepromwrite(void)
       Serial.print(kanalsettingarray[curr_model][i][2]);
       
       Serial.print("\n");
-      
+      */
       
       
       EEPROM.update(2*(i + EEPROMINDEX_U),(potgrenzearray[i][1] & 0x00FF)); // lo byte
@@ -883,10 +886,7 @@ void setModus(void)
          // Joystick-Settings auf neutral stellen
          for (uint8_t i=0;i<NUM_SERVOS;i++)
          {
-            ////Serial.print(adcpinarray[i]);
-            ////Serial.print("\t");
-            ////Serial.print(servomittearray[i]);
-            ////Serial.print("\t");
+
             
             kanalsettingarray[0][i][1] = 0x00; // level
             kanalsettingarray[0][i][2] = 0x00; // expo
@@ -934,11 +934,10 @@ void setup()
    Serial.begin(9600);
 
    // PPM decode
-   pinMode(PPM_DIR_PIN, OUTPUT);
-   pinMode(PPM_DATA_PIN, OUTPUT);
-   digitalWrite(PPM_DATA_PIN,LOW);
+   //pinMode(PPM_DIR_PIN, OUTPUT);
+   //pinMode(PPM_DATA_PIN, OUTPUT);
+   //digitalWrite(PPM_DATA_PIN,LOW);
 
-   //attachInterrupt(digitalPinToInterrupt(PPM_PIN), ppmISR, RISING);
    
    pinMode(BUZZPIN,OUTPUT);
    digitalWrite(BUZZPIN,LOW);
@@ -1025,7 +1024,7 @@ void setup()
    radio.begin();
    radio.openWritingPipe(pipeOut);
    radio.setChannel(124);
-   radio.setAutoAck(false);
+   //radio.setAutoAck(false);
    //radio.setDataRate(RF24_250KBPS);    // The lowest data rate value for more stable communication  | Daha kararlı iletişim için en düşük veri hızı.
    radio.setDataRate(RF24_2MBPS); // Set the speed of the transmission to the quickest available
    
@@ -1034,8 +1033,10 @@ void setup()
    
    radio.setPALevel(RF24_PA_MIN); 
    radio.setPALevel(RF24_PA_MAX); 
-   
-   radio.stopListening();              // Start the radio comunication for Transmitter | Verici için sinyal iletişimini başlatır.
+   radio.enableAckPayload();
+   radio.setRetries(0, 0);
+
+   //radio.stopListening();              // Start the radio comunication for Transmitter | Verici için sinyal iletişimini başlatır.
    if (radio.failureDetected) 
    {
       radio.failureDetected = false;
@@ -1172,8 +1173,6 @@ int Throttle_Map255(int val, int fromlow, int fromhigh,int tolow, int tohigh, bo
    levelint = expoint * (8-levelwerta);
    levelint /= 4;
 
-
-
    return ( reverse ? 255 - levelint : levelint );
 }
 
@@ -1255,6 +1254,25 @@ int Border_Mapvar255(uint8_t servo, int val, int lower, int middle, int upper, b
    return ( reverse ? 255 - levelint : levelint );
 }
 
+int Border_Mapvar255_Throttle(uint8_t servo, int val, int lower,  int upper, bool reverse)
+{
+   val = constrain(val, lower, upper); // Grenzen einhalten
+   val = map(val, lower, upper, 0, 255); // normieren auf 0 - 255
+   uint8_t levelwerta = levelwertarray[servo] & 0x07;
+   uint8_t levelwertb = (levelwertarray[servo] & 0x70)>>4;
+   
+   uint8_t expowerta = expowertarray[servo] & 0x07;
+   uint8_t expowertb = (expowertarray[servo] & 0x70)>>4;
+
+   intdiff = val;
+   expoint = expoarray8[expowertb][intdiff/2]; // nur 127 Werte in expoarray
+   levelint = expoint * (8-levelwertb) ;   
+   levelint /= 8; // 
+   
+   return  2 * ( reverse ? 255 - levelint : levelint );
+
+}
+
 
 
 uint16_t map_uint16(uint16_t x, uint16_t in_min, uint16_t in_max, uint16_t out_min, uint16_t out_max) 
@@ -1322,7 +1340,8 @@ void loop()
          u8g2.sendBuffer();
       }
       
-   }  
+   }   // zeitintervall > 500
+   
    
    if (tastaturstatus & (1<<TASTE_OK) && Taste) // Menu ansteuern
    {
@@ -2146,17 +2165,12 @@ void loop()
       
       
       batteriespannung = analogRead(BATT_PIN);
-      batteriearray[batteriemittelwertcounter] = batteriespannung;
       
       
       batteriemittelwertcounter++;
       batteriemittelwertcounter &= 0x07;
       batteriemittel = 0;
-      for(uint8_t i=0;i<8;i++)
-      {
-         batteriemittel += batteriearray[i];
-      }
-      batteriemittel /= 8;
+      
       //Serial.println(batteriemittel);
       
       
@@ -2276,7 +2290,14 @@ void loop()
          loopcounter1 = 0;
       }
       
-      
+      Serial.print(" Throttle: ");
+      Serial.print(potwertarray[THROTTLE]);
+         
+         
+      Serial.print(" data.throttle: ");
+      Serial.print(data.throttle);
+
+      Serial.print("\n");
       
       if (TEST == 1)
       {
@@ -2520,8 +2541,6 @@ void loop()
 
       if(calibstatus & (1<<CALIB_START))
       {
-         
-      
          if(potwert > potgrenzearray[i][0])
          {
             potgrenzearray[i][0] = potwert; // pothi
@@ -2554,9 +2573,7 @@ void loop()
       expowertarray[i] = kanalsettingarray[curr_model][i][2];
       //expowerta = expowert & 0x07;
       //expowertb = (expowert & 0x70)>>4;
-      
-      
-      
+       
       // map(value, fromLow, fromHigh, toLow, toHigh)
       
       if((i == YAW) || (i == PITCH) || (i == ROLL))
@@ -2594,7 +2611,7 @@ void loop()
     
    //uint16_t throttlemitte = servomittearray[THROTTLE];
    //data.throttle = Throttle_Map(potwertarray[THROTTLE],throttlemitte, POTHI,0,255, false );   
-   data.throttle = Throttle_Map255(potwertarray[THROTTLE],servomittearray[THROTTLE], potgrenzearray[THROTTLE][0],10,127, false ); // nur eine haelfte 
+   data.throttle = Throttle_Map255(potwertarray[THROTTLE],servomittearray[THROTTLE], potgrenzearray[THROTTLE][0],10,127, false ); // 
 
 
    //data.throttle = Border_Map(potwertarray[THROTTLE],0, 340,570, false );      // Potentiometer
