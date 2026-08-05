@@ -1026,7 +1026,7 @@ void setup()
    radio.setChannel(124);
    //radio.setAutoAck(false);
    //radio.setDataRate(RF24_250KBPS);    // The lowest data rate value for more stable communication  | Daha kararlı iletişim için en düşük veri hızı.
-   radio.setDataRate(RF24_2MBPS); // Set the speed of the transmission to the quickest available
+   radio.setDataRate(RF24_1MBPS); // Set the speed of the transmission to the quickest available
    
    
    radio.setPALevel(RF24_PA_MAX);      // Output power is set for maximum range  |  Çıkış gücü maksimum menzil için ayarlanıyor.
